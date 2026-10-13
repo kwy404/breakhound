@@ -1,0 +1,228 @@
+<!--meta
+{
+  "slug": "find-bugs-automatically-javascript",
+  "title": "Find Bugs Automatically in a JavaScript Library",
+  "description": "Find bugs automatically in a JavaScript library without writing tests. breakhound reads your types, tries edge cases and writes Vitest tests.",
+  "h1": "How to find bugs automatically in a JavaScript library",
+  "crumb": "Find bugs automatically",
+  "lead": "Most libraries are tested with the inputs their authors imagined, and the bugs live in the ones nobody did. breakhound points at a package, generates the awkward inputs for you and hands back a reproduction and a ready Vitest test for every bug it finds.",
+  "readTime": "4 min read",
+  "related": [
+    "fuzz-testing-typescript",
+    "timezone-bugs-javascript",
+    "unicode-surrogate-pair-bugs"
+  ],
+  "faq": [
+    {
+      "q": "Do I need to write tests before I can find bugs automatically?",
+      "a": "<p>No. breakhound derives inputs from the type signatures in your <code>.d.ts</code> files and checks built in invariants, so a library with no tests at all can still be scanned with <code>npx breakhound ./my-lib</code>.</p>"
+    },
+    {
+      "q": "Does it only work on TypeScript projects?",
+      "a": "<p>It works on JavaScript and TypeScript libraries. Types give it better inputs, so a package that ships declarations gives the most precise results.</p>"
+    },
+    {
+      "q": "How many false positives should I expect?",
+      "a": "<p>Each finding carries a severity and a confidence level, so you can triage the high confidence ones first. Treat a finding as a question: either the function should handle that input, or its types are too loose.</p>"
+    },
+    {
+      "q": "Can I get the same result every run?",
+      "a": "<p>Yes. The default seed is 42, and you can change it with <code>--seed</code>. The run is also saved to <code>.breakhound/last-run.jsonl</code> and <code>.breakhound/report.json</code> unless you pass <code>--no-save</code>.</p>"
+    },
+    {
+      "q": "How is this different from fuzzing?",
+      "a": "<p>Coverage guided fuzzers such as Jazzer.js mutate bytes to find crashes and need a fuzz target. breakhound uses typed edge cases and checks semantic invariants such as time zone independence and sign preservation. The <a href=\"fuzz-testing-typescript.html\">fuzz testing TypeScript guide</a> compares them in detail.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "How to find bugs automatically in a JavaScript library",
+        "description": "Find bugs automatically in a JavaScript library without writing tests. breakhound reads your types, tries edge cases and writes Vitest tests.",
+        "url": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Do I need to write tests before I can find bugs automatically?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. breakhound derives inputs from the type signatures in your .d.ts files and checks built in invariants, so a library with no tests at all can still be scanned with npx breakhound ./my-lib."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does it only work on TypeScript projects?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It works on JavaScript and TypeScript libraries. Types give it better inputs, so a package that ships declarations gives the most precise results."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How many false positives should I expect?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Each finding carries a severity and a confidence level, so you can triage the high confidence ones first. Treat a finding as a question: either the function should handle that input, or its types are too loose."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I get the same result every run?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. The default seed is 42, and you can change it with --seed. The run is also saved to .breakhound/last-run.jsonl and .breakhound/report.json unless you pass --no-save."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is this different from fuzzing?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Coverage guided fuzzers such as Jazzer.js mutate bytes to find crashes and need a fuzz target. breakhound uses typed edge cases and checks semantic invariants such as time zone independence and sign preservation. The fuzz testing TypeScript guide compares them in detail."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "How to find bugs automatically in a JavaScript library",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="why-bugs-hide"><h2>Why library bugs hide from your test suite</h2>
+<p>A hand written test encodes what the author already believes. You test <code>truncate("hello world", 5)</code> because that is the example in your head. You do not test a string that ends in an emoji, a negative number between -1 and 0, or a date that is one second after a daylight saving jump, because you do not think of them. Those are exactly the inputs real users send.</p>
+<p>To find bugs automatically you need two things: a way to produce hostile but valid inputs for every function, and a set of rules that say what a correct result looks like without knowing the specific answer. The rules are called invariants. "A string function never returns half of a surrogate pair" is an invariant. "The same input gives the same output in every time zone" is another.</p>
+</section>
+<section id="a-bug-in-twelve-lines"><h2>A bug that passes every ordinary test</h2>
+<p>Here is a truncate helper that looks fine. It has a test for short strings, a test for long strings and a test for the empty string, and all of them pass.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="truncate.ts" data-bad="3">
+export function truncate(text: string, max: number): string {
+  if (text.length &lt;= max) return text;
+  return text.slice(0, max);
+}
+</pre>
+<p>The problem is that <code>String.prototype.slice</code> counts UTF-16 code units, not characters. An emoji such as <code>'\u{1F600}'</code> occupies two code units (a surrogate pair). Cut after the first one and you return a lone high surrogate, which is not valid text. It renders as a replacement character and makes <code>encodeURIComponent</code> throw a <code>URIError</code>. This class of defect is covered in depth in <a href="unicode-surrogate-pair-bugs.html">unicode surrogate pair bugs</a>.</p>
+<p>The fix is to never end the slice on a high surrogate:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="truncate.ts" data-ok="5">
+export function truncate(text: string, max: number): string {
+  if (text.length &lt;= max) return text;
+  let end = max;
+  const last = text.charCodeAt(end - 1);
+  if (last &gt;= 0xd800 &amp;&amp; last &lt;= 0xdbff) end -= 1;
+  return text.slice(0, end);
+}
+</pre>
+</section>
+<section id="run-breakhound"><h2>Run breakhound on the library</h2>
+<p>You do not need to write a harness. Give breakhound an npm package name or a path to a local folder:</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib
+</pre>
+<p>It reads the TypeScript declarations (<code>.d.ts</code>) to learn the type of each parameter, then generates inputs for every exported function. Strings get emoji, combining marks and lone surrogates. Dates get daylight saving transitions and dates before 1970. Numbers get <code>-0</code>, <code>NaN</code>, <code>Infinity</code> and values between -1 and 0. These edge cases come from the edgegoat package. Parameters that are callbacks receive generated callbacks.</p>
+<p>The output on a small fixture called buggy-lib looks like this:</p>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+breakhound v0.1.0  buggy-lib@1.0.0 (local)
+23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42 | 6.8s
+
+HIGH (5)
+  [lone-surrogate-output] truncate returns a string with a lone surrogate (confidence high)
+    truncate('\u{1F600}', 1)  -&gt; '\ud83d'
+
+  [unexpected-crash] initials throws TypeError: Cannot read properties of undefined (reading 'toUpperCase') (confidence high)
+    initials('')  -&gt; throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+
+MEDIUM (5)
+  [nan-leak] average returns NaN for finite input (confidence high)
+    average([0])  -&gt; NaN
+
+Summary: 5 high, 5 medium, 0 low, 2 info
+</pre>
+<p>Every finding has a severity (high, medium, low or info), a confidence level and a rule id.</p>
+</section>
+<section id="keep-the-test"><h2>Keep the test it writes for you</h2>
+<p>A finding is only useful if you can act on it. For each one breakhound prints a minimal reproduction script you can paste into a terminal, and a Vitest test that fails until the bug is fixed. For the truncate finding above, the test is:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="truncate.breakhound.test.ts" data-bad="7">
+import { expect, test } from 'vitest';
+import { truncate } from 'buggy-lib';
+
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?&lt;![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+test("truncate returns well formed UTF-16", () =&gt; {
+  const result = truncate('\u{1F600}', 1);
+  expect(result).not.toMatch(LONE_SURROGATE);
+});
+</pre>
+<p>Run it, watch it fail, apply the fix from the previous section, watch it pass, then commit the test.</p>
+</section>
+<section id="what-it-checks"><h2>The invariants it checks</h2>
+<p>breakhound ships a fixed set of oracles. Each maps to a rule id you can select with <code>--rules</code>:</p>
+<table>
+<tr><th>Rule id</th><th>What it catches</th></tr>
+<tr><td><code>lone-surrogate-output</code></td><td>Output strings split in the middle of an emoji</td></tr>
+<tr><td><code>timezone-dependent</code></td><td>Results that change with the <code>TZ</code> value (see <a href="timezone-bugs-javascript.html">time zone bugs</a>)</td></tr>
+<tr><td><code>unexpected-crash</code></td><td>Exceptions on inputs that match the declared types</td></tr>
+<tr><td><code>nan-leak</code></td><td><code>NaN</code> returned for finite input</td></tr>
+<tr><td><code>roundtrip</code></td><td>Pairs such as <code>encodeX</code> and <code>decodeX</code> that do not invert each other</td></tr>
+<tr><td><code>not-idempotent</code></td><td>Normalize style functions that change their own output</td></tr>
+<tr><td><code>negative-zero-sign</code></td><td>Values between -1 and 0 that lose the minus sign</td></tr>
+<tr><td><code>nondeterministic</code></td><td>Different results for the same input</td></tr>
+</table>
+<p>Each call runs in an isolated child process with a timeout, and the time zone rules run under several <code>TZ</code> values (six by default, including UTC, America/Sao_Paulo, Pacific/Kiritimati and America/New_York). Runs are seeded, so seed 42 gives the same inputs every time.</p>
+</section>
+<section id="narrow-and-gate"><h2>Narrow the run and gate your pipeline</h2>
+<p>On a large package you usually want to focus. Use <code>--only</code> and <code>--exclude</code> with wildcards, pick rules with <code>--rules</code>, and raise the budget with <code>--max-calls</code> when a first pass is clean. To fail a build when something serious shows up, use <code>--fail-on</code>:</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --only "format*" --rules nan-leak,negative-zero-sign
+npx breakhound . --fail-on high --json --output findings.json
+</pre>
+<p>In GitHub Actions breakhound emits annotations and writes a markdown job summary on its own. The full setup is in <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a>. If you would rather write properties by hand for the same kind of checks, see <a href="property-based-testing-without-writing-tests.html">property based testing without writing tests</a>.</p>
+<div class="callout"><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container. Installs use <code>--ignore-scripts</code>, and the child process isolation is for robustness, not a security sandbox.</p></div>
+<p>The approach has paid off on real projects. Fixes merged upstream include relative-time-element (a year check used UTC instead of the display time zone), budoux and vscode-js-debug (surrogate pairs split) and pdf.js (negative numbers above -1 lost their sign).</p>
+</section>

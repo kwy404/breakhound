@@ -81,11 +81,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fixture": "node scripts/build-fixture.mjs",
-    "docs": "node scripts/build-docs.mjs && node scripts/highlight-docs.mjs",
-    "docs:highlight": "node scripts/highlight-docs.mjs",
+    "docs": "node scripts/build-docs.mjs",
     "demo": "node scripts/build-demo.mjs",
     "prepublishOnly": "npm run build && npm test",
-    "pretest": "node scripts/build-fixture.mjs"
+    "pretest": "node scripts/build-fixture.mjs",
+    "docs:check": "node scripts/build-docs.mjs --check"
   },
   "dependencies": {
     "edgegoat": "^0.1.0",

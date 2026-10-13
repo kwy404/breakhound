@@ -1,0 +1,213 @@
+<!--meta
+{
+  "slug": "fuzz-testing-typescript",
+  "title": "Fuzz Testing TypeScript Without Writing Harnesses",
+  "description": "Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.",
+  "h1": "Fuzz testing TypeScript without writing harnesses",
+  "crumb": "Fuzz testing TypeScript",
+  "lead": "Your TypeScript types already describe every valid input. breakhound uses them to fuzz a library with edge cases, checks invariants on the results and gives you a Vitest test for each bug, with no fuzz targets or arbitraries to write.",
+  "readTime": "4 min read",
+  "related": [
+    "timezone-bugs-javascript",
+    "unicode-surrogate-pair-bugs",
+    "property-based-testing-without-writing-tests"
+  ],
+  "faq": [
+    {
+      "q": "Is this real fuzz testing for TypeScript?",
+      "a": "<p>It is type driven fuzzing: inputs are generated from your declared types plus a curated edge case catalog, and results are checked against invariants. It is not coverage guided, so it does not mutate bytes to reach new branches the way Jazzer.js does.</p>"
+    },
+    {
+      "q": "Do I need to write fuzz targets or arbitraries?",
+      "a": "<p>No. Run <code>npx breakhound ./my-lib</code> and it reads the <code>.d.ts</code> types, generates inputs for each parameter, including generated callbacks, and reports findings with a reproduction.</p>"
+    },
+    {
+      "q": "Can I restrict it to certain functions or rules?",
+      "a": "<p>Yes. Use <code>--only</code> and <code>--exclude</code> with wildcards for functions, and <code>--rules</code> to pick rule ids such as <code>nan-leak</code> or <code>roundtrip</code>.</p>"
+    },
+    {
+      "q": "What if a function hangs or runs forever?",
+      "a": "<p>Each call runs in a separate child process with a timeout, which you can change with <code>--timeout</code>. A hang is contained and does not stop the rest of the run.</p>"
+    },
+    {
+      "q": "Does it replace my unit tests?",
+      "a": "<p>No. It finds the inputs you did not think of, and every finding becomes a Vitest test you can keep next to your existing ones. Start with the <a href=\"find-bugs-automatically-javascript.html\">guide to finding bugs automatically</a> for the full workflow.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Fuzz testing TypeScript without writing harnesses",
+        "description": "Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.",
+        "url": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is this real fuzz testing for TypeScript?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It is type driven fuzzing: inputs are generated from your declared types plus a curated edge case catalog, and results are checked against invariants. It is not coverage guided, so it does not mutate bytes to reach new branches the way Jazzer.js does."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to write fuzz targets or arbitraries?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Run npx breakhound ./my-lib and it reads the .d.ts types, generates inputs for each parameter, including generated callbacks, and reports findings with a reproduction."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I restrict it to certain functions or rules?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Use --only and --exclude with wildcards for functions, and --rules to pick rule ids such as nan-leak or roundtrip."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What if a function hangs or runs forever?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Each call runs in a separate child process with a timeout, which you can change with --timeout. A hang is contained and does not stop the rest of the run."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does it replace my unit tests?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. It finds the inputs you did not think of, and every finding becomes a Vitest test you can keep next to your existing ones. Start with the guide to finding bugs automatically for the full workflow."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Fuzz testing TypeScript without writing harnesses",
+            "item": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="types-as-fuzz-input"><h2>Your types are already a fuzzing spec</h2>
+<p>Classic fuzzing feeds random bytes into a parser and waits for a crash. That works well for C code and binary formats, but most TypeScript libraries do not take bytes. They take a <code>string</code>, a <code>Date</code>, a <code>number[]</code> and a callback. The interesting question is rarely "does it crash" and more often "does it return something wrong".</p>
+<p>A type signature tells a fuzzer what shape to generate. Random strings of that shape are weak, though. A bug in a text function hides in an emoji or a lone surrogate, not in the 500th random ASCII word. Type driven fuzzing means generating values that are valid for the type and chosen to be nasty.</p>
+</section>
+<section id="a-typed-bug"><h2>A typed function that is quietly wrong</h2>
+<p>Consider a small formatter. Its types are correct, it compiles with <code>strict</code> on, and its unit tests with 1.5, 100 and 0 all pass.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="formatFixed.ts" data-bad="2">
+export function formatFixed(value: number): string {
+  const whole = Math.trunc(value);
+  const frac = Math.abs(value - whole).toFixed(2).slice(1);
+  return `${whole}${frac}`;
+}
+</pre>
+<p>For <code>-0.5</code>, <code>Math.trunc</code> returns <code>-0</code>, and a template literal prints <code>-0</code> as <code>"0"</code>. The result is <code>"0.50"</code>, the same as for <code>0.5</code>. The sign is gone, so a refund of 50 cents shows up as a charge. This is one of the <a href="negative-zero-javascript-bugs.html">negative zero bugs</a> that only appears for values between -1 and 0.</p>
+<p>The fix decides the sign from the original value and formats the absolute value:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="formatFixed.ts" data-ok="2">
+export function formatFixed(value: number): string {
+  const sign = value &lt; 0 ? "-" : "";
+  return sign + Math.abs(value).toFixed(2);
+}
+</pre>
+</section>
+<section id="how-types-drive-inputs"><h2>How breakhound turns types into inputs</h2>
+<p>breakhound reads the declaration file for each exported function. For the function above it sees this:</p>
+<pre data-kind="editor" data-lang="ts" data-title="formatFixed.d.ts">
+export declare function formatFixed(value: number): string;
+</pre>
+<p>A <code>number</code> parameter gets <code>0</code>, <code>-0</code>, <code>NaN</code>, <code>Infinity</code>, values between -1 and 0 and very large magnitudes, all from the edgegoat catalog. A <code>string</code> gets empty strings, emoji, combining marks and lone surrogates. A <code>Date</code> gets daylight saving boundaries and dates before 1970. If a parameter is a function, such as <code>(word: string) =&gt; string</code>, breakhound generates callbacks for it too, so higher order helpers like a <code>mapWords</code> are exercised.</p>
+<p>Then it checks oracles on the results. These are not crash only checks: a function that returns <code>NaN</code> for finite input, changes its answer with the <code>TZ</code> environment variable or loses a minus sign is flagged even though it never throws.</p>
+</section>
+<section id="run-it"><h2>Run it and read the output</h2>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --seed 42 --max-calls 20000
+</pre>
+<p>Both flags show their defaults here: seed 42 and a budget of 20000 calls. Every call runs in an isolated child process with a timeout (2000 ms by default), so a function that hangs or blows the stack does not take the run down. The output on the buggy-lib fixture includes this finding:</p>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+MEDIUM (5)
+  [negative-zero-sign] formatFixed drops the minus sign of numbers between -1 and 0 (confidence medium)
+    formatFixed(-0.5)  -&gt; '0.50'
+    formatFixed(0.5)  -&gt; '0.50'
+    formatFixed(-1.5)  -&gt; '-1.50'
+
+INFO (2)
+  [unexpected-crash] percent throws RangeError for some inputs that match its types (confidence high)
+
+Summary: 5 high, 5 medium, 0 low, 2 info
+</pre>
+<p>The generated test pins the behavior down so it keeps failing until you fix it:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="formatFixed.breakhound.test.ts" data-bad="5">
+import { expect, test } from 'vitest';
+import { formatFixed } from 'buggy-lib';
+
+test("formatFixed keeps the sign of -0.5", () =&gt; {
+  expect(formatFixed(-0.5)).not.toBe(formatFixed(0.5));
+});
+</pre>
+</section>
+<section id="compare-tools"><h2>breakhound, fast-check and Jazzer.js</h2>
+<p>These tools solve different problems, and many projects benefit from more than one.</p>
+<table>
+<tr><th>Tool</th><th>What you write</th><th>Best at</th></tr>
+<tr><td>fast-check</td><td>Properties and arbitraries</td><td>Domain specific invariants, with shrinking to a minimal counterexample</td></tr>
+<tr><td>Jazzer.js</td><td>Fuzz targets</td><td>Crashes and security bugs in parsers, guided by code coverage</td></tr>
+<tr><td>breakhound</td><td>Nothing</td><td>Generic invariant checks driven by types, across a whole package</td></tr>
+</table>
+<p>If your library has rules only you know (a sorted list stays sorted, a diff applied to the old text gives the new text), write those properties with fast-check. If it parses untrusted input, add a Jazzer.js target. Use breakhound first because it costs one command and covers the class of bugs shared by almost every library. The related guide on <a href="property-based-testing-without-writing-tests.html">property based testing without writing tests</a> goes further on that tradeoff.</p>
+</section>
+<section id="make-it-repeatable"><h2>Make the fuzz run repeatable</h2>
+<p>Fuzzing that cannot be reproduced is noise. breakhound is seeded, so a failure on a laptop is a failure in CI with the same <code>--seed</code>. It also keeps the evidence: a run is saved to <code>.breakhound/last-run.jsonl</code> and <code>.breakhound/report.json</code>, and <code>--log</code> writes a JSON Lines log you can attach to an issue.</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound . --fail-on high --zones UTC,America/Sao_Paulo --timeout 1000
+</pre>
+<p>In GitHub Actions it adds annotations and a job summary automatically, as shown in <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a>. Wiring a fuzz pass into pull requests is where it pays off most, since the cost of a regression is smallest on the commit that caused it.</p>
+<div class="callout"><p>breakhound runs the package code it analyzes. Use it on code you trust or in a container. The child process isolation protects the run from hangs and crashes, but it is not a security sandbox.</p></div>
+</section>

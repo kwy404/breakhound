@@ -1,0 +1,25 @@
+breakhound
+Point it at any JavaScript package. It sniffs out the bugs.
+
+Usage: breakhound <npm package | local path> [options]
+
+Options:
+  --only <names>        Only these functions (comma separated, * wildcards)
+  --exclude <names>     Skip these functions
+  --rules <ids>         Only these rules: lone-surrogate-output, timezone-dependent, unexpected-crash, nan-leak, nondeterministic, roundtrip, not-idempotent, negative-zero-sign
+  --seed <n>            Seed for random inputs (default 42)
+  --max-calls <n>       Call budget for the whole hunt (default 20000)
+  --timeout <ms>        Per call timeout (default 2000)
+  --zones <list>        Time zones, the first is the primary one
+  --fail-on <severity>  Exit with code 1 when a finding has this severity or higher (high, medium, low, info)
+  --json                Print the report as JSON
+  --output <file>       Write the report to a file instead of stdout
+  --plain               Plain text output: no colors, boxes or spinner
+  --no-color            Disable colors (also NO_COLOR=1)
+  --log <file>          Write a JSON Lines run log (also BREAKHOUND_LOG)
+  --no-save             Do not save .breakhound/last-run.jsonl and .breakhound/report.json
+  -v, --verbose         Debug lines on stderr, info findings and every skipped signature
+  -V, --version         Print the version
+  -h, --help            Print this help
+
+breakhound executes the package code. Run it only on code you trust, or inside a container.

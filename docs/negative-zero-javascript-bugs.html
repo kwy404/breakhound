@@ -1,30 +1,39 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Negative Zero in JavaScript: Bugs and Fixes | breakhound</title>
-  <meta name="description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
-  <link rel="canonical" href="https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html">
-  <meta name="theme-color" content="#fffbf4" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#11162a" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="light dark">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="breakhound">
-  <meta property="og:title" content="Negative Zero in JavaScript: Bugs and Fixes | breakhound">
-  <meta property="og:description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
-  <meta property="og:url" content="https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html">
-  <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
-  <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Negative Zero in JavaScript: Bugs and Fixes | breakhound">
-  <meta name="twitter:description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
-  <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
-  <link rel="stylesheet" href="style.css">
-  <script>try{var t=localStorage.getItem('voodoo:theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
-  <script src="https://cdn.jsdelivr.net/npm/voodoojs@1.0.0/dist/voodoo.full.min.js" defer></script>
-  <script type="application/ld+json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>
+<title>Negative Zero in JavaScript: Bugs and Fixes | breakhound</title>
+<meta name="description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
+<link rel="canonical" href="https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html">
+<meta name="author" content="Alexandre Kohler">
+<meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1220" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="breakhound">
+<meta property="og:title" content="Negative Zero in JavaScript: Bugs and Fixes | breakhound">
+<meta property="og:description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
+<meta property="og:url" content="https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html">
+<meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Negative Zero in JavaScript: Bugs and Fixes | breakhound">
+<meta name="twitter:description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
+<meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&amp;display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monsooncss@0.2.0/dist/monsoon.min.css">
+<link rel="stylesheet" href="site.css">
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@1.0.0/dist/voodoo.full.min.js" data-manual defer></script>
+<script type="module" src="site.js"></script>
+<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
@@ -36,13 +45,17 @@
       "mainEntityOfPage": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
       "image": "https://kwy404.github.io/breakhound/og.png",
       "datePublished": "2026-10-12",
-      "dateModified": "2026-10-12",
+      "dateModified": "2026-10-13",
       "inLanguage": "en",
       "proficiencyLevel": "Intermediate",
       "author": {
         "@type": "Person",
         "name": "Alexandre Kohler",
-        "url": "https://github.com/kwy404"
+        "url": "https://github.com/kwy404",
+        "sameAs": [
+          "https://github.com/kwy404",
+          "https://www.linkedin.com/in/alexandre-silva-173687256/"
+        ]
       },
       "publisher": {
         "@type": "Person",
@@ -113,7 +126,7 @@
           "@type": "ListItem",
           "position": 2,
           "name": "Guides",
-          "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          "item": "https://kwy404.github.io/breakhound/guides.html"
         },
         {
           "@type": "ListItem",
@@ -125,72 +138,54 @@
     }
   ]
 }
-  </script>
+</script>
 </head>
-<body>
-  <a class="skip" href="#main">Skip to content</a>
-  <header class="site" v-data="{ menu: false }" @keydown.esc="menu = false">
-    <div class="wrap">
-      <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="38" height="38">breakhound</a>
-      <nav class="site" id="site-nav" aria-label="Main" :class="{ open: menu }" @click="menu = false">
-        <a href="./#bugs">Bugs it finds</a>
-        <a href="./#how">How it works</a>
-        <a href="./#ci">CI</a>
-        <a href="./#compare">Compare</a>
-        <a href="find-bugs-automatically-javascript.html">Guides</a>
-        <a href="./#faq">FAQ</a>
-      </nav>
-      <a class="stars" href="https://github.com/kwy404/breakhound" aria-label="Star breakhound on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="stars-label">Star</span><img src="https://img.shields.io/github/stars/kwy404/breakhound?style=flat&amp;label=&amp;color=1fa692" alt="GitHub stars" width="34" height="20" loading="lazy"></a>
-      <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" :aria-expanded="menu ? 'true' : 'false'" @click="menu = !menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-        <span class="visually-hidden">Menu</span>
-      </button>
-      <button class="icon-btn theme-toggle" type="button" v-theme-toggle>
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        <span class="visually-hidden">Toggle dark theme</span>
-      </button>
+<body class="antialiased bg-background text-foreground page-guide">
+<svg class="sprite" aria-hidden="true" focusable="false"><symbol id="i-magnifier" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.25"/><path d="M14.6 14.6 20.5 20.5"/><path d="M7.2 8.4a3.2 3.2 0 0 1 2.6-2.3" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-paw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g fill="currentColor" stroke="none"><path d="M8.4 16c0-2.3 1.7-4 3.6-4s3.6 1.7 3.6 4c0 1.7-1.2 2.6-2.4 2.6-.6 0-.9-.4-1.2-.4s-.6.4-1.2.4c-1.2 0-2.4-.9-2.4-2.6Z"/><ellipse cx="6.6" cy="11" rx="1.3" ry="1.8" transform="rotate(-20 6.6 11)"/><ellipse cx="9.8" cy="7.6" rx="1.3" ry="1.9"/><ellipse cx="14.2" cy="7.6" rx="1.3" ry="1.9"/><ellipse cx="17.4" cy="11" rx="1.3" ry="1.8" transform="rotate(20 17.4 11)"/></g></symbol><symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9.5A1.5 1.5 0 0 0 19.5 8H11.2L9.4 5.5H4.5A1.5 1.5 0 0 0 3 7Z"/><path d="M7 12.5h6M7 15.5h3.5" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 5H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8.5L4 15V9Z"/><circle cx="8" cy="12" r="1.3"/><path d="M6.8 12.4C4.2 13 2.4 10.8 3 7.5" style="stroke:var(--ev,#e8a33d)"/><path d="M12 10h5.5M12 14h3.5"/></symbol><symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 4.5 3 3H7l3-3Z" style="stroke:var(--ev,#e8a33d)"/><path d="M12 11v9.5"/></symbol><symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="m7 10 3 2.5L7 15"/><path d="M12.5 15.5H17" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l10.5-6.5Z"/></symbol><symbol id="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4.2h4.2"/></symbol><symbol id="i-skip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6v12l8.5-6Z"/><path d="M18 6v12"/></symbol><symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11.5" height="11.5" rx="2"/><path d="M5.5 15H5a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 5 3.5h8.5A1.5 1.5 0 0 1 15 5v.5"/></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol><symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/></symbol><symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol><symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7Z"/></symbol><symbol id="i-system" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16.5V20"/></symbol><symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></symbol><symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18.5V5.5A2 2 0 0 1 6 3.5h13.5v14H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13.5"/><path d="M8 8h7.5" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.2 7.4V18l-3.6 2v-7.6Z"/></symbol><symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol><symbol id="i-lone-surrogate-output" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 4.1A8 8 0 0 0 10.6 19.9L12 17l-1.4-2.6 1.4-2.4-1.4-2.6L12 7Z"/><path d="M13.6 4.6a8 8 0 0 1 0 15.3" /><path d="M13.6 4.6 15 7.4l-1.4 2.4 1.4 2.6-1.4 2.4 1.4 2.6-1.4 2.5" style="stroke:var(--ev,#e8a33d)"/><path d="M7.4 10v.01M17 10v.01M6.8 14.5c.8 1 1.9 1.6 3 1.7M14.4 16.3c1.2-.2 2.2-.8 2.9-1.8"/></symbol><symbol id="i-timezone-dependent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="11" r="7.5"/><path d="M3 11h15M10.5 3.5c2.2 2.1 3.2 4.7 3.2 7.5M10.5 3.5C8.3 5.6 7.3 8.2 7.3 11s1 5.4 3.2 7.5"/><circle cx="17.5" cy="17.5" r="4" style="fill:var(--paper,#f6ecd2)"/><path d="M17.5 15.6v2l1.3 1" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-unexpected-crash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M12.8 4.5 10.6 9.8l3 2-2.4 7.7" style="stroke:var(--ev,#e8a33d)"/><path d="M6.5 8.5h1.5M6.5 11.5h1M16.5 14.5h1.5"/></symbol><symbol id="i-nan-leak" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5h5M10.5 3.5V9L5.6 17.6A1.6 1.6 0 0 0 7 20h10a1.6 1.6 0 0 0 1.4-2.4L13.5 9V3.5"/><path d="M7.8 14h8.4"/><path d="M19.5 3.8c1 1.4 1.7 2.4 1.7 3.3a1.7 1.7 0 0 1-3.4 0c0-.9.7-1.9 1.7-3.3Z" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-roundtrip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.6 10A7.8 7.8 0 0 0 6 6.3"/><path d="M5.5 3v3.8h3.8"/><path d="M4.4 14A7.8 7.8 0 0 0 18 17.7"/><path d="M18.5 21v-3.8h-3.8"/><path d="M20.4 12.6 21.6 14M2.4 9.8 3.6 11.2" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-not-idempotent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5h4v4.5h-4Z"/><path d="M8 8h8l1 3H7Z"/><path d="M5.5 11h13v2.5h-13Z"/><path d="M5.5 17h13"/><path d="M7.5 20.5h13" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-negative-zero-sign" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="15.5" cy="12" rx="4.5" ry="7"/><path d="M12.4 17.2 18.6 6.8"/><path d="M2.8 12h6" stroke-dasharray="2 2.2" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-nondeterministic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="8.2" width="11" height="11" rx="2"/><path d="M14.3 5.5 19.6 4a1.6 1.6 0 0 1 2 1.1l1.2 4.6a1.6 1.6 0 0 1-1.1 2l-4.2 1.1" style="stroke:var(--ev,#e8a33d)"/><path d="M6 11.4h.01M10.6 16h.01M8.3 13.7h.01M18.6 7.4h.01"/></symbol><symbol id="i-types" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8.5L19 8v12.5H6Z"/><path d="M14.5 3.5V8H19"/><path d="M10.5 11.5c-1 0-1.2.6-1.2 1.3s-.6 1.2-1.1 1.2c.5 0 1.1.4 1.1 1.2s.2 1.3 1.2 1.3M14.5 11.5c1 0 1.2.6 1.2 1.3s.6 1.2 1.1 1.2c-.5 0-1.1.4-1.1 1.2s-.2 1.3-1.2 1.3" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-inputs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14l-1.2 13.5H6.2Z"/><path d="M4 7h16M6.5 4.5h11L19 7H5Z"/><rect x="8.5" y="11" width="7" height="5" rx="1" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-isolation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v4"/><path d="M7 13.5 9 6.5h6l2 7Z"/><path d="M5 17.5l-1.5 1.5M12 17v3M19 17.5l1.5 1.5M8.4 16.2l-.8 1.2M15.6 16.2l.8 1.2" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-report" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12v17H6Z"/><path d="M9 7.5h6M9 10.5h6M9 13.5h2.5"/><circle cx="15" cy="16.5" r="2.5" style="stroke:var(--ev,#e8a33d)"/></symbol><symbol id="i-ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="6" r="2.5"/><circle cx="5.5" cy="18" r="2.5"/><circle cx="18.5" cy="12" r="2.5" style="stroke:var(--ev,#e8a33d)"/><path d="M5.5 8.5v7M8 6c4 0 4.5 6 8 6M8 18c4 0 4.5-6 8-6"/></symbol><symbol id="i-github" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol><symbol id="i-linkedin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M7.5 10.5v6M7.5 7.5v.01M11.5 16.5v-6M11.5 13c0-1.6 1-2.6 2.5-2.6s2.5 1 2.5 2.6v3.5"/></symbol><symbol id="i-npm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M6.5 14.5v-5h3v5M9.5 11v3.5M12 14.5v-5h3v3.5h-3M16.5 14.5v-5h2.5"/></symbol></svg>
+<a href="#main" class="skip-link">Skip to content</a>
+<header class="topbar" v-data="{ open: false }" @keydown.escape="open = false">
+  <div class="wrap topbar-in">
+    <a href="./" class="brand" aria-label="breakhound home"><img src="assets/mascot.svg" width="34" height="34" alt=""><span class="brand-name">breakhound</span><span class="brand-file">case files</span></a>
+    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#board" class="top-link">Evidence board</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Case index</a></nav>
+    <div class="top-right">
+      <button type="button" class="search-btn" data-search-open v-hotkey="mod+k" aria-haspopup="dialog" aria-label="Search the site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="search-label">Search</span><kbd class="kbd kbd-sm">Ctrl K</kbd></button>
+      <a href="https://github.com/kwy404/breakhound" class="icon-btn" aria-label="breakhound on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a>
+      <button type="button" class="icon-btn theme-btn" v-theme-toggle.cycle aria-label="Switch theme" title="Theme: system, light or dark"><svg class="ic ti-system" aria-hidden="true" focusable="false"><use href="#i-system"/></svg><svg class="ic ti-light" aria-hidden="true" focusable="false"><use href="#i-sun"/></svg><svg class="ic ti-dark" aria-hidden="true" focusable="false"><use href="#i-moon"/></svg></button>
+      <button type="button" class="icon-btn nav-btn" aria-controls="topnav" :aria-expanded="open ? 'true' : 'false'" aria-expanded="false" @click="open = !open" aria-label="Menu"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-menu"/></svg></button>
     </div>
+  </div>
+</header>
+<main id="main">
+<div class="read-progress" aria-hidden="true"></div>
+<div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="./">breakhound</a></li><li><a href="guides.html">Guides</a></li><li><span aria-current="page">Negative zero bugs</span></li></ol></nav>
+  <header class="cover">
+    <div class="cover-text">
+      <p class="cover-file"><span class="file-no">Case file G-07</span><span class="file-topic">Numbers</span></p>
+      <h1>Negative zero in JavaScript: the bugs it causes and how to catch them</h1>
+      <p class="lead">JavaScript has two zeros, and the difference between them is invisible to ===, String() and JSON. Here is how -0 breaks number formatting, how the pdf.js bug happened, and how to find it without writing a single test.</p>
+      <p class="cover-meta"><span>By <a href="https://github.com/kwy404" rel="author">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-13">October 13, 2026</time></span><span>3 min read</span></p>
+    </div>
+    <div class="cover-art" aria-hidden="true"><svg class="ill cover-folders" viewBox="0 0 240 170" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="2.2">
+<path d="M46 40h52l10 12h86a8 8 0 0 1 8 8v82a8 8 0 0 1-8 8H46a8 8 0 0 1-8-8V48a8 8 0 0 1 8-8Z" style="fill:var(--paper,#f6ecd2)" transform="rotate(-6 120 95)"/>
+<path d="M40 52h52l10 12h92a8 8 0 0 1 8 8v78a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V60a8 8 0 0 1 8-8Z" style="fill:var(--paper,#f6ecd2)" transform="rotate(3 120 105)"/>
+<path d="M30 64h56l10 12h104a8 8 0 0 1 8 8v70a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8V72a8 8 0 0 1 8-8Z" style="fill:var(--paper,#f6ecd2)"/>
+<path d="M22 84h186"/>
+<rect x="44" y="96" width="78" height="22" rx="2"/>
+<path d="M52 107h44" style="stroke:var(--ev,#e8a33d)"/>
+<circle cx="168" cy="122" r="9"/><circle cx="168" cy="122" r="3" style="fill:var(--ev,#e8a33d);stroke:none"/>
+<path d="M168 131c-6 10-20 14-34 10M177 122c14 4 22 14 18 26" style="stroke:var(--ev,#e8a33d)"/>
+<path d="M150 98l16 4-3 6-16-4Z" style="stroke:var(--ev,#e8a33d)" transform="rotate(-8 158 103)"/>
+</g></svg><span class="cover-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-negative-zero-sign"/></svg></span></div>
   </header>
-  <main id="main">
-    <div class="wrap">
-      <nav class="crumbs" aria-label="Breadcrumb">
-        <ol>
-          <li><a href="./">breakhound</a></li>
-          <li><a href="find-bugs-automatically-javascript.html">Guides</a></li>
-          <li aria-current="page">Negative zero bugs</li>
-        </ol>
-      </nav>
-      <header class="article-head">
-        <p class="eyebrow">Guide</p>
-        <h1>Negative zero in JavaScript: the bugs it causes and how to catch them</h1>
-        <p class="lead">JavaScript has two zeros, and the difference between them is invisible to ===, String() and JSON. Here is how -0 breaks number formatting, how the pdf.js bug happened, and how to find it without writing a single test.</p>
-        <p class="meta"><span>By <a href="https://github.com/kwy404">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-12">October 12, 2026</time></span><span>3 min read</span></p>
-      </header>
-      <div class="article-grid">
-        <aside class="toc" aria-labelledby="toc-title">
-          <h2 id="toc-title">On this page</h2>
-          <ol>
-            <li><a href="#two-zeros">JavaScript has two zeros</a></li>
-            <li><a href="#where-it-bites">Where -0 actually bites</a></li>
-            <li><a href="#naive-code">The naive code that loses the sign</a></li>
-            <li><a href="#pdfjs">A real case: pdf.js pull request 22017</a></li>
-            <li><a href="#fix">The fix</a></li>
-            <li><a href="#breakhound">Catching it automatically with breakhound</a></li>
-            <li><a href="#faq">FAQ</a></li>
-            <li><a href="#related">Related guides</a></li>
-          </ol>
-          <div class="toc-cta">
-            <p>Try it on your library</p>
-            <code>npx breakhound ./my-lib</code>
-          </div>
-        </aside>
-        <article class="prose">
-<section id="two-zeros"><h2>JavaScript has two zeros</h2>
+  <div class="read">
+    <article class="read-main">
+      <aside class="mnote mnote-toc" aria-labelledby="toc-title"><p class="mnote-label" id="toc-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>In this file</p><ol><li><a href="#two-zeros">JavaScript has two zeros</a></li><li><a href="#where-it-bites">Where -0 actually bites</a></li><li><a href="#naive-code">The naive code that loses the sign</a></li><li><a href="#pdfjs">A real case: pdf.js pull request 22017</a></li><li><a href="#fix">The fix</a></li><li><a href="#breakhound">Catching it automatically with breakhound</a></li><li><a href="#faq">Questions on the record</a></li><li><a href="#related">Related case files</a></li></ol></aside>
+<section id="two-zeros" class="chapter"><h2><a href="#two-zeros" class="anchor" aria-hidden="true" tabindex="-1">#</a>JavaScript has two zeros</h2><aside class="mnote mnote-def"><p class="mnote-label"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Signed zero</p><p><code>Object.is(-0, 0)</code> is false, but <code>-0 === 0</code> is true and <code>String(-0)</code> is "0".</p></aside>
 <p>IEEE 754 floating point numbers carry a sign bit, so <code>0</code> and <code>-0</code> are different values that compare as equal. <code>-0 === 0</code> is <code>true</code>, and <code>String(-0)</code>, template literals and <code>JSON.stringify(-0)</code> all produce <code>"0"</code>. The sign is only observable through a few doors: <code>Object.is(-0, 0)</code> is <code>false</code>, <code>1 / -0</code> is <code>-Infinity</code>, and <code>Math.sign(-0)</code> returns <code>-0</code>.</p>
 <p>Negative zero is not exotic. It appears whenever a negative number is rounded or truncated toward zero: <code>Math.trunc(-0.5)</code>, <code>Math.round(-0.4)</code>, <code>Math.ceil(-0.2)</code> and <code>-1 * 0</code> all return <code>-0</code>. Any library that does arithmetic on user supplied numbers will meet it eventually.</p>
 </section>
-<section id="where-it-bites"><h2>Where -0 actually bites</h2>
+<section id="where-it-bites" class="chapter"><h2><a href="#where-it-bites" class="anchor" aria-hidden="true" tabindex="-1">#</a>Where -0 actually bites</h2>
 <p>Because <code>-0</code> prints as <code>"0"</code>, the bug is rarely the zero itself. It is the sign information that disappears <em>before</em> the zero is created. Three places cause most real reports:</p>
 <ul>
 <li><strong>Math.trunc and friends.</strong> Splitting a number into whole and fractional parts with <code>Math.trunc</code> turns every value in the open interval (-1, 0) into <code>-0</code> for the whole part. Once you stringify that part, the minus sign is gone.</li>
@@ -198,135 +193,93 @@
 <li><strong>Equality checks.</strong> <code>Object.is</code> treats the two zeros as different, while <code>===</code> does not. Test assertions such as <code>expect(x).toBe(0)</code> fail on <code>-0</code> because <code>toBe</code> uses <code>Object.is</code>.</li>
 </ul>
 </section>
-<section id="naive-code"><h2>The naive code that loses the sign</h2>
+<section id="naive-code" class="chapter"><h2><a href="#naive-code" class="anchor" aria-hidden="true" tabindex="-1">#</a>The naive code that loses the sign</h2>
 <p>A fixed point formatter is a classic example. It splits the number, formats the fraction, and glues the parts back together. Every positive input and every number at or below -1 works, which is why this passes code review and hand written tests.</p>
-<figure class="code editor numbered" data-lang="ts" data-title="format.ts" data-bad="2">
-<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>format.ts</span><button type="button" class="code-copy" v-copy-from="#code-1" aria-label="Copy format.ts">Copy</button></div>
-<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-1"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
-<span class="line mark-bad"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">trunc</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<figure class="frame frame-editor" data-lang="ts"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#3178c6"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">TS</text></svg><span>format.ts</span></span><button type="button" class="frame-copy" v-copy-from="#code-1" aria-label="Copy format.ts"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki numbered" tabindex="0"><code id="code-1"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line bad"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">trunc</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> frac</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">round</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> - </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">) * </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">100</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> `</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">${</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">whole</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">.</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">${</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">String</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">frac</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">padStart</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">2</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'0'</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">)</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">`</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(-</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">1.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">); </span><span style="--shiki-light:#008000;--shiki-dark:#6A9955">// '-1.50'</span></span>
-<span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(-</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">); </span><span style="--shiki-light:#008000;--shiki-dark:#6A9955">// '0.50'  (the minus sign is gone)</span></span></code></pre>
-</figure>
+<span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(-</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">); </span><span style="--shiki-light:#008000;--shiki-dark:#6A9955">// '0.50'  (the minus sign is gone)</span></span></code></pre></figure>
 <p>For <code>-0.5</code>, <code>Math.trunc</code> returns <code>-0</code>, the template literal prints it as <code>0</code>, and a negative balance, temperature or delta is displayed as a positive one. The output is well formed and no exception is thrown, so nothing in your logs will point at it.</p>
 </section>
-<section id="pdfjs"><h2>A real case: pdf.js pull request 22017</h2>
+<section id="pdfjs" class="chapter"><h2><a href="#pdfjs" class="anchor" aria-hidden="true" tabindex="-1">#</a>A real case: pdf.js pull request 22017</h2><aside class="mnote mnote-ev"><p class="mnote-label"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg>Evidence</p><p>Fixed in <a href="https://github.com/mozilla/pdf.js/pull/22017">mozilla/pdf.js#22017</a>: negative numbers above -1 lost their minus sign.</p></aside>
 <p>This is not hypothetical. Fix <a href="https://github.com/mozilla/pdf.js/pull/22017">mozilla/pdf.js#22017</a> corrected a code path where negative values above -1 lost their sign, the same shape of bug as the formatter above. Bugs like this survive for years because the failing inputs sit in a narrow band of the number line that people rarely type into a test. A generator that deliberately tries values between -1 and 0 finds them in seconds.</p>
 </section>
-<section id="fix"><h2>The fix</h2>
+<section id="fix" class="chapter"><h2><a href="#fix" class="anchor" aria-hidden="true" tabindex="-1">#</a>The fix</h2>
 <p>Decide the sign explicitly, from the original input, before you do anything that can round it away. Work with the absolute value and put the sign back at the end:</p>
-<figure class="code editor numbered" data-lang="ts" data-title="format.ts" data-ok="2">
-<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>format.ts</span><button type="button" class="code-copy" v-copy-from="#code-2" aria-label="Copy format.ts">Copy</button></div>
-<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-2"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
-<span class="line mark-ok"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> sign</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> &#x3C; </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> ? </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'-'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> : </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<figure class="frame frame-editor" data-lang="ts"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#3178c6"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">TS</text></svg><span>format.ts</span></span><button type="button" class="frame-copy" v-copy-from="#code-2" aria-label="Copy format.ts"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki numbered" tabindex="0"><code id="code-2"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line ok"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> sign</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> &#x3C; </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> ? </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'-'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> : </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
 <span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">n</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">trunc</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> frac</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">round</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">((</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> - </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">) * </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">100</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> `</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">${</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">sign</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}${</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">whole</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">.</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">${</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">String</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">frac</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">padStart</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">2</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'0'</span><span style="--shiki-light:#000000FF;--shiki-dark:#D4D4D4">)</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">`</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
-<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre>
-</figure>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre></figure>
 <p>When you really need to distinguish the zeros, use <code>Object.is(x, -0)</code>, not <code>x === -0</code>. When you want to normalize them away, <code>x + 0</code> turns <code>-0</code> into <code>0</code>. Decide which behavior your API promises and write it down.</p>
-<div class="callout"><p>Rule of thumb: never derive the sign of a result from a value that has already been truncated or rounded. Read it from the input.</p></div>
+<div class="callout callout-warning"><p class="callout-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-isolation"/></svg>Handle with care</p><p>Rule of thumb: never derive the sign of a result from a value that has already been truncated or rounded. Read it from the input.</p></div>
 </section>
-<section id="breakhound"><h2>Catching it automatically with breakhound</h2>
+<section id="breakhound" class="chapter"><h2><a href="#breakhound" class="anchor" aria-hidden="true" tabindex="-1">#</a>Catching it automatically with breakhound</h2><aside class="mnote mnote-case"><p class="mnote-label"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Case 07</p><p>Lost minus sign. The <a href="./#case-negative-zero-sign">recorded case</a> and its generated test.</p></aside>
 <p>The <code>negative-zero-sign</code> oracle looks for functions where a value between -1 and 0 loses its minus sign in the output. The input generator already includes <code>-0</code> and other edge cases from the edgegoat package, so you do not write anything. See <a href="find-bugs-automatically-javascript.html">how breakhound finds bugs automatically</a> for the overall approach.</p>
-<figure class="code terminal" data-lang="bash">
-<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-bash" aria-hidden="true"></span>Terminal</span><button type="button" class="code-copy" v-copy-from="#code-3" aria-label="Copy command">Copy</button></div>
-<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-3"><span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">npx</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> breakhound</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> ./my-lib</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --rules</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> negative-zero-sign</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --plain</span></span></code></pre>
-</figure>
-<figure class="code output" data-lang="text" data-title="Terminal output">
-<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-text" aria-hidden="true"></span>Terminal output</span><button type="button" class="code-copy" v-copy-from="#code-4" aria-label="Copy Terminal output">Copy</button></div>
-<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-4"><span class="line"><span>MEDIUM (1)</span></span>
+<figure class="frame frame-terminal" data-lang="bash"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#3f8f4f"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">$_</text></svg><span>Terminal</span></span><button type="button" class="frame-copy" v-copy-from="#code-3" aria-label="Copy Terminal"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki" tabindex="0"><code id="code-3"><span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">npx</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> breakhound</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> ./my-lib</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --rules</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> negative-zero-sign</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --plain</span></span></code></pre></figure>
+<figure class="frame frame-output" data-lang="text"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#6b7280"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">&gt;_</text></svg><span>Terminal output</span></span><button type="button" class="frame-copy" v-copy-from="#code-4" aria-label="Copy Terminal output"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki" tabindex="0"><code id="code-4"><span class="line"><span>MEDIUM (1)</span></span>
 <span class="line"><span>  [negative-zero-sign] formatFixed drops the minus sign of numbers between -1 and 0 (confidence medium)</span></span>
 <span class="line"><span>    formatFixed(-0.5)  -> '0.50'</span></span>
 <span class="line"><span>    formatFixed(0.5)  -> '0.50'</span></span>
-<span class="line"><span>    formatFixed(-1.5)  -> '-1.50'</span></span></code></pre>
-</figure>
+<span class="line"><span>    formatFixed(-1.5)  -> '-1.50'</span></span></code></pre></figure>
 <p>Every finding comes with a minimal reproduction script and a ready to paste Vitest test, so the regression test for the fix already exists:</p>
-<figure class="code editor numbered" data-lang="ts" data-title="format.test.ts">
-<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>format.test.ts</span><button type="button" class="code-copy" v-copy-from="#code-5" aria-label="Copy format.test.ts">Copy</button></div>
-<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-5"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'vitest'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<figure class="frame frame-editor" data-lang="ts"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#3178c6"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">TS</text></svg><span>format.test.ts</span></span><button type="button" class="frame-copy" v-copy-from="#code-5" aria-label="Copy format.test.ts"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki numbered" tabindex="0"><code id="code-5"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'vitest'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
 <span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'buggy-lib'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">"formatFixed keeps the sign of -0.5"</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, () </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">=></span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(-</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">)).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toBe</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">));</span></span>
-<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre>
-</figure>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
 <p>To keep it from coming back, run the same command on every pull request. The <a href="automated-testing-in-github-actions.html">GitHub Actions guide</a> shows the workflow, and <a href="roundtrip-testing-encode-decode.html">roundtrip testing</a> covers a related class of silent data loss. Go back to the <a href="./">home page</a> for the full list of oracles.</p>
 </section>
-          <section id="faq" class="faq-list">
-            <h2>FAQ</h2>
-<div class="q"><h3>Is -0 === 0 true in JavaScript?</h3><p>Yes. Strict and loose equality both treat the two zeros as equal. Use <code>Object.is(x, -0)</code> when you must tell them apart.</p></div>
-<div class="q"><h3>Why does Math.trunc(-0.5) return -0?</h3><p>Truncation keeps the sign of the input, and the result has magnitude zero, so it is negative zero. Printing it gives <code>"0"</code>, which is how the minus sign gets lost.</p></div>
-<div class="q"><h3>Does toFixed keep the sign of small negative numbers?</h3><p>It depends on the value. <code>(-0.4).toFixed(0)</code> returns <code>"-0"</code>, while <code>(-0).toFixed(0)</code> returns <code>"0"</code>. Do not assume the two behave the same.</p></div>
-<div class="q"><h3>How do I convert -0 to 0?</h3><p>Add zero: <code>-0 + 0</code> is <code>0</code>. Adding opposite signed zeros gives positive zero under round to nearest.</p></div>
-<div class="q"><h3>Can breakhound find negative zero bugs in code without tests?</h3><p>Yes. It reads TypeScript types (<code>.d.ts</code>) to decide what to generate for each parameter, then runs the <code>negative-zero-sign</code> oracle. Point it at a package or a local path with <code>npx breakhound ./my-lib</code>.</p></div>
-          </section>
-          <aside class="guide-cta" aria-label="Get started">
-            <img src="assets/mascot.svg" alt="" width="88" height="88" loading="lazy">
-            <div>
-              <h2>Let Sniff hunt your library</h2>
-              <p>No install, no config, no tests to write. Run <code>npx breakhound ./my-lib</code> and get a reproduction plus a Vitest test for every bug.</p>
-              <a class="btn btn-primary" href="./#install">Get started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-            </div>
-          </aside>
-          <section id="related">
-            <h2>Related guides</h2>
-            <div class="related">
-              <a href="automated-testing-in-github-actions.html">Testing in GitHub Actions<span>Annotations, job summary and --fail-on.</span></a>
-              <a href="find-bugs-automatically-javascript.html">Find bugs automatically<span>The zero config workflow, start to finish.</span></a>
-              <a href="fuzz-testing-typescript.html">Fuzz testing TypeScript<span>Use your .d.ts types as the fuzzing spec.</span></a>
-            </div>
-          </section>
-        </article>
+
+      <section id="faq" class="chapter"><h2><a href="#faq" class="anchor" aria-hidden="true" tabindex="-1">#</a>Questions on the record</h2><div class="accordion collapse-plus"><details class="collapse q" open><summary class="collapse-title"><span class="q-no">Q1</span>Is -0 === 0 true in JavaScript?</summary><div class="collapse-content"><p>Yes. Strict and loose equality both treat the two zeros as equal. Use <code>Object.is(x, -0)</code> when you must tell them apart.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q2</span>Why does Math.trunc(-0.5) return -0?</summary><div class="collapse-content"><p>Truncation keeps the sign of the input, and the result has magnitude zero, so it is negative zero. Printing it gives <code>"0"</code>, which is how the minus sign gets lost.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q3</span>Does toFixed keep the sign of small negative numbers?</summary><div class="collapse-content"><p>It depends on the value. <code>(-0.4).toFixed(0)</code> returns <code>"-0"</code>, while <code>(-0).toFixed(0)</code> returns <code>"0"</code>. Do not assume the two behave the same.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q4</span>How do I convert -0 to 0?</summary><div class="collapse-content"><p>Add zero: <code>-0 + 0</code> is <code>0</code>. Adding opposite signed zeros gives positive zero under round to nearest.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q5</span>Can breakhound find negative zero bugs in code without tests?</summary><div class="collapse-content"><p>Yes. It reads TypeScript types (<code>.d.ts</code>) to decide what to generate for each parameter, then runs the <code>negative-zero-sign</code> oracle. Point it at a package or a local path with <code>npx breakhound ./my-lib</code>.</p></div></details></div></section>
+      <aside class="guide-cta" aria-label="Get started">
+        <img src="assets/mascot.svg" width="96" height="96" alt="" loading="lazy">
+        <div><h2>Let Sniff work your library</h2><p>No install, no config, no tests to write. You get a reproduction and a Vitest test for every bug.</p>
+        <div class="close-cmd"><code id="cta-cmd">npx breakhound ./my-lib</code><button type="button" class="copy-btn" v-copy-from="#cta-cmd" aria-label="Copy the command"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div></div>
+      </aside>
+      <section id="related" class="chapter"><h2><a href="#related" class="anchor" aria-hidden="true" tabindex="-1">#</a>Related case files</h2><div class="related"><a href="automated-testing-in-github-actions.html" class="rel"><span class="rel-no">Case file G-08</span><strong>Automated testing in GitHub Actions without writing tests</strong><span>Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.</span></a><a href="find-bugs-automatically-javascript.html" class="rel"><span class="rel-no">Case file G-01</span><strong>How to find bugs automatically in a JavaScript library</strong><span>Find bugs automatically in a JavaScript library without writing tests. breakhound reads your types, tries edge cases and writes Vitest tests.</span></a><a href="fuzz-testing-typescript.html" class="rel"><span class="rel-no">Case file G-02</span><strong>Fuzz testing TypeScript without writing harnesses</strong><span>Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.</span></a></div></section>
+    </article>
+  </div>
+</div>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a href="./" class="brand"><img src="assets/mascot.svg" width="40" height="40" alt="" loading="lazy"><span class="brand-name">breakhound</span></a>
+        <p>Point it at any JavaScript package. Sniff reads the types, attacks every function with edge cases and files a report with a reproduction and a Vitest test for each bug.</p>
+        <p class="foot-links"><a href="https://github.com/kwy404/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>GitHub</a><a href="https://www.npmjs.com/package/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-npm"/></svg>npm</a><a href="https://github.com/kwy404/breakhound/blob/main/CHANGELOG.md"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Changelog</a></p>
       </div>
+      <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
+        <li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
+      </ul></nav>
+      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li><li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li><li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li><li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li><li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li><li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li></ul></nav>
+      <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more"><li><a href="https://kwy404.github.io/monsoon/">Monsoon</a><small>Utility-first CSS with no build step</small></li><li><a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li><li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li><li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li><li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li><li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li></ul></nav>
     </div>
-  </main>
-  <footer class="site">
-    <div class="wrap">
-      <div class="foot-grid">
-        <div class="foot-about">
-          <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="38" height="38" loading="lazy">breakhound</a>
-          <p>Point it at any JavaScript package. It sniffs out the bugs, then hands you a reproduction and a Vitest test for each one.</p>
-          <p><a href="https://github.com/kwy404/breakhound">GitHub</a> &middot; <a href="https://www.npmjs.com/package/breakhound">npm</a> &middot; <a href="https://github.com/kwy404/breakhound/blob/main/LICENSE">MIT license</a></p>
-        </div>
-        <div>
-          <h2>Guides</h2>
-          <ul>
-            <li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li>
-            <li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li>
-            <li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li>
-            <li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li>
-          </ul>
-        </div>
-        <div>
-          <h2>More guides</h2>
-          <ul>
-            <li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li>
-            <li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li>
-            <li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li>
-            <li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li>
-          </ul>
-        </div>
-        <div>
-          <h2>More from kwy404</h2>
-          <ul>
-            <li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li>
-            <li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li>
-            <li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li>
-            <li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li>
-            <li><a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li>
-          </ul>
-        </div>
-      </div>
-      <div class="foot-bottom">
-        <span>Made by <a href="https://github.com/kwy404">Alexandre Kohler</a>. MIT licensed.</span>
-        <span>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a>.</span>
-      </div>
+    <div class="foot-bottom">
+      <p>Made by <a href="https://github.com/kwy404" rel="me noopener">Alexandre Kohler</a><a href="https://github.com/kwy404" class="foot-ic" rel="me noopener" aria-label="Alexandre Kohler on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a><a href="https://www.linkedin.com/in/alexandre-silva-173687256/" class="foot-ic" rel="me noopener" aria-label="Alexandre Kohler on LinkedIn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-linkedin"/></svg></a></p>
+      <p>Built with <a href="https://kwy404.github.io/monsoon/">Monsoon</a>. Interactive parts built with <a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a>. MIT licensed.</p>
     </div>
-  </footer>
+  </div>
+</footer>
+<dialog id="search" class="modal modal-top search-dlg" aria-label="Search the site">
+  <div class="command-palette" v-data="{ q: '', sel: 0 }" @keydown.down.prevent="sel = Math.min(sel + 1, hits(q, S.ready).length - 1)" @keydown.up.prevent="sel = Math.max(sel - 1, 0)" @keydown.enter.prevent="go(q, sel)">
+    <label class="command-palette-search"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><input id="search-input" class="command-palette-input" v-model="q" @input="sel = 0" placeholder="Search cases, guides and oracles" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="search-results"></label>
+    <div id="search-results" class="command-palette-list" role="listbox" aria-label="Results">
+      <p class="command-palette-heading" v-if="!q">Suggestions</p>
+      <a v-for="(r, i) in hits(q, S.ready)" :key="r.url" :href="r.url" class="command-palette-item" role="option" :aria-selected="i === sel ? 'true' : 'false'" @mouseenter="sel = i"><span class="hit-kind" v-text="r.kind"></span><span class="hit-text"><span class="hit-title" v-text="r.title"></span><span class="hit-sub" v-text="r.sub"></span></span></a>
+      <p class="command-palette-empty" v-if="q && !hits(q, S.ready).length">No case matches. Sniff is still searching.</p>
+    </div>
+    <div class="command-palette-footer"><span><kbd class="kbd kbd-xs">Enter</kbd> open</span><span><kbd class="kbd kbd-xs">Esc</kbd> close</span></div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button aria-label="Close search">Close</button></form>
+</dialog>
 </body>
 </html>

@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
-  <title>Feature: reads TypeScript types</title>
-  <rect width="48" height="48" rx="12" fill="#1B2440"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3.5"><path d="M15 15L7 24L15 33M33 15L41 24L33 33"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#1FA393" stroke-width="3.5"><path d="M18 16H30M24 16V33"/></g>
-</svg>

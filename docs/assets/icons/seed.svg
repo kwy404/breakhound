@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
-  <title>Feature: reproducible seeds</title>
-  <rect width="48" height="48" rx="12" fill="#1B2440"/>
-  <rect x="8" y="8" width="23" height="23" rx="5" fill="#FFFFFF"/><g fill="#1B2440"><circle cx="14" cy="14" r="2.5"/><circle cx="19.5" cy="19.5" r="2.5"/><circle cx="25" cy="25" r="2.5"/></g><path d="M28 27V23A4.5 4.5 0 0 1 37 23V27" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#E9B97A" stroke-width="3"/><rect x="24" y="26" width="17" height="13" rx="3" fill="#E9B97A" stroke="#1B2440" stroke-width="2.5"/><circle cx="32.5" cy="32.5" r="2" fill="#1B2440"/>
-</svg>

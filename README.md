@@ -36,6 +36,7 @@ breakhound is a zero config bug finder for JavaScript and TypeScript libraries. 
 - [Comparison with fast-check and Jazzer.js](#comparison-with-fast-check-and-jazzerjs)
 - [Born from 130 real bug fixes](#born-from-130-real-bug-fixes)
 - [More from kwy404](#more-from-kwy404)
+- [Author](#author)
 - [License](#license)
 
 ## Quick start
@@ -191,7 +192,14 @@ Each of these would have been caught by one of the checks above.
 - [edgegoat](https://kwy404.github.io/edgegoat/): edge case inputs for JavaScript testing.
 - [vueleap](https://kwy404.github.io/vueleap/)
 - [numberparrot](https://kwy404.github.io/numberparrot/)
-- [Voodoo.js](https://github.com/kwy404/Voodoo.js): tiny reactive attributes for plain HTML.
+- [Voodoo.js](https://kwy404.github.io/Voodoo.js/): tiny reactive attributes for plain HTML.
+- [Monsoon](https://kwy404.github.io/monsoon/): utility-first CSS with no build step.
+
+## Author
+
+Made by Alexandre Kohler ([GitHub](https://github.com/kwy404), [LinkedIn](https://www.linkedin.com/in/alexandre-silva-173687256/)).
+
+The [website](https://kwy404.github.io/breakhound/) is built with [Monsoon](https://kwy404.github.io/monsoon/), and its interactive parts are built with [Voodoo.js](https://kwy404.github.io/Voodoo.js/).
 
 ## License
 

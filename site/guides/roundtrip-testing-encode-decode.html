@@ -1,0 +1,213 @@
+<!--meta
+{
+  "slug": "roundtrip-testing-encode-decode",
+  "title": "Roundtrip Testing for Encode and Decode | breakhound",
+  "description": "Roundtrip testing for encode decode pairs: breakhound finds encodeX/decodeX and toY/fromY partners by name and checks they invert each other.",
+  "h1": "Roundtrip testing for encode and decode functions",
+  "crumb": "Roundtrip testing",
+  "lead": "If a library can encode something, it should be able to decode it back to the original. breakhound discovers encode and decode pairs by name and checks that rule on generated inputs, so you do not have to write the test.",
+  "readTime": "4 min read",
+  "related": [
+    "negative-zero-javascript-bugs",
+    "automated-testing-in-github-actions",
+    "find-bugs-automatically-javascript"
+  ],
+  "faq": [
+    {
+      "q": "How does breakhound know which functions are a pair?",
+      "a": "<p>It matches names: <code>encodeX</code> with <code>decodeX</code>, and <code>toY</code> with <code>fromY</code>. Functions that invert each other under unrelated names are not paired, so follow the naming convention or export an alias.</p>"
+    },
+    {
+      "q": "What if my codec is intentionally lossy?",
+      "a": "<p>Then <code>decode(encode(x))</code> will legitimately differ from <code>x</code>, and the finding is a false positive for that function. Roundtrip findings carry medium confidence for this reason, so review each one against the intended contract.</p>"
+    },
+    {
+      "q": "Which inputs does the roundtrip check try?",
+      "a": "<p>Values generated from the parameter types, including edge cases from the edgegoat package such as empty strings, emoji, lone surrogates and unusual delimiters. The run is seeded (default 42) so results are reproducible.</p>"
+    },
+    {
+      "q": "Do I have to write the test myself?",
+      "a": "<p>No. Each finding includes a minimal reproduction script and a ready Vitest test, like the <code>decodeBase reverses encodeBase</code> example above.</p>"
+    },
+    {
+      "q": "Can I run only the roundtrip check?",
+      "a": "<p>Yes, use <code>--rules roundtrip</code>. You can also narrow the functions with <code>--only</code> and <code>--exclude</code>, which accept comma separated names with <code>*</code> wildcards.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Roundtrip testing for encode and decode functions",
+        "description": "Roundtrip testing for encode decode pairs: breakhound finds encodeX/decodeX and toY/fromY partners by name and checks they invert each other.",
+        "url": "https://kwy404.github.io/breakhound/roundtrip-testing-encode-decode.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/roundtrip-testing-encode-decode.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does breakhound know which functions are a pair?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It matches names: encodeX with decodeX, and toY with fromY. Functions that invert each other under unrelated names are not paired, so follow the naming convention or export an alias."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What if my codec is intentionally lossy?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Then decode(encode(x)) will legitimately differ from x, and the finding is a false positive for that function. Roundtrip findings carry medium confidence for this reason, so review each one against the intended contract."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which inputs does the roundtrip check try?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Values generated from the parameter types, including edge cases from the edgegoat package such as empty strings, emoji, lone surrogates and unusual delimiters. The run is seeded (default 42) so results are reproducible."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I have to write the test myself?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Each finding includes a minimal reproduction script and a ready Vitest test, like the decodeBase reverses encodeBase example above."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I run only the roundtrip check?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, use --rules roundtrip. You can also narrow the functions with --only and --exclude, which accept comma separated names with * wildcards."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Roundtrip testing for encode and decode functions",
+            "item": "https://kwy404.github.io/breakhound/roundtrip-testing-encode-decode.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="what-a-roundtrip-guarantees"><h2>What a roundtrip guarantees</h2>
+<p>A roundtrip property says that decoding an encoded value gives back the original: <code>decode(encode(x))</code> equals <code>x</code> for every valid <code>x</code>. It is the single most useful invariant for serializers, escapers, URL and slug helpers, base converters and anything else that converts between two representations. When it breaks, data is silently corrupted: a name loses a character, a path changes meaning, a record round-trips into a different record.</p>
+<p>It is also one of the easiest properties to state, which makes it a good first step into <a href="property-based-testing-without-writing-tests.html">property based testing without writing tests</a>. The catch is on the input side. The values that break codecs are rarely the friendly ones in your unit tests. They are the delimiter itself, the escape character, the empty string, a lone surrogate, or a character that your encoder treats specially and your decoder does not.</p>
+</section>
+<section id="a-codec-that-looks-correct"><h2>A codec that looks correct</h2>
+<p>Here is a tiny codec in the style of many real escaping helpers. The encoder replaces spaces with underscores so the result is safe in an identifier, and the decoder reverses it.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="codec.ts" data-bad="2">
+export function encodeBase(input: string): string {
+  return input.replace(/ /g, '_');
+}
+
+export function decodeBase(input: string): string {
+  return input.replace(/_/g, ' ');
+}
+</pre>
+<p>Every example you would normally write passes. <code>encodeBase('hello world')</code> returns <code>'hello_world'</code>, and <code>decodeBase('hello_world')</code> returns the original. The bug only shows up for input that already contains the output alphabet. If the original text contains an underscore, the encoder passes it through untouched, and the decoder then turns it into a space. Two different inputs, <code>' '</code> and <code>'_'</code>, encode to the same string, so no decoder could possibly tell them apart. That is the real shape of a roundtrip failure: the encoding is not injective.</p>
+</section>
+<section id="how-partners-are-found"><h2>How breakhound finds the partner function</h2>
+<p>A roundtrip check needs to know which function inverts which. breakhound infers this from names. It looks for pairs such as <code>encodeX</code> and <code>decodeX</code>, or <code>toY</code> and <code>fromY</code>, that share a suffix, then generates inputs for the encoder and feeds the result to the decoder. In this codec the pair is <code>encodeBase</code> and <code>decodeBase</code>.</p>
+<p>Naming conventions are the whole mechanism, so it pays to follow them:</p>
+<ul>
+<li><code>encodeUrl</code> and <code>decodeUrl</code> are paired. <code>encodeUrl</code> and <code>parseUri</code> are not.</li>
+<li><code>toHex</code> and <code>fromHex</code> are paired through the shared <code>Hex</code> suffix.</li>
+<li>If an inverse exists under an unrelated name, the roundtrip oracle will not see it. Renaming it, or adding a thin alias export, brings it into scope.</li>
+</ul>
+<p>Because the match is by name, a result is reported with medium confidence. Some codecs are intentionally lossy, for example a decoder that normalizes its output, so treat a finding as a strong lead and decide whether the loss is by design.</p>
+</section>
+<section id="running-the-roundtrip-oracle"><h2>Running the roundtrip oracle</h2>
+<p>Point breakhound at the package or folder. To focus on this check and its close relative, restrict the rules:</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --rules roundtrip,not-idempotent
+</pre>
+<p>On the buggy-lib fixture, which contains exactly this codec, the plain output reports both rules:</p>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+breakhound v0.1.0  buggy-lib@1.0.0 (local)
+23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42 | 6.8s
+
+  [roundtrip] decodeBase(encodeBase(x)) does not return x (confidence medium)
+    encodeBase('_')  -&gt; '_'
+    decodeBase(encodeBase('_'))  -&gt; ' '
+
+  [not-idempotent] slugify is not idempotent (confidence medium)
+    slugify('x y')  -&gt; 'x_y'
+    slugify(slugify('x y'))  -&gt; 'x-y'
+</pre>
+<p>The finding names the minimal input (<code>'_'</code>), shows what the encoder produced and what came back. It also ships a reproduction script and a ready Vitest test you can commit as a regression guard:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="codec.test.ts">
+import { expect, test } from 'vitest';
+import { encodeBase, decodeBase } from 'buggy-lib';
+
+test("decodeBase reverses encodeBase", () =&gt; {
+  const input = '_';
+  const encoded = encodeBase('_');
+  expect(decodeBase(encoded)).toEqual(input);
+});
+</pre>
+</section>
+<section id="fixing-the-codec"><h2>Fixing the codec</h2>
+<p>The cure for a non-injective encoding is to escape the escape. Before you introduce a new meaning for a character, make sure the original character can still be represented. A percent-style escape does that, and it must be decoded in the reverse order it was applied:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="codec.ts" data-ok="2">
+export function encodeBase(input: string): string {
+  return input.replace(/%/g, '%25').replace(/_/g, '%5F').replace(/ /g, '_');
+}
+
+export function decodeBase(input: string): string {
+  return input.replace(/_/g, ' ').replace(/%5F/g, '_').replace(/%25/g, '%');
+}
+</pre>
+<p>Now the underscore is encoded as <code>%5F</code> and the percent sign as <code>%25</code>, so the only bare underscore left in encoded text means a space. Run breakhound again with the same seed and the roundtrip finding disappears. If you can, prefer a standard codec such as <code>encodeURIComponent</code> over a hand-rolled one.</p>
+</section>
+<section id="the-idempotence-sibling"><h2>The idempotence sibling</h2>
+<p>The same fixture shows the related <code>not-idempotent</code> oracle, which targets normalize-like functions. A normalizer should be a fixed point of itself: <code>slugify(slugify(x))</code> should equal <code>slugify(x)</code>. In the output above, <code>slugify('x y')</code> returns <code>'x_y'</code> but a second pass returns <code>'x-y'</code>, which means stored slugs drift every time they are re-normalized.</p>
+<p>Roundtrip and idempotence often fail together, because both come from a transformation that creates the very characters it later treats as special. If your library mixes text with Unicode, also read <a href="unicode-surrogate-pair-bugs.html">unicode surrogate pair bugs</a>, since encoders that cut strings by index frequently produce lone surrogates that no decoder can recover. For the broader workflow, see <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a>.</p>
+<div class="callout"><p>Add <code>--fail-on medium</code> in CI so a new roundtrip regression fails the build. Findings are saved to <code>.breakhound/report.json</code> unless you pass <code>--no-save</code>.</p></div>
+</section>

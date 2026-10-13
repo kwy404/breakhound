@@ -1,0 +1,204 @@
+<!--meta
+{
+  "slug": "negative-zero-javascript-bugs",
+  "title": "Negative Zero in JavaScript: Bugs and Fixes | breakhound",
+  "description": "How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.",
+  "h1": "Negative zero in JavaScript: the bugs it causes and how to catch them",
+  "crumb": "Negative zero bugs",
+  "lead": "JavaScript has two zeros, and the difference between them is invisible to ===, String() and JSON. Here is how -0 breaks number formatting, how the pdf.js bug happened, and how to find it without writing a single test.",
+  "readTime": "3 min read",
+  "related": [
+    "automated-testing-in-github-actions",
+    "find-bugs-automatically-javascript",
+    "fuzz-testing-typescript"
+  ],
+  "faq": [
+    {
+      "q": "Is -0 === 0 true in JavaScript?",
+      "a": "<p>Yes. Strict and loose equality both treat the two zeros as equal. Use <code>Object.is(x, -0)</code> when you must tell them apart.</p>"
+    },
+    {
+      "q": "Why does Math.trunc(-0.5) return -0?",
+      "a": "<p>Truncation keeps the sign of the input, and the result has magnitude zero, so it is negative zero. Printing it gives <code>\"0\"</code>, which is how the minus sign gets lost.</p>"
+    },
+    {
+      "q": "Does toFixed keep the sign of small negative numbers?",
+      "a": "<p>It depends on the value. <code>(-0.4).toFixed(0)</code> returns <code>\"-0\"</code>, while <code>(-0).toFixed(0)</code> returns <code>\"0\"</code>. Do not assume the two behave the same.</p>"
+    },
+    {
+      "q": "How do I convert -0 to 0?",
+      "a": "<p>Add zero: <code>-0 + 0</code> is <code>0</code>. Adding opposite signed zeros gives positive zero under round to nearest.</p>"
+    },
+    {
+      "q": "Can breakhound find negative zero bugs in code without tests?",
+      "a": "<p>Yes. It reads TypeScript types (<code>.d.ts</code>) to decide what to generate for each parameter, then runs the <code>negative-zero-sign</code> oracle. Point it at a package or a local path with <code>npx breakhound ./my-lib</code>.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Negative zero in JavaScript: the bugs it causes and how to catch them",
+        "description": "How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.",
+        "url": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is -0 === 0 true in JavaScript?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Strict and loose equality both treat the two zeros as equal. Use Object.is(x, -0) when you must tell them apart."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does Math.trunc(-0.5) return -0?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Truncation keeps the sign of the input, and the result has magnitude zero, so it is negative zero. Printing it gives \"0\", which is how the minus sign gets lost."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does toFixed keep the sign of small negative numbers?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends on the value. (-0.4).toFixed(0) returns \"-0\", while (-0).toFixed(0) returns \"0\". Do not assume the two behave the same."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I convert -0 to 0?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Add zero: -0 + 0 is 0. Adding opposite signed zeros gives positive zero under round to nearest."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can breakhound find negative zero bugs in code without tests?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. It reads TypeScript types (.d.ts) to decide what to generate for each parameter, then runs the negative-zero-sign oracle. Point it at a package or a local path with npx breakhound ./my-lib."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Negative zero in JavaScript: the bugs it causes and how to catch them",
+            "item": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="two-zeros"><h2>JavaScript has two zeros</h2>
+<p>IEEE 754 floating point numbers carry a sign bit, so <code>0</code> and <code>-0</code> are different values that compare as equal. <code>-0 === 0</code> is <code>true</code>, and <code>String(-0)</code>, template literals and <code>JSON.stringify(-0)</code> all produce <code>"0"</code>. The sign is only observable through a few doors: <code>Object.is(-0, 0)</code> is <code>false</code>, <code>1 / -0</code> is <code>-Infinity</code>, and <code>Math.sign(-0)</code> returns <code>-0</code>.</p>
+<p>Negative zero is not exotic. It appears whenever a negative number is rounded or truncated toward zero: <code>Math.trunc(-0.5)</code>, <code>Math.round(-0.4)</code>, <code>Math.ceil(-0.2)</code> and <code>-1 * 0</code> all return <code>-0</code>. Any library that does arithmetic on user supplied numbers will meet it eventually.</p>
+</section>
+<section id="where-it-bites"><h2>Where -0 actually bites</h2>
+<p>Because <code>-0</code> prints as <code>"0"</code>, the bug is rarely the zero itself. It is the sign information that disappears <em>before</em> the zero is created. Three places cause most real reports:</p>
+<ul>
+<li><strong>Math.trunc and friends.</strong> Splitting a number into whole and fractional parts with <code>Math.trunc</code> turns every value in the open interval (-1, 0) into <code>-0</code> for the whole part. Once you stringify that part, the minus sign is gone.</li>
+<li><strong>toFixed.</strong> <code>(-0.4).toFixed(0)</code> returns <code>"-0"</code>, but <code>(-0).toFixed(0)</code> returns <code>"0"</code>. Two inputs that look equivalent produce different strings, and code that post-processes the result (stripping "-0", parsing it back) behaves inconsistently.</li>
+<li><strong>Equality checks.</strong> <code>Object.is</code> treats the two zeros as different, while <code>===</code> does not. Test assertions such as <code>expect(x).toBe(0)</code> fail on <code>-0</code> because <code>toBe</code> uses <code>Object.is</code>.</li>
+</ul>
+</section>
+<section id="naive-code"><h2>The naive code that loses the sign</h2>
+<p>A fixed point formatter is a classic example. It splits the number, formats the fraction, and glues the parts back together. Every positive input and every number at or below -1 works, which is why this passes code review and hand written tests.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="format.ts" data-bad="2">
+export function formatFixed(n: number): string {
+  const whole = Math.trunc(n);
+  const frac = Math.round(Math.abs(n - whole) * 100);
+  return `${whole}.${String(frac).padStart(2, '0')}`;
+}
+
+formatFixed(-1.5); // '-1.50'
+formatFixed(-0.5); // '0.50'  (the minus sign is gone)
+</pre>
+<p>For <code>-0.5</code>, <code>Math.trunc</code> returns <code>-0</code>, the template literal prints it as <code>0</code>, and a negative balance, temperature or delta is displayed as a positive one. The output is well formed and no exception is thrown, so nothing in your logs will point at it.</p>
+</section>
+<section id="pdfjs"><h2>A real case: pdf.js pull request 22017</h2>
+<p>This is not hypothetical. Fix <a href="https://github.com/mozilla/pdf.js/pull/22017">mozilla/pdf.js#22017</a> corrected a code path where negative values above -1 lost their sign, the same shape of bug as the formatter above. Bugs like this survive for years because the failing inputs sit in a narrow band of the number line that people rarely type into a test. A generator that deliberately tries values between -1 and 0 finds them in seconds.</p>
+</section>
+<section id="fix"><h2>The fix</h2>
+<p>Decide the sign explicitly, from the original input, before you do anything that can round it away. Work with the absolute value and put the sign back at the end:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="format.ts" data-ok="2">
+export function formatFixed(n: number): string {
+  const sign = n &lt; 0 ? '-' : '';
+  const abs = Math.abs(n);
+  const whole = Math.trunc(abs);
+  const frac = Math.round((abs - whole) * 100);
+  return `${sign}${whole}.${String(frac).padStart(2, '0')}`;
+}
+</pre>
+<p>When you really need to distinguish the zeros, use <code>Object.is(x, -0)</code>, not <code>x === -0</code>. When you want to normalize them away, <code>x + 0</code> turns <code>-0</code> into <code>0</code>. Decide which behavior your API promises and write it down.</p>
+<div class="callout"><p>Rule of thumb: never derive the sign of a result from a value that has already been truncated or rounded. Read it from the input.</p></div>
+</section>
+<section id="breakhound"><h2>Catching it automatically with breakhound</h2>
+<p>The <code>negative-zero-sign</code> oracle looks for functions where a value between -1 and 0 loses its minus sign in the output. The input generator already includes <code>-0</code> and other edge cases from the edgegoat package, so you do not write anything. See <a href="find-bugs-automatically-javascript.html">how breakhound finds bugs automatically</a> for the overall approach.</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --rules negative-zero-sign --plain
+</pre>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+MEDIUM (1)
+  [negative-zero-sign] formatFixed drops the minus sign of numbers between -1 and 0 (confidence medium)
+    formatFixed(-0.5)  -&gt; '0.50'
+    formatFixed(0.5)  -&gt; '0.50'
+    formatFixed(-1.5)  -&gt; '-1.50'
+</pre>
+<p>Every finding comes with a minimal reproduction script and a ready to paste Vitest test, so the regression test for the fix already exists:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="format.test.ts">
+import { expect, test } from 'vitest';
+import { formatFixed } from 'buggy-lib';
+
+test("formatFixed keeps the sign of -0.5", () =&gt; {
+  expect(formatFixed(-0.5)).not.toBe(formatFixed(0.5));
+});
+</pre>
+<p>To keep it from coming back, run the same command on every pull request. The <a href="automated-testing-in-github-actions.html">GitHub Actions guide</a> shows the workflow, and <a href="roundtrip-testing-encode-decode.html">roundtrip testing</a> covers a related class of silent data loss. Go back to the <a href="./">home page</a> for the full list of oracles.</p>
+</section>

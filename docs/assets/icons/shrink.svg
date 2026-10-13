@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
-  <title>Feature: shrinks failing inputs</title>
-  <rect width="48" height="48" rx="12" fill="#1B2440"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3.5"><path d="M10 10L18 18M18 12V18H12M38 10L30 18M30 12V18H36M10 38L18 30M18 36V30H12M38 38L30 30M30 36V30H36"/></g><rect x="21" y="21" width="6" height="6" rx="1.5" fill="#1FA393"/>
-</svg>

@@ -1,0 +1,488 @@
+{
+  "tool": {
+    "name": "breakhound",
+    "version": "1.0.0"
+  },
+  "target": {
+    "spec": "C:\\Users\\Hadouken Game Center\\own\\breakhound\\test\\fixtures\\buggy-lib",
+    "name": "buggy-lib",
+    "version": "1.0.0",
+    "source": "local",
+    "types": "C:\\Users\\Hadouken Game Center\\own\\breakhound\\test\\fixtures\\buggy-lib\\dist\\index.d.ts",
+    "entry": "C:\\Users\\Hadouken Game Center\\own\\breakhound\\test\\fixtures\\buggy-lib\\dist\\index.js"
+  },
+  "options": {
+    "seed": 42,
+    "maxCalls": 20000,
+    "timeout": 2000,
+    "zones": [
+      "UTC",
+      "America/Sao_Paulo",
+      "Asia/Kathmandu",
+      "Pacific/Kiritimati",
+      "America/New_York",
+      "Australia/Lord_Howe"
+    ],
+    "rules": [
+      "lone-surrogate-output",
+      "timezone-dependent",
+      "unexpected-crash",
+      "nan-leak",
+      "nondeterministic",
+      "roundtrip",
+      "not-idempotent",
+      "negative-zero-sign"
+    ]
+  },
+  "stats": {
+    "exports": 24,
+    "analyzed": 23,
+    "skipped": 1,
+    "calls": 4444,
+    "durationMs": 3965,
+    "budgetExhausted": false,
+    "unconfirmed": 0
+  },
+  "counts": {
+    "high": 5,
+    "medium": 5,
+    "low": 0,
+    "info": 2
+  },
+  "findings": [
+    {
+      "rule": "lone-surrogate-output",
+      "severity": "high",
+      "confidence": "high",
+      "function": "initials",
+      "signature": "initials(name: string): string",
+      "title": "initials returns a string with a lone surrogate",
+      "explanation": "Every string argument is well formed UTF-16, but the return value contains an unpaired surrogate (U+D83D at index 0). A lone surrogate renders as a replacement character, makes encodeURIComponent throw and is changed by TextEncoder and by JSON round trips through UTF-8. It usually means a string was cut between the two halves of a surrogate pair, for example by slice, substring, substr or a length limit counted in UTF-16 code units.",
+      "expected": "A well formed string. Cut text at code point or grapheme boundaries so surrogate pairs stay together.",
+      "input": [
+        "'\\u{1F600}'"
+      ],
+      "evidence": [
+        {
+          "call": "initials('\\u{1F600}')",
+          "result": "'\\ud83d'",
+          "note": "U+D83D at index 0 of the return value has no partner"
+        }
+      ],
+      "reproduction": "// initials returns a string with a lone surrogate\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { initials } from 'buggy-lib';\n\nconst result = initials('\\u{1F600}');\nconsole.log(result);\n// true means the string contains a lone surrogate (isWellFormed() is false on Node 20+):\nconsole.log(/[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF]/.test(result));\n",
+      "test": "import { expect, test } from 'vitest';\nimport { initials } from 'buggy-lib';\n\nconst LONE_SURROGATE = /[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF]/;\n\ntest(\"initials returns well formed UTF-16\", () => {\n  const result = initials('\\u{1F600}');\n  expect(result).not.toMatch(LONE_SURROGATE);\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "lone-surrogate-output",
+      "severity": "high",
+      "confidence": "high",
+      "function": "truncate",
+      "signature": "truncate(text: string, max: number): string",
+      "title": "truncate returns a string with a lone surrogate",
+      "explanation": "Every string argument is well formed UTF-16, but the return value contains an unpaired surrogate (U+D83D at index 0). A lone surrogate renders as a replacement character, makes encodeURIComponent throw and is changed by TextEncoder and by JSON round trips through UTF-8. It usually means a string was cut between the two halves of a surrogate pair, for example by slice, substring, substr or a length limit counted in UTF-16 code units.",
+      "expected": "A well formed string. Cut text at code point or grapheme boundaries so surrogate pairs stay together.",
+      "input": [
+        "'\\u{1F600}'",
+        "1"
+      ],
+      "evidence": [
+        {
+          "call": "truncate('\\u{1F600}', 1)",
+          "result": "'\\ud83d'",
+          "note": "U+D83D at index 0 of the return value has no partner"
+        }
+      ],
+      "reproduction": "// truncate returns a string with a lone surrogate\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { truncate } from 'buggy-lib';\n\nconst result = truncate('\\u{1F600}', 1);\nconsole.log(result);\n// true means the string contains a lone surrogate (isWellFormed() is false on Node 20+):\nconsole.log(/[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF]/.test(result));\n",
+      "test": "import { expect, test } from 'vitest';\nimport { truncate } from 'buggy-lib';\n\nconst LONE_SURROGATE = /[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF]/;\n\ntest(\"truncate returns well formed UTF-16\", () => {\n  const result = truncate('\\u{1F600}', 1);\n  expect(result).not.toMatch(LONE_SURROGATE);\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "timezone-dependent",
+      "severity": "high",
+      "confidence": "medium",
+      "function": "yearLabel",
+      "signature": "yearLabel(seconds: number): string",
+      "title": "yearLabel returns different results in different time zones",
+      "explanation": "yearLabel takes no Date and no time zone argument, yet the same call returns a different value when the process runs with TZ=America/Sao_Paulo instead of TZ=UTC. Code like this usually mixes local time getters (getHours, getDate, getFullYear, toLocaleString) with UTC values, so results change near midnight and New Year, or between servers and browsers in different zones.",
+      "expected": "The same result in every time zone, or an explicit time zone parameter.",
+      "input": [
+        "0"
+      ],
+      "evidence": [
+        {
+          "call": "yearLabel(0)",
+          "result": "'1970'",
+          "tz": "UTC"
+        },
+        {
+          "call": "yearLabel(0)",
+          "result": "'1969'",
+          "tz": "America/Sao_Paulo"
+        },
+        {
+          "call": "yearLabel(0)",
+          "result": "'1969'",
+          "tz": "Pacific/Kiritimati"
+        },
+        {
+          "call": "yearLabel(0)",
+          "result": "'1969'",
+          "tz": "America/New_York"
+        }
+      ],
+      "reproduction": "// yearLabel returns different results in different time zones\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { yearLabel } from 'buggy-lib';\n\nfor (const tz of ['UTC', 'America/Sao_Paulo']) {\n  process.env.TZ = tz;\n  console.log(tz, yearLabel(0));\n}\n",
+      "test": "import { expect, test } from 'vitest';\nimport { yearLabel } from 'buggy-lib';\n\ntest(\"yearLabel does not depend on the host time zone\", () => {\n  const original = process.env.TZ;\n  try {\n    process.env.TZ = 'UTC';\n    const expected = yearLabel(0);\n    process.env.TZ = 'America/Sao_Paulo';\n    expect(yearLabel(0)).toEqual(expected);\n  } finally {\n    if (original === undefined) delete process.env.TZ;\n    else process.env.TZ = original;\n  }\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "unexpected-crash",
+      "severity": "high",
+      "confidence": "high",
+      "function": "initials",
+      "signature": "initials(name: string): string",
+      "title": "initials throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')",
+      "explanation": "The arguments match the declared parameter types (initials(name: string): string), but the call throws TypeError: Cannot read properties of undefined (reading 'toUpperCase'). This message comes from the JavaScript engine, not from an explicit validation check, which usually means the code reads a property of undefined or null, calls a missing method or iterates something that is not iterable.",
+      "expected": "A return value, or an explicit error that explains which input is not supported (and a declared type that excludes it).",
+      "input": [
+        "''"
+      ],
+      "evidence": [
+        {
+          "call": "initials('')",
+          "result": "throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')"
+        }
+      ],
+      "reproduction": "// initials throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { initials } from 'buggy-lib';\n\nconsole.log(initials(''));\n// TypeError: Cannot read properties of undefined (reading 'toUpperCase')\n",
+      "test": "import { expect, test } from 'vitest';\nimport { initials } from 'buggy-lib';\n\ntest(\"initials does not throw TypeError for valid input\", () => {\n  expect(() => initials('')).not.toThrow();\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "unexpected-crash",
+      "severity": "high",
+      "confidence": "high",
+      "function": "mapWords",
+      "signature": "mapWords(text: string, fn: (word: string) => string): string",
+      "title": "mapWords throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')",
+      "explanation": "The arguments match the declared parameter types (mapWords(text: string, fn: (word: string) => string): string), but the call throws TypeError: Cannot read properties of undefined (reading 'toUpperCase'). This message comes from the JavaScript engine, not from an explicit validation check, which usually means the code reads a property of undefined or null, calls a missing method or iterates something that is not iterable.",
+      "expected": "A return value, or an explicit error that explains which input is not supported (and a declared type that excludes it).",
+      "input": [
+        "''",
+        "(word) => word"
+      ],
+      "evidence": [
+        {
+          "call": "mapWords('', (word) => word)",
+          "result": "throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')"
+        }
+      ],
+      "reproduction": "// mapWords throws TypeError: Cannot read properties of undefined (reading 'toUpperCase')\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { mapWords } from 'buggy-lib';\n\nconsole.log(mapWords('', (word) => word));\n// TypeError: Cannot read properties of undefined (reading 'toUpperCase')\n",
+      "test": "import { expect, test } from 'vitest';\nimport { mapWords } from 'buggy-lib';\n\ntest(\"mapWords does not throw TypeError for valid input\", () => {\n  expect(() => mapWords('', (word) => word)).not.toThrow();\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "nan-leak",
+      "severity": "medium",
+      "confidence": "high",
+      "function": "average",
+      "signature": "average(values: number[]): number",
+      "title": "average returns NaN for finite input",
+      "explanation": "All numeric arguments are finite, but the result is NaN. NaN usually leaks from 0 / 0, Infinity - Infinity, arithmetic on undefined or a failed lookup, and then spreads silently through later calculations.",
+      "expected": "A finite number, or an explicit error for inputs outside the supported range.",
+      "input": [
+        "[0]"
+      ],
+      "evidence": [
+        {
+          "call": "average([0])",
+          "result": "NaN"
+        }
+      ],
+      "reproduction": "// average returns NaN for finite input\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { average } from 'buggy-lib';\n\nconsole.log(average([0]));\n",
+      "test": "import { expect, test } from 'vitest';\nimport { average } from 'buggy-lib';\n\ntest(\"average does not return NaN for finite input\", () => {\n  expect(average([0])).not.toBeNaN();\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "nondeterministic",
+      "severity": "medium",
+      "confidence": "medium",
+      "function": "label",
+      "signature": "label(text: string): string",
+      "title": "label returns different results for the same input",
+      "explanation": "Calling label twice in a row with the same arguments, in the same process, gave different results. The clock is frozen during the calls and each call gets a fresh copy of the arguments, so the difference comes from somewhere else: Math.random, a module level counter or cache, or other state shared between calls.",
+      "expected": "The same result for the same arguments, or a name and documentation that make the variation explicit.",
+      "input": [
+        "'a'"
+      ],
+      "evidence": [
+        {
+          "call": "label('a')",
+          "result": "'a'",
+          "note": "first call"
+        },
+        {
+          "call": "label('a')",
+          "result": "'A'",
+          "note": "second call"
+        }
+      ],
+      "reproduction": "// label returns different results for the same input\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { label } from 'buggy-lib';\n\nconst first = label('a');\nconst second = label('a');\nconsole.log(first, second);\n",
+      "test": "import { expect, test } from 'vitest';\nimport { label } from 'buggy-lib';\n\ntest(\"label is deterministic\", () => {\n  const first = label('a');\n  const second = label('a');\n  expect(second).toEqual(first);\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "roundtrip",
+      "severity": "medium",
+      "confidence": "medium",
+      "function": "encodeBase",
+      "signature": "encodeBase(text: string): string",
+      "title": "decodeBase(encodeBase(x)) does not return x",
+      "explanation": "encodeBase and decodeBase look like inverse functions. For a well formed input x, decodeBase(encodeBase(x)) returned ' ' instead of x. One of the two functions loses information for this input, or the pair is not meant to be inverse (then this finding can be ignored).",
+      "expected": "decodeBase(encodeBase(x)) equals x.",
+      "input": [
+        "'_'"
+      ],
+      "evidence": [
+        {
+          "call": "encodeBase('_')",
+          "result": "'_'"
+        },
+        {
+          "call": "decodeBase(encodeBase('_'))",
+          "result": "' '"
+        }
+      ],
+      "reproduction": "// decodeBase(encodeBase(x)) does not return x\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { encodeBase, decodeBase } from 'buggy-lib';\n\nconst input = '_';\nconst encoded = encodeBase('_');\nconst decoded = decodeBase(encoded);\nconsole.log(encoded, decoded);\n",
+      "test": "import { expect, test } from 'vitest';\nimport { encodeBase, decodeBase } from 'buggy-lib';\n\ntest(\"decodeBase reverses encodeBase\", () => {\n  const input = '_';\n  const encoded = encodeBase('_');\n  expect(decodeBase(encoded)).toEqual(input);\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "not-idempotent",
+      "severity": "medium",
+      "confidence": "medium",
+      "function": "slugify",
+      "signature": "slugify(text: string): string",
+      "title": "slugify is not idempotent",
+      "explanation": "The name suggests a normalizing function, and applying a normalizer twice should change nothing. For this input a second application changed the result again ('x_y' became 'x-y'), so values normalized once and values normalized twice compare as different.",
+      "expected": "slugify(slugify(x)) equals slugify(x).",
+      "input": [
+        "'x y'"
+      ],
+      "evidence": [
+        {
+          "call": "slugify('x y')",
+          "result": "'x_y'"
+        },
+        {
+          "call": "slugify(slugify('x y'))",
+          "result": "'x-y'"
+        }
+      ],
+      "reproduction": "// slugify is not idempotent\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { slugify } from 'buggy-lib';\n\nconst once = slugify('x y');\nconst twice = slugify(once);\nconsole.log(once, twice);\n",
+      "test": "import { expect, test } from 'vitest';\nimport { slugify } from 'buggy-lib';\n\ntest(\"slugify is idempotent\", () => {\n  const once = slugify('x y');\n  expect(slugify(once)).toEqual(once);\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "negative-zero-sign",
+      "severity": "medium",
+      "confidence": "medium",
+      "function": "formatFixed",
+      "signature": "formatFixed(value: number): string",
+      "title": "formatFixed drops the minus sign of numbers between -1 and 0",
+      "explanation": "formatFixed(-0.5) returns '0.50', the same as for 0.5. Negative numbers outside that range keep their sign (formatFixed(-1.5) returns '-1.50'), so the sign is lost only when the integer part is zero. This often happens when the integer part is computed first and the sign is read from it: the integer part of -0.5 is -0, which prints as \"0\".",
+      "expected": "A result with a minus sign, like '-1.50' for -1.5.",
+      "input": [
+        "-0.5"
+      ],
+      "evidence": [
+        {
+          "call": "formatFixed(-0.5)",
+          "result": "'0.50'"
+        },
+        {
+          "call": "formatFixed(0.5)",
+          "result": "'0.50'"
+        },
+        {
+          "call": "formatFixed(-1.5)",
+          "result": "'-1.50'"
+        }
+      ],
+      "reproduction": "// formatFixed drops the minus sign of numbers between -1 and 0\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { formatFixed } from 'buggy-lib';\n\nconsole.log(formatFixed(-0.5));\nconsole.log(formatFixed(0.5));\nconsole.log(formatFixed(-1.5));\n",
+      "test": "import { expect, test } from 'vitest';\nimport { formatFixed } from 'buggy-lib';\n\ntest(\"formatFixed keeps the sign of -0.5\", () => {\n  expect(formatFixed(-0.5)).not.toBe(formatFixed(0.5));\n});\n",
+      "confirmed": true
+    },
+    {
+      "rule": "unexpected-crash",
+      "severity": "info",
+      "confidence": "high",
+      "function": "percent",
+      "signature": "percent(part: number, total: number): number",
+      "title": "percent throws RangeError for some inputs that match its types",
+      "explanation": "For arguments that match the declared types (percent(part: number, total: number): number), the call throws RangeError: total must not be 0. This looks like an intentional validation error or a documented limit, so it is reported for information only. If the input is not supported, a narrower declared type would let TypeScript users catch it at compile time.",
+      "expected": "A narrower declared type, or a documented error.",
+      "input": [
+        "0",
+        "0"
+      ],
+      "evidence": [
+        {
+          "call": "percent(0, 0)",
+          "result": "throws RangeError: total must not be 0"
+        }
+      ],
+      "reproduction": "// percent throws RangeError for some inputs that match its types\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { percent } from 'buggy-lib';\n\nconsole.log(percent(0, 0));\n// RangeError: total must not be 0\n",
+      "test": "import { expect, test } from 'vitest';\nimport { percent } from 'buggy-lib';\n\ntest(\"percent accepts this input\", () => {\n  expect(() => percent(0, 0)).not.toThrow();\n});\n",
+      "confirmed": false
+    },
+    {
+      "rule": "nondeterministic",
+      "severity": "info",
+      "confidence": "high",
+      "function": "randomToken",
+      "signature": "randomToken(): string",
+      "title": "randomToken returns a different result on each call",
+      "explanation": "randomToken returned different results for the same arguments. Its name suggests randomness, time or unique ids, so this is likely intended.",
+      "expected": "The same result for the same arguments, or a name and documentation that make the variation explicit.",
+      "input": [],
+      "evidence": [
+        {
+          "call": "randomToken()",
+          "result": "'cfsjwn0459v'",
+          "note": "first call"
+        },
+        {
+          "call": "randomToken()",
+          "result": "'kbcwzroq15'",
+          "note": "second call"
+        }
+      ],
+      "reproduction": "// randomToken returns a different result on each call\n// Found by breakhound. Package: buggy-lib@1.0.0\nimport { randomToken } from 'buggy-lib';\n\nconst first = randomToken();\nconst second = randomToken();\nconsole.log(first, second);\n",
+      "test": "import { expect, test } from 'vitest';\nimport { randomToken } from 'buggy-lib';\n\ntest(\"randomToken is deterministic\", () => {\n  const first = randomToken();\n  const second = randomToken();\n  expect(second).toEqual(first);\n});\n",
+      "confirmed": false
+    }
+  ],
+  "skipped": [
+    {
+      "id": "Counter",
+      "reason": "class (constructors are not called)"
+    }
+  ],
+  "functions": [
+    {
+      "id": "average",
+      "signature": "average(values: number[]): number",
+      "calls": 110
+    },
+    {
+      "id": "averageSafe",
+      "signature": "averageSafe(values: number[]): number",
+      "calls": 110
+    },
+    {
+      "id": "decodeBase",
+      "signature": "decodeBase(text: string): string",
+      "calls": 110
+    },
+    {
+      "id": "decodeSafe",
+      "signature": "decodeSafe(text: string): string",
+      "calls": 110
+    },
+    {
+      "id": "encodeBase",
+      "signature": "encodeBase(text: string): string",
+      "calls": 170
+    },
+    {
+      "id": "encodeSafe",
+      "signature": "encodeSafe(text: string): string",
+      "calls": 165
+    },
+    {
+      "id": "formatFixed",
+      "signature": "formatFixed(value: number): string",
+      "calls": 117
+    },
+    {
+      "id": "formatFixedSafe",
+      "signature": "formatFixedSafe(value: number): string",
+      "calls": 117
+    },
+    {
+      "id": "initials",
+      "signature": "initials(name: string): string",
+      "calls": 110
+    },
+    {
+      "id": "initialsSafe",
+      "signature": "initialsSafe(name: string): string",
+      "calls": 110
+    },
+    {
+      "id": "label",
+      "signature": "label(text: string): string",
+      "calls": 80
+    },
+    {
+      "id": "labelSafe",
+      "signature": "labelSafe(text: string): string",
+      "calls": 110
+    },
+    {
+      "id": "mapWords",
+      "signature": "mapWords(text: string, fn: (word: string) => string): string",
+      "calls": 110
+    },
+    {
+      "id": "mapWordsSafe",
+      "signature": "mapWordsSafe(text: string, fn: (word: string) => string): string",
+      "calls": 110
+    },
+    {
+      "id": "pad",
+      "signature": "pad(text: string, options: { width: number; side?: \"left\" | \"right\" | undefined; }): string",
+      "calls": 110
+    },
+    {
+      "id": "percent",
+      "signature": "percent(part: number, total: number): number",
+      "calls": 111
+    },
+    {
+      "id": "randomToken",
+      "signature": "randomToken(): string",
+      "calls": 1
+    },
+    {
+      "id": "slugify",
+      "signature": "slugify(text: string): string",
+      "calls": 153
+    },
+    {
+      "id": "slugifySafe",
+      "signature": "slugifySafe(text: string): string",
+      "calls": 165
+    },
+    {
+      "id": "truncate",
+      "signature": "truncate(text: string, max: number): string",
+      "calls": 118
+    },
+    {
+      "id": "truncateSafe",
+      "signature": "truncateSafe(text: string, max: number): string",
+      "calls": 117
+    },
+    {
+      "id": "yearLabel",
+      "signature": "yearLabel(seconds: number): string",
+      "calls": 122
+    },
+    {
+      "id": "yearLabelUtc",
+      "signature": "yearLabelUtc(seconds: number): string",
+      "calls": 117
+    }
+  ]
+}

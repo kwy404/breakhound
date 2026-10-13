@@ -1,0 +1,284 @@
+[33m    __/\__         [0m  [1mbreakhound[0m [2mv1.0.0[0m
+[33m   (  o  o)__      [0m  target buggy-lib@1.0.0 [2m(local)[0m
+[33m   /   (_)   \ .-. [0m  [2m23 functions, 4444 calls, seed 42[0m
+[33m  ( '--'  ,__(( O )[0m  [2m6 time zones, 8 rules[0m
+[33m   \_____/    \'-' [0m
+
+[31m[1mHIGH (5)[0m[0m
+[31m╭─[0m[1;97;41m HIGH [0m[1m initials [0m[31m──────────────────────────────────────[0m[2m lone-surrogate-output [0m[31m╮[0m
+[31m│[0m [1minitials returns a string with a lone surrogate                             [0m [31m│[0m
+[31m│[0m Every string argument is well formed UTF-16, but the return value contains   [31m│[0m
+[31m│[0m an unpaired surrogate (U+D83D at index 0). A lone surrogate renders as a     [31m│[0m
+[31m│[0m replacement character, makes encodeURIComponent throw and is changed by      [31m│[0m
+[31m│[0m TextEncoder and by JSON round trips through UTF-8. It usually means a string [31m│[0m
+[31m│[0m was cut between the two halves of a surrogate pair, for example by slice,    [31m│[0m
+[31m│[0m substring, substr or a length limit counted in UTF-16 code units.            [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m input: '\u{1F600}'                                                           [31m│[0m
+[31m│[0m [2minitials('\u{1F600}') -> '\ud83d'                                           [0m [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2mreproduction:                                                               [0m [31m│[0m
+[31m│[0m   // initials returns a string with a lone surrogate                         [31m│[0m
+[31m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [31m│[0m
+[31m│[0m   import { initials } from 'buggy-lib';                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   const result = initials('\u{1F600}');                                      [31m│[0m
+[31m│[0m   console.log(result);                                                       [31m│[0m
+[31m│[0m   // true means the string contains a lone surrogate (isWellFormed() is      [31m│[0m
+[31m│[0m   false on Node 20+):                                                        [31m│[0m
+[31m│[0m   console.log(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC0 [31m│[0m
+[31m│[0m   0-\uDFFF]/.test(result));                                                  [31m│[0m
+[31m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[31m╭─[0m[1;97;41m HIGH [0m[1m truncate [0m[31m──────────────────────────────────────[0m[2m lone-surrogate-output [0m[31m╮[0m
+[31m│[0m [1mtruncate returns a string with a lone surrogate                             [0m [31m│[0m
+[31m│[0m Every string argument is well formed UTF-16, but the return value contains   [31m│[0m
+[31m│[0m an unpaired surrogate (U+D83D at index 0). A lone surrogate renders as a     [31m│[0m
+[31m│[0m replacement character, makes encodeURIComponent throw and is changed by      [31m│[0m
+[31m│[0m TextEncoder and by JSON round trips through UTF-8. It usually means a string [31m│[0m
+[31m│[0m was cut between the two halves of a surrogate pair, for example by slice,    [31m│[0m
+[31m│[0m substring, substr or a length limit counted in UTF-16 code units.            [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m input: '\u{1F600}', 1                                                        [31m│[0m
+[31m│[0m [2mtruncate('\u{1F600}', 1) -> '\ud83d'                                        [0m [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2mreproduction:                                                               [0m [31m│[0m
+[31m│[0m   // truncate returns a string with a lone surrogate                         [31m│[0m
+[31m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [31m│[0m
+[31m│[0m   import { truncate } from 'buggy-lib';                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   const result = truncate('\u{1F600}', 1);                                   [31m│[0m
+[31m│[0m   console.log(result);                                                       [31m│[0m
+[31m│[0m   // true means the string contains a lone surrogate (isWellFormed() is      [31m│[0m
+[31m│[0m   false on Node 20+):                                                        [31m│[0m
+[31m│[0m   console.log(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC0 [31m│[0m
+[31m│[0m   0-\uDFFF]/.test(result));                                                  [31m│[0m
+[31m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[31m╭─[0m[1;97;41m HIGH [0m[1m yearLabel [0m[31m────────────────────────────────────────[0m[2m timezone-dependent [0m[31m╮[0m
+[31m│[0m [1myearLabel returns different results in different time zones                 [0m [31m│[0m
+[31m│[0m yearLabel takes no Date and no time zone argument, yet the same call returns [31m│[0m
+[31m│[0m a different value when the process runs with TZ=America/Sao_Paulo instead of [31m│[0m
+[31m│[0m TZ=UTC. Code like this usually mixes local time getters (getHours, getDate,  [31m│[0m
+[31m│[0m getFullYear, toLocaleString) with UTC values, so results change near         [31m│[0m
+[31m│[0m midnight and New Year, or between servers and browsers in different zones.   [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m input: 0                                                                     [31m│[0m
+[31m│[0m [2mTZ=UTC yearLabel(0) -> '1970'                                               [0m [31m│[0m
+[31m│[0m [2mTZ=America/Sao_Paulo yearLabel(0) -> '1969'                                 [0m [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2mreproduction:                                                               [0m [31m│[0m
+[31m│[0m   // yearLabel returns different results in different time zones             [31m│[0m
+[31m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [31m│[0m
+[31m│[0m   import { yearLabel } from 'buggy-lib';                                     [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   for (const tz of ['UTC', 'America/Sao_Paulo']) {                           [31m│[0m
+[31m│[0m     process.env.TZ = tz;                                                     [31m│[0m
+[31m│[0m     console.log(tz, yearLabel(0));                                           [31m│[0m
+[31m│[0m   }                                                                          [31m│[0m
+[31m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[31m╭─[0m[1;97;41m HIGH [0m[1m initials [0m[31m───────────────────────────────────────────[0m[2m unexpected-crash [0m[31m╮[0m
+[31m│[0m [1minitials throws TypeError: Cannot read properties of undefined (reading     [0m [31m│[0m
+[31m│[0m [1m'toUpperCase')                                                              [0m [31m│[0m
+[31m│[0m The arguments match the declared parameter types (initials(name: string):    [31m│[0m
+[31m│[0m string), but the call throws TypeError: Cannot read properties of undefined  [31m│[0m
+[31m│[0m (reading 'toUpperCase'). This message comes from the JavaScript engine, not  [31m│[0m
+[31m│[0m from an explicit validation check, which usually means the code reads a      [31m│[0m
+[31m│[0m property of undefined or null, calls a missing method or iterates something  [31m│[0m
+[31m│[0m that is not iterable.                                                        [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m input: ''                                                                    [31m│[0m
+[31m│[0m [2minitials('') -> throws TypeError: Cannot read properties of undefined       [0m [31m│[0m
+[31m│[0m [2m(reading 'toUpperCase')                                                     [0m [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2mreproduction:                                                               [0m [31m│[0m
+[31m│[0m   // initials throws TypeError: Cannot read properties of undefined (reading [31m│[0m
+[31m│[0m   'toUpperCase')                                                             [31m│[0m
+[31m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [31m│[0m
+[31m│[0m   import { initials } from 'buggy-lib';                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   console.log(initials(''));                                                 [31m│[0m
+[31m│[0m   // TypeError: Cannot read properties of undefined (reading 'toUpperCase')  [31m│[0m
+[31m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[31m╭─[0m[1;97;41m HIGH [0m[1m mapWords [0m[31m───────────────────────────────────────────[0m[2m unexpected-crash [0m[31m╮[0m
+[31m│[0m [1mmapWords throws TypeError: Cannot read properties of undefined (reading     [0m [31m│[0m
+[31m│[0m [1m'toUpperCase')                                                              [0m [31m│[0m
+[31m│[0m The arguments match the declared parameter types (mapWords(text: string, fn: [31m│[0m
+[31m│[0m (word: string) => string): string), but the call throws TypeError: Cannot    [31m│[0m
+[31m│[0m read properties of undefined (reading 'toUpperCase'). This message comes     [31m│[0m
+[31m│[0m from the JavaScript engine, not from an explicit validation check, which     [31m│[0m
+[31m│[0m usually means the code reads a property of undefined or null, calls a        [31m│[0m
+[31m│[0m missing method or iterates something that is not iterable.                   [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m input: '', (word) => word                                                    [31m│[0m
+[31m│[0m [2mmapWords('', (word) => word) -> throws TypeError: Cannot read properties of [0m [31m│[0m
+[31m│[0m [2mundefined (reading 'toUpperCase')                                           [0m [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2mreproduction:                                                               [0m [31m│[0m
+[31m│[0m   // mapWords throws TypeError: Cannot read properties of undefined (reading [31m│[0m
+[31m│[0m   'toUpperCase')                                                             [31m│[0m
+[31m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [31m│[0m
+[31m│[0m   import { mapWords } from 'buggy-lib';                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   console.log(mapWords('', (word) => word));                                 [31m│[0m
+[31m│[0m   // TypeError: Cannot read properties of undefined (reading 'toUpperCase')  [31m│[0m
+[31m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+
+[33m[1mMEDIUM (5)[0m[0m
+[33m╭─[0m[1;30;43m MEDIUM [0m[1m average [0m[33m──────────────────────────────────────────────────[0m[2m nan-leak [0m[33m╮[0m
+[33m│[0m [1maverage returns NaN for finite input                                        [0m [33m│[0m
+[33m│[0m All numeric arguments are finite, but the result is NaN. NaN usually leaks   [33m│[0m
+[33m│[0m from 0 / 0, Infinity - Infinity, arithmetic on undefined or a failed lookup, [33m│[0m
+[33m│[0m and then spreads silently through later calculations.                        [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m input: [0]                                                                   [33m│[0m
+[33m│[0m [2maverage([0]) -> NaN                                                         [0m [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m [2mreproduction:                                                               [0m [33m│[0m
+[33m│[0m   // average returns NaN for finite input                                    [33m│[0m
+[33m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [33m│[0m
+[33m│[0m   import { average } from 'buggy-lib';                                       [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m   console.log(average([0]));                                                 [33m│[0m
+[33m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[33m╭─[0m[1;30;43m MEDIUM [0m[1m label [0m[33m────────────────────────────────────────────[0m[2m nondeterministic [0m[33m╮[0m
+[33m│[0m [1mlabel returns different results for the same input                          [0m [33m│[0m
+[33m│[0m Calling label twice in a row with the same arguments, in the same process,   [33m│[0m
+[33m│[0m gave different results. The clock is frozen during the calls and each call   [33m│[0m
+[33m│[0m gets a fresh copy of the arguments, so the difference comes from somewhere   [33m│[0m
+[33m│[0m else: Math.random, a module level counter or cache, or other state shared    [33m│[0m
+[33m│[0m between calls.                                                               [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m input: 'a'                                                                   [33m│[0m
+[33m│[0m [2mlabel('a') -> 'a'                                                           [0m [33m│[0m
+[33m│[0m [2mlabel('a') -> 'A'                                                           [0m [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m [2mreproduction:                                                               [0m [33m│[0m
+[33m│[0m   // label returns different results for the same input                      [33m│[0m
+[33m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [33m│[0m
+[33m│[0m   import { label } from 'buggy-lib';                                         [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m   const first = label('a');                                                  [33m│[0m
+[33m│[0m   const second = label('a');                                                 [33m│[0m
+[33m│[0m   console.log(first, second);                                                [33m│[0m
+[33m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[33m╭─[0m[1;30;43m MEDIUM [0m[1m encodeBase [0m[33m──────────────────────────────────────────────[0m[2m roundtrip [0m[33m╮[0m
+[33m│[0m [1mdecodeBase(encodeBase(x)) does not return x                                 [0m [33m│[0m
+[33m│[0m encodeBase and decodeBase look like inverse functions. For a well formed     [33m│[0m
+[33m│[0m input x, decodeBase(encodeBase(x)) returned ' ' instead of x. One of the two [33m│[0m
+[33m│[0m functions loses information for this input, or the pair is not meant to be   [33m│[0m
+[33m│[0m inverse (then this finding can be ignored).                                  [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m input: '_'                                                                   [33m│[0m
+[33m│[0m [2mencodeBase('_') -> '_'                                                      [0m [33m│[0m
+[33m│[0m [2mdecodeBase(encodeBase('_')) -> ' '                                          [0m [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m [2mreproduction:                                                               [0m [33m│[0m
+[33m│[0m   // decodeBase(encodeBase(x)) does not return x                             [33m│[0m
+[33m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [33m│[0m
+[33m│[0m   import { encodeBase, decodeBase } from 'buggy-lib';                        [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m   const input = '_';                                                         [33m│[0m
+[33m│[0m   const encoded = encodeBase('_');                                           [33m│[0m
+[33m│[0m   const decoded = decodeBase(encoded);                                       [33m│[0m
+[33m│[0m   console.log(encoded, decoded);                                             [33m│[0m
+[33m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[33m╭─[0m[1;30;43m MEDIUM [0m[1m slugify [0m[33m────────────────────────────────────────────[0m[2m not-idempotent [0m[33m╮[0m
+[33m│[0m [1mslugify is not idempotent                                                   [0m [33m│[0m
+[33m│[0m The name suggests a normalizing function, and applying a normalizer twice    [33m│[0m
+[33m│[0m should change nothing. For this input a second application changed the       [33m│[0m
+[33m│[0m result again ('x_y' became 'x-y'), so values normalized once and values      [33m│[0m
+[33m│[0m normalized twice compare as different.                                       [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m input: 'x y'                                                                 [33m│[0m
+[33m│[0m [2mslugify('x y') -> 'x_y'                                                     [0m [33m│[0m
+[33m│[0m [2mslugify(slugify('x y')) -> 'x-y'                                            [0m [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m [2mreproduction:                                                               [0m [33m│[0m
+[33m│[0m   // slugify is not idempotent                                               [33m│[0m
+[33m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [33m│[0m
+[33m│[0m   import { slugify } from 'buggy-lib';                                       [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m   const once = slugify('x y');                                               [33m│[0m
+[33m│[0m   const twice = slugify(once);                                               [33m│[0m
+[33m│[0m   console.log(once, twice);                                                  [33m│[0m
+[33m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[33m╭─[0m[1;30;43m MEDIUM [0m[1m formatFixed [0m[33m────────────────────────────────────[0m[2m negative-zero-sign [0m[33m╮[0m
+[33m│[0m [1mformatFixed drops the minus sign of numbers between -1 and 0                [0m [33m│[0m
+[33m│[0m formatFixed(-0.5) returns '0.50', the same as for 0.5. Negative numbers      [33m│[0m
+[33m│[0m outside that range keep their sign (formatFixed(-1.5) returns '-1.50'), so   [33m│[0m
+[33m│[0m the sign is lost only when the integer part is zero. This often happens when [33m│[0m
+[33m│[0m the integer part is computed first and the sign is read from it: the integer [33m│[0m
+[33m│[0m part of -0.5 is -0, which prints as "0".                                     [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m input: -0.5                                                                  [33m│[0m
+[33m│[0m [2mformatFixed(-0.5) -> '0.50'                                                 [0m [33m│[0m
+[33m│[0m [2mformatFixed(0.5) -> '0.50'                                                  [0m [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m [2mreproduction:                                                               [0m [33m│[0m
+[33m│[0m   // formatFixed drops the minus sign of numbers between -1 and 0            [33m│[0m
+[33m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [33m│[0m
+[33m│[0m   import { formatFixed } from 'buggy-lib';                                   [33m│[0m
+[33m│[0m                                                                              [33m│[0m
+[33m│[0m   console.log(formatFixed(-0.5));                                            [33m│[0m
+[33m│[0m   console.log(formatFixed(0.5));                                             [33m│[0m
+[33m│[0m   console.log(formatFixed(-1.5));                                            [33m│[0m
+[33m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+
+[90m[1mINFO (2)[0m[0m
+[90m╭─[0m[1;97;100m INFO [0m[1m percent [0m[90m────────────────────────────────────────────[0m[2m unexpected-crash [0m[90m╮[0m
+[90m│[0m [1mpercent throws RangeError for some inputs that match its types              [0m [90m│[0m
+[90m│[0m For arguments that match the declared types (percent(part: number, total:    [90m│[0m
+[90m│[0m number): number), the call throws RangeError: total must not be 0. This      [90m│[0m
+[90m│[0m looks like an intentional validation error or a documented limit, so it is   [90m│[0m
+[90m│[0m reported for information only. If the input is not supported, a narrower     [90m│[0m
+[90m│[0m declared type would let TypeScript users catch it at compile time.           [90m│[0m
+[90m│[0m                                                                              [90m│[0m
+[90m│[0m input: 0, 0                                                                  [90m│[0m
+[90m│[0m [2mpercent(0, 0) -> throws RangeError: total must not be 0                     [0m [90m│[0m
+[90m│[0m                                                                              [90m│[0m
+[90m│[0m [2mreproduction:                                                               [0m [90m│[0m
+[90m│[0m   // percent throws RangeError for some inputs that match its types          [90m│[0m
+[90m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [90m│[0m
+[90m│[0m   import { percent } from 'buggy-lib';                                       [90m│[0m
+[90m│[0m                                                                              [90m│[0m
+[90m│[0m   console.log(percent(0, 0));                                                [90m│[0m
+[90m│[0m   // RangeError: total must not be 0                                         [90m│[0m
+[90m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[90m╭─[0m[1;97;100m INFO [0m[1m randomToken [0m[90m────────────────────────────────────────[0m[2m nondeterministic [0m[90m╮[0m
+[90m│[0m [1mrandomToken returns a different result on each call                         [0m [90m│[0m
+[90m│[0m randomToken returned different results for the same arguments. Its name      [90m│[0m
+[90m│[0m suggests randomness, time or unique ids, so this is likely intended.         [90m│[0m
+[90m│[0m                                                                              [90m│[0m
+[90m│[0m input:                                                                       [90m│[0m
+[90m│[0m [2mrandomToken() -> 'bnk5aob6ju'                                               [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> 'oorw3fflsp'                                               [0m [90m│[0m
+[90m│[0m                                                                              [90m│[0m
+[90m│[0m [2mreproduction:                                                               [0m [90m│[0m
+[90m│[0m   // randomToken returns a different result on each call                     [90m│[0m
+[90m│[0m   // Found by breakhound. Package: buggy-lib@1.0.0                           [90m│[0m
+[90m│[0m   import { randomToken } from 'buggy-lib';                                   [90m│[0m
+[90m│[0m                                                                              [90m│[0m
+[90m│[0m   const first = randomToken();                                               [90m│[0m
+[90m│[0m   const second = randomToken();                                              [90m│[0m
+[90m│[0m   console.log(first, second);                                                [90m│[0m
+[90m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+
+[1mSummary[0m
+[2m  rule                   count  severity[0m
+  lone-surrogate-output      2  [31mhigh[0m
+  unexpected-crash           2  [31mhigh[0m
+  timezone-dependent         1  [31mhigh[0m
+  nan-leak                   1  [33mmedium[0m
+  negative-zero-sign         1  [33mmedium[0m
+  nondeterministic           1  [33mmedium[0m
+  not-idempotent             1  [33mmedium[0m
+  roundtrip                  1  [33mmedium[0m
+  nondeterministic           1  [90minfo[0m
+  unexpected-crash           1  [90minfo[0m
+
+[1m[31m12 bugs sniffed out in 23 functions, 4.8 s[0m[0m
+
+[2mSkipped 1 signature:[0m
+[2m  Counter: class (constructors are not called)[0m
+
+[2mHints: --json for machine output, --fail-on high for CI, --only <names> to focus[0m
+[2mSaved report to .breakhound/report.json[0m

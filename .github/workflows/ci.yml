@@ -32,3 +32,6 @@ jobs:
         if: matrix.node != 18
 
       - run: npm test
+
+      - run: npm run docs:check
+        if: matrix.node == 22

@@ -1,0 +1,221 @@
+<!--meta
+{
+  "slug": "property-based-testing-without-writing-tests",
+  "title": "Property Based Testing Without Writing Tests | breakhound",
+  "description": "Property based testing without writing tests: breakhound checks idempotence, roundtrip and determinism from your types, no properties to author.",
+  "h1": "Property based testing without writing tests",
+  "crumb": "Property testing, no tests",
+  "lead": "Property based testing is powerful, but most teams never get past the blank file where the first property should go. breakhound runs the common invariants for you, straight from your TypeScript types.",
+  "readTime": "4 min read",
+  "related": [
+    "roundtrip-testing-encode-decode",
+    "negative-zero-javascript-bugs",
+    "automated-testing-in-github-actions"
+  ],
+  "faq": [
+    {
+      "q": "Is this really property based testing if I write nothing?",
+      "a": "<p>The checks are properties (idempotence, roundtrip, determinism) evaluated over generated inputs, so the technique is the same. The difference is who writes the property and the generator: breakhound ships a fixed set of oracles and derives inputs from your types.</p>"
+    },
+    {
+      "q": "Does breakhound replace fast-check?",
+      "a": "<p>No. fast-check is the right tool for properties that encode your domain rules, and it has shrinking. breakhound covers generic invariants with zero authoring, so the two complement each other.</p>"
+    },
+    {
+      "q": "Which invariants does breakhound check?",
+      "a": "<p>The rule ids are <code>lone-surrogate-output</code>, <code>timezone-dependent</code>, <code>unexpected-crash</code>, <code>nan-leak</code>, <code>roundtrip</code>, <code>not-idempotent</code>, <code>negative-zero-sign</code> and <code>nondeterministic</code>. Use <code>--rules</code> to select a subset.</p>"
+    },
+    {
+      "q": "Do I need TypeScript types for it to work?",
+      "a": "<p>breakhound generates inputs from the declared types in the <code>.d.ts</code> files, so typed packages give the best results. It works on both npm packages and local paths.</p>"
+    },
+    {
+      "q": "Are the results reproducible?",
+      "a": "<p>Yes. The random inputs are seeded (default 42, change it with <code>--seed</code>), and each finding includes a minimal reproduction script and a Vitest test.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Property based testing without writing tests",
+        "description": "Property based testing without writing tests: breakhound checks idempotence, roundtrip and determinism from your types, no properties to author.",
+        "url": "https://kwy404.github.io/breakhound/property-based-testing-without-writing-tests.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/property-based-testing-without-writing-tests.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is this really property based testing if I write nothing?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The checks are properties (idempotence, roundtrip, determinism) evaluated over generated inputs, so the technique is the same. The difference is who writes the property and the generator: breakhound ships a fixed set of oracles and derives inputs from your types."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does breakhound replace fast-check?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. fast-check is the right tool for properties that encode your domain rules, and it has shrinking. breakhound covers generic invariants with zero authoring, so the two complement each other."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which invariants does breakhound check?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The rule ids are lone-surrogate-output, timezone-dependent, unexpected-crash, nan-leak, roundtrip, not-idempotent, negative-zero-sign and nondeterministic. Use --rules to select a subset."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need TypeScript types for it to work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "breakhound generates inputs from the declared types in the .d.ts files, so typed packages give the best results. It works on both npm packages and local paths."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are the results reproducible?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. The random inputs are seeded (default 42, change it with --seed), and each finding includes a minimal reproduction script and a Vitest test."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Property based testing without writing tests",
+            "item": "https://kwy404.github.io/breakhound/property-based-testing-without-writing-tests.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="why-properties-are-hard-to-start"><h2>Why properties are hard to start</h2>
+<p>The idea behind property based testing is simple: instead of asserting that <code>slugify('Hello World')</code> equals <code>'hello-world'</code>, you state a rule that must hold for every input and let a machine hunt for a counterexample. The hard part is not the machine. It is deciding which rules to write, and then writing an input generator (an arbitrary) that produces the nasty values your real users will eventually send.</p>
+<p>In practice that cost is why the test file stays empty. You need to know the library well enough to name its invariants, and you need to know the platform well enough to generate lone surrogates, <code>-0</code>, dates before 1970 and inputs that change meaning under a different time zone. This guide shows a shortcut: for a surprisingly large family of bugs, the invariants are generic and can be checked without you authoring anything.</p>
+</section>
+<section id="what-fast-check-gives-you"><h2>What fast-check gives you, honestly</h2>
+<p>fast-check is the standard property based testing library for JavaScript, and it is excellent. You write the property, you choose the arbitraries, and when something fails it shrinks the input to a small counterexample. If your team already has the habit, keep using it. Here is the idempotence property for a slug function:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="slugify.property.test.ts">
+import fc from 'fast-check';
+import { test } from 'vitest';
+import { slugify } from './slugify';
+
+test('slugify is idempotent', () =&gt; {
+  fc.assert(
+    fc.property(fc.string(), (s) =&gt; slugify(slugify(s)) === slugify(s))
+  );
+});
+</pre>
+<p>That is nine lines for one function and one invariant. It is also only as good as the arbitrary you pick: a plain string arbitrary will not hit every platform edge by default, and a time zone dependency needs you to write the harness that switches <code>TZ</code>. fast-check solves "how do I express and shrink a property." It does not solve "which properties should I write for the other fifty exports."</p>
+</section>
+<section id="invariants-you-can-check-for-free"><h2>Invariants you can check for free</h2>
+<p>Some rules apply to nearly any function, and they are exactly the ones people forget to write:</p>
+<ul>
+<li><strong>Idempotence:</strong> for normalizing functions such as <code>slugify</code> and canonicalizers, <code>f(f(x))</code> should equal <code>f(x)</code>.</li>
+<li><strong>Roundtrip:</strong> if a library exposes <code>encodeX</code> and <code>decodeX</code>, then <code>decodeX(encodeX(x))</code> should return <code>x</code>. See <a href="roundtrip-testing-encode-decode.html">roundtrip testing for encode and decode pairs</a>.</li>
+<li><strong>Determinism:</strong> calling a function twice with the same input should give the same answer.</li>
+<li><strong>No NaN leak:</strong> finite input should not produce <code>NaN</code>.</li>
+<li><strong>Well formed output:</strong> a string result should not contain a lone surrogate (see <a href="unicode-surrogate-pair-bugs.html">unicode surrogate pair bugs</a>).</li>
+<li><strong>No unexpected crash:</strong> a call whose arguments match the declared types should not throw a <code>TypeError</code>.</li>
+</ul>
+<p>None of these need domain knowledge. They only need a generator that knows what a <code>string</code>, a <code>number</code> or a <code>Date</code> looks like at the edges, and that is derivable from the type signature.</p>
+</section>
+<section id="a-failing-example"><h2>A failing example</h2>
+<p>Here is a slug function that looks reasonable in review. It lowercases, converts underscores to hyphens, then turns whitespace into underscores.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="slugify.ts" data-bad="5">
+export function slugify(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, '-')
+    .replace(/\s+/g, '_');
+}
+</pre>
+<p>Now <code>slugify('x y')</code> returns <code>'x_y'</code>, and feeding that result back in returns <code>'x-y'</code>. The two passes disagree about which separator is canonical, so the output of the function is not a fixed point of the function. In a real system that means duplicate or unstable URLs the moment someone re-saves a record. The fix is to converge on one separator in a single pass:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="slugify.ts" data-ok="5">
+export function slugify(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-');
+}
+</pre>
+</section>
+<section id="running-breakhound"><h2>Running breakhound on it</h2>
+<p>breakhound reads the <code>.d.ts</code> types, generates inputs per parameter (including edge cases from the edgegoat package), and applies the invariants above as oracles. You do not write a property or an arbitrary:</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --rules not-idempotent,roundtrip,nondeterministic
+</pre>
+<p>On the buggy-lib fixture, the plain output includes this finding:</p>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+breakhound v0.1.0  buggy-lib@1.0.0 (local)
+23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42 | 6.8s
+
+  [not-idempotent] slugify is not idempotent (confidence medium)
+    slugify('x y')  -&gt; 'x_y'
+    slugify(slugify('x y'))  -&gt; 'x-y'
+</pre>
+<p>Every finding also comes with a minimal reproduction script and a ready Vitest test, so the counterexample becomes a permanent regression test without any extra typing:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="slugify.test.ts">
+import { expect, test } from 'vitest';
+import { slugify } from 'buggy-lib';
+
+test("slugify is idempotent", () =&gt; {
+  const once = slugify('x y');
+  expect(slugify(once)).toEqual(once);
+});
+</pre>
+<p>Runs are seeded (default seed 42), so the same command finds the same inputs tomorrow. Because the target is executed in an isolated child process with a timeout, a hang or a crash in one function does not stop the hunt.</p>
+</section>
+<section id="when-to-keep-writing-properties"><h2>When to keep writing properties</h2>
+<p>Generic oracles cover rules that hold for any function of a given shape. They cannot know that your <code>sortInvoices</code> must preserve the total, or that your parser must accept every output of your printer. Those domain properties are where fast-check earns its place, and they are worth writing by hand.</p>
+<p>A sensible split is to run breakhound first, because it costs one command and clears the generic bugs, then spend your property-writing time on the rules only you know. If you also care about crashes in parsers on hostile bytes, a coverage guided fuzzer such as Jazzer.js is the better tool, and <a href="fuzz-testing-typescript.html">fuzz testing in TypeScript</a> explains where each approach fits. For the general workflow, start with <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a>, and when you are ready to enforce it on every pull request, see <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a>.</p>
+<div class="callout"><p>Use <code>--fail-on high</code> to make the command exit with code 1 only when a high severity finding appears, so you can adopt the checks gradually.</p></div>
+</section>

@@ -1,0 +1,228 @@
+<!--meta
+{
+  "slug": "unicode-surrogate-pair-bugs",
+  "title": "Surrogate pair bugs in JavaScript: lone surrogates",
+  "description": "Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.",
+  "h1": "Surrogate pair bugs in JavaScript: why emoji get split",
+  "crumb": "Surrogate pair bugs",
+  "lead": "JavaScript strings are UTF-16, so cutting one at the wrong index can leave half an emoji behind. That half is a lone surrogate, and it breaks JSON, URLs and rendering.",
+  "readTime": "3 min read",
+  "related": [
+    "property-based-testing-without-writing-tests",
+    "roundtrip-testing-encode-decode",
+    "negative-zero-javascript-bugs"
+  ],
+  "faq": [
+    {
+      "q": "What is a lone surrogate?",
+      "a": "<p>Half of a UTF-16 surrogate pair without its partner. It is not a valid character, and it breaks <code>encodeURIComponent</code>, <code>TextEncoder</code> round trips and many serializers.</p>"
+    },
+    {
+      "q": "Is code point slicing enough?",
+      "a": "<p>It avoids lone surrogates, but grapheme clusters such as flags, skin tone sequences and family emoji can still be split into odd pieces. Use <code>Intl.Segmenter</code> when the user sees the result.</p>"
+    },
+    {
+      "q": "How do I check a string for lone surrogates?",
+      "a": "<p>On Node 20 and newer, call <code>str.isWellFormed()</code>. On older runtimes, use a regular expression that matches an unpaired high or low surrogate, as in the generated test above.</p>"
+    },
+    {
+      "q": "Does <code>substr</code> have the same problem as <code>slice</code>?",
+      "a": "<p>Yes. <code>substr</code> is deprecated and counts code units like <code>slice</code> and <code>substring</code>, so it can cut a pair in half too.</p>"
+    },
+    {
+      "q": "Do I need to write emoji test cases myself?",
+      "a": "<p>No. breakhound reads your TypeScript types and feeds emoji, flags and lone surrogates to every string parameter automatically. You only run <code>npx breakhound ./my-lib</code>.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Surrogate pair bugs in JavaScript: why emoji get split",
+        "description": "Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.",
+        "url": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is a lone surrogate?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Half of a UTF-16 surrogate pair without its partner. It is not a valid character, and it breaks encodeURIComponent, TextEncoder round trips and many serializers."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is code point slicing enough?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It avoids lone surrogates, but grapheme clusters such as flags, skin tone sequences and family emoji can still be split into odd pieces. Use Intl.Segmenter when the user sees the result."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I check a string for lone surrogates?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "On Node 20 and newer, call str.isWellFormed(). On older runtimes, use a regular expression that matches an unpaired high or low surrogate, as in the generated test above."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does substr have the same problem as slice?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. substr is deprecated and counts code units like slice and substring, so it can cut a pair in half too."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to write emoji test cases myself?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. breakhound reads your TypeScript types and feeds emoji, flags and lone surrogates to every string parameter automatically. You only run npx breakhound ./my-lib."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Surrogate pair bugs in JavaScript: why emoji get split",
+            "item": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="what-is-a-surrogate-pair"><h2>What a surrogate pair is, and what a lone surrogate is</h2>
+<p>A JavaScript string is a sequence of 16-bit code units. Characters in the Basic Multilingual Plane fit in one unit. Everything above U+FFFF, including most emoji, needs two: a high surrogate (0xD800 to 0xDBFF) followed by a low surrogate (0xDC00 to 0xDFFF). Together they form a surrogate pair.</p>
+<p>A <strong>lone surrogate</strong> is one half of that pair with no partner. It is not a valid character. It renders as a replacement box, <code>encodeURIComponent</code> throws a <code>URIError</code> on it, <code>TextEncoder</code> silently replaces it with U+FFFD, and many JSON serializers and databases reject or corrupt it. The bug is hard to notice because the broken string only shows up when real text contains an emoji at exactly the wrong position.</p>
+</section>
+<section id="slice-substr-charat"><h2>How slice, substr and charAt split emoji</h2>
+<p><code>length</code>, <code>slice</code>, <code>substring</code>, <code>substr</code> and <code>charAt</code> all count code units, not characters. One emoji has a length of 2:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="split.ts" data-bad="3">
+const s = 'hi \u{1F44B}';
+s.length;                    // 5, not 4
+s.slice(0, 4);               // 'hi \uD83D', a lone high surrogate
+[...s].slice(0, 4).join(''); // 'hi \u{1F44B}', code points are kept whole
+</pre>
+<p>Here are the usual suspects and what each one counts:</p>
+<table>
+<tr><th>Method</th><th>Counts</th><th>Can leave a lone surrogate</th></tr>
+<tr><td><code>slice(a, b)</code>, <code>substring(a, b)</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>substr(a, n)</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>charAt(i)</code>, <code>str[i]</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>split('')</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>[...str]</code>, <code>for...of</code>, <code>Array.from</code></td><td>code points</td><td>no</td></tr>
+</table>
+<p>The classic victims are helper functions that every project has: truncate with an ellipsis, take the first letter for an avatar, pad or wrap to a column width.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="truncate.ts" data-bad="3">
+export function truncate(text: string, max: number): string {
+  // bug: slice counts UTF-16 code units, so it can cut an emoji in half
+  return text.length &gt; max ? text.slice(0, max) : text;
+}
+
+export function initials(name: string): string {
+  return name.charAt(0).toUpperCase();
+}
+</pre>
+<p>With input <code>'\u{1F600}'</code> and a limit of 1, <code>truncate</code> returns <code>'\uD83D'</code>. <code>initials</code> does the same for a name that starts with an emoji.</p>
+</section>
+<section id="real-bugs"><h2>Real bugs fixed in the wild</h2>
+<p>This is not a beginner mistake. It was fixed in <a href="https://github.com/google/budoux/pull/1411">google/budoux#1411</a> and <a href="https://github.com/microsoft/vscode-js-debug/pull/2423">microsoft/vscode-js-debug#2423</a>, both merged. Those projects are maintained by people who know Unicode well, and the bug still got in, because unit tests rarely put an emoji at the cut point. The lesson is that you cannot rely on remembering; you need inputs that deliberately land on the boundary.</p>
+</section>
+<section id="how-to-fix-it"><h2>How to fix it</h2>
+<p>The smallest fix is to work in code points instead of code units:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="truncate.ts" data-ok="3">
+export function truncate(text: string, max: number): string {
+  const chars = Array.from(text);
+  return chars.length &gt; max ? chars.slice(0, max).join('') : text;
+}
+
+export function initials(name: string): string {
+  const [first = ''] = Array.from(name);
+  return first.toUpperCase();
+}
+</pre>
+<p>That removes lone surrogates, but a code point is still not what a user sees as one character. Flags, skin tone sequences and family emoji are several code points joined together, and combining accents are separate code points as well. When you need user-perceived characters, use <code>Intl.Segmenter</code> with <code>granularity: 'grapheme'</code>:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="graphemes.ts">
+export function truncateGraphemes(text: string, max: number): string {
+  const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  const parts = Array.from(seg.segment(text), (s) =&gt; s.segment);
+  return parts.length &gt; max ? parts.slice(0, max).join('') : text;
+}
+</pre>
+<p>As a last line of defense at an output boundary, <code>String.prototype.toWellFormed()</code> (Node 20+) replaces any lone surrogate with U+FFFD, and <code>isWellFormed()</code> lets you check first. Use them to contain damage, not to hide the cause.</p>
+</section>
+<section id="how-breakhound-catches-it"><h2>How breakhound catches lone surrogates</h2>
+<p>For every <code>string</code> parameter, breakhound generates edge cases from the edgegoat package: emoji, flags, lone surrogates and other awkward Unicode, plus numeric arguments that move the cut position. Each call runs in an isolated child process with a timeout. The <code>lone-surrogate-output</code> rule then checks every string in the result and reports the shortest input that produces a broken one.</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --rules lone-surrogate-output
+</pre>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+breakhound v0.1.0  buggy-lib@1.0.0 (local)
+23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42 | 6.8s
+
+HIGH (2)
+  [lone-surrogate-output] truncate returns a string with a lone surrogate (confidence high)
+    truncate('\u{1F600}', 1)  -&gt; '\ud83d'
+  [lone-surrogate-output] initials returns a string with a lone surrogate (confidence high)
+    initials('\u{1F600}')  -&gt; '\ud83d'
+</pre>
+<p>Each finding includes a reproduction script and a ready Vitest test you can keep as a regression test:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="truncate.test.ts">
+import { expect, test } from 'vitest';
+import { truncate } from 'my-lib';
+
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?&lt;![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+test("truncate returns well formed UTF-16", () =&gt; {
+  const result = truncate('\u{1F600}', 1);
+  expect(result).not.toMatch(LONE_SURROGATE);
+});
+</pre>
+<p>The same run also reports crashes, <code>NaN</code> leaks and zone-dependent output, so one command covers more than strings. See <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a> for the full list of rules, <a href="timezone-bugs-javascript.html">timezone bugs</a> for the date side, and <a href="fuzz-testing-typescript.html">fuzz testing TypeScript</a> for how this compares with writing your own fuzzers.</p>
+<div class="callout"><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container.</p></div>
+</section>

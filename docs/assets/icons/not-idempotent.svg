@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
-  <title>Oracle: not idempotent</title>
-  <rect width="48" height="48" rx="12" fill="#1B2440"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3.5"><path d="M9 16H24M20 12L24 16L20 20"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#E9B97A" stroke-width="3.5"><path d="M9 32H24M20 28L24 32L20 36"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#1FA393" stroke-width="3"><path d="M30 21H40M30 27H40M37 16L33 32"/></g>
-</svg>

@@ -1,0 +1,215 @@
+<!--meta
+{
+  "slug": "automated-testing-in-github-actions",
+  "title": "Automated Testing in GitHub Actions with breakhound",
+  "description": "Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.",
+  "h1": "Automated testing in GitHub Actions without writing tests",
+  "crumb": "Testing in GitHub Actions",
+  "lead": "A pull request check that finds crashes, time zone bugs and broken Unicode handling in your JavaScript library takes about ten lines of YAML. Here is the workflow, what it reports, and how to keep runs reproducible.",
+  "readTime": "3 min read",
+  "related": [
+    "find-bugs-automatically-javascript",
+    "fuzz-testing-typescript",
+    "timezone-bugs-javascript"
+  ],
+  "faq": [
+    {
+      "q": "How do I make the GitHub Actions job fail on findings?",
+      "a": "<p>Pass <code>--fail-on high</code> (or <code>medium</code>, <code>low</code>, <code>info</code>). The command exits with code 1 when a finding of that severity or higher exists.</p>"
+    },
+    {
+      "q": "Where does the job summary come from?",
+      "a": "<p>In GitHub Actions breakhound appends a markdown report to <code>GITHUB_STEP_SUMMARY</code> automatically and emits annotations. You do not enable it.</p>"
+    },
+    {
+      "q": "Why use npm ci --ignore-scripts?",
+      "a": "<p><code>npm ci</code> installs exactly what the lockfile says, and <code>--ignore-scripts</code> skips dependency lifecycle scripts. breakhound installs npm packages with <code>--ignore-scripts</code> as well.</p>"
+    },
+    {
+      "q": "Will the same commit give the same findings on every run?",
+      "a": "<p>That is the point of seeding. The default seed is 42; pass <code>--seed</code> to choose another one and record it so a failure can be reproduced locally.</p>"
+    },
+    {
+      "q": "How is this different from running fast-check or Jazzer.js in CI?",
+      "a": "<p>fast-check needs you to write properties and arbitraries, and Jazzer.js needs fuzz targets. breakhound is type driven and needs neither, so it works as a zero setup first line of defense. See <a href=\"fuzz-testing-typescript.html\">fuzz testing TypeScript</a> for the trade-offs.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Automated testing in GitHub Actions without writing tests",
+        "description": "Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.",
+        "url": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I make the GitHub Actions job fail on findings?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pass --fail-on high (or medium, low, info). The command exits with code 1 when a finding of that severity or higher exists."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where does the job summary come from?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "In GitHub Actions breakhound appends a markdown report to GITHUB_STEP_SUMMARY automatically and emits annotations. You do not enable it."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why use npm ci --ignore-scripts?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "npm ci installs exactly what the lockfile says, and --ignore-scripts skips dependency lifecycle scripts. breakhound installs npm packages with --ignore-scripts as well."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Will the same commit give the same findings on every run?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "That is the point of seeding. The default seed is 42; pass --seed to choose another one and record it so a failure can be reproduced locally."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is this different from running fast-check or Jazzer.js in CI?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "fast-check needs you to write properties and arbitraries, and Jazzer.js needs fuzz targets. breakhound is type driven and needs neither, so it works as a zero setup first line of defense. See fuzz testing TypeScript for the trade-offs."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Automated testing in GitHub Actions without writing tests",
+            "item": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="why"><h2>Why add a bug hunt to CI</h2>
+<p>Unit tests only cover the cases someone thought of. A type driven check covers the rest: <code>npx breakhound</code> reads your TypeScript declarations, generates inputs for every parameter (including time zones, DST edges, emoji, lone surrogates, <code>-0</code>, <code>NaN</code> and empty strings), and checks invariants on the results. Running it in CI means a regression is caught on the pull request that introduces it, not in a bug report six months later. For how the checks work, see <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a>.</p>
+</section>
+<section id="naive-workflow"><h2>The workflow people write first</h2>
+<p>The first attempt usually has two problems. <code>npm install</code> runs lifecycle scripts of every dependency, and <code>|| true</code> swallows the exit code, so the job is green no matter what was found. A check that can never fail is decoration.</p>
+<pre data-kind="editor" data-numbered data-lang="yaml" data-title=".github/workflows/breakhound.yml" data-bad="10">
+name: breakhound
+on: [push, pull_request]
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm install
+      - run: npx breakhound . || true
+</pre>
+</section>
+<section id="correct-workflow"><h2>A workflow that fails on real bugs</h2>
+<p>Install with <code>npm ci --ignore-scripts</code> for a reproducible dependency tree without running install scripts, then gate on severity with <code>--fail-on</code>. The process exits with code 1 when a finding has that severity or higher, which fails the job.</p>
+<pre data-kind="editor" data-numbered data-lang="yaml" data-title=".github/workflows/breakhound.yml" data-ok="16">
+name: breakhound
+on:
+  push:
+  pull_request:
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --ignore-scripts
+      - run: npx breakhound . --fail-on high
+</pre>
+<p>Start with <code>--fail-on high</code> (lone surrogates, crashes, time zone dependence) and tighten to <code>medium</code> once the backlog is clean. If your package entry point is a build output, add your build step before the breakhound step so the declarations and code exist.</p>
+<div class="callout"><p>breakhound executes the code it analyzes. That is fine for your own repository. For pull requests from forks, keep permissions minimal as above, expose no secrets to the job, and avoid <code>pull_request_target</code>.</p></div>
+</section>
+<section id="annotations"><h2>Annotations and the job summary</h2>
+<p>When it detects <code>GITHUB_ACTIONS=true</code>, breakhound emits workflow annotations (<code>::error</code> and friends) so findings show up on the run page, and it appends a markdown report to the file named by <code>GITHUB_STEP_SUMMARY</code>. You get a readable summary on the job page with no extra steps and no configuration. The log header and summary line look like this:</p>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+breakhound v0.1.0  buggy-lib@1.0.0 (local)
+23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42 | 6.8s
+
+HIGH (5)
+  [lone-surrogate-output] truncate returns a string with a lone surrogate (confidence high)
+    truncate('\u{1F600}', 1)  -&gt; '\ud83d'
+
+Summary: 5 high, 5 medium, 0 low, 2 info
+</pre>
+</section>
+<section id="artifacts"><h2>Keeping the evidence: JSON, JSONL and artifacts</h2>
+<p>A red check is more useful when the reproduction scripts and Vitest tests are one click away. Use <code>--json --output report.json</code> to write the full report to a file, <code>--log</code> to write a JSON Lines run log (the <code>BREAKHOUND_LOG</code> environment variable works too), and upload both with <code>actions/upload-artifact</code>. By default breakhound also saves <code>.breakhound/last-run.jsonl</code> and <code>.breakhound/report.json</code> unless you pass <code>--no-save</code>.</p>
+<pre data-kind="editor" data-numbered data-lang="yaml" data-title="Steps added after install">
+      - run: npx breakhound . --fail-on high --log run.jsonl
+      - run: npx breakhound . --json --output report.json
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: breakhound-report
+          path: |
+            report.json
+            run.jsonl
+</pre>
+<p>The <code>if: always()</code> guards matter: without them the later steps are skipped exactly when the gate step fails, which is when you want the files.</p>
+</section>
+<section id="seeds"><h2>Seeds and reproducibility</h2>
+<p>Input generation is seeded. The default seed is 42, so two runs on the same commit explore the same inputs. That is what you want on pull requests: a failure should not vanish on rerun. To widen coverage over time, run a scheduled workflow that passes a different seed, such as <code>--seed ${{ github.run_number }}</code>, and use the seed printed in the log header to rerun locally:</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound . --seed 1337 --max-calls 50000 --fail-on high
+</pre>
+<p>You can also narrow a noisy run with <code>--only</code>, <code>--exclude</code> or <code>--rules</code>, and bound it with <code>--max-calls</code> and <code>--timeout</code>. Related reading: <a href="timezone-bugs-javascript.html">time zone bugs in JavaScript</a>, which breakhound exercises by running under several <code>TZ</code> values, and <a href="negative-zero-javascript-bugs.html">negative zero bugs</a>. See the <a href="./">home page</a> for the full flag list.</p>
+</section>

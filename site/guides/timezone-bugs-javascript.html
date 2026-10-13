@@ -1,0 +1,236 @@
+<!--meta
+{
+  "slug": "timezone-bugs-javascript",
+  "title": "Timezone bugs in JavaScript: find and fix | breakhound",
+  "description": "Why JavaScript date code breaks in other time zones: UTC vs local getters, DST, dates before 1970, and how to catch every case automatically.",
+  "h1": "Timezone bugs in JavaScript and how to catch them",
+  "crumb": "Timezone bugs",
+  "lead": "A JavaScript Date is one instant, but every getter answers in some time zone. Mix two of them and your code is right on your laptop and wrong for half the planet.",
+  "readTime": "4 min read",
+  "related": [
+    "unicode-surrogate-pair-bugs",
+    "property-based-testing-without-writing-tests",
+    "roundtrip-testing-encode-decode"
+  ],
+  "faq": [
+    {
+      "q": "Why does my date test pass locally but fail in CI?",
+      "a": "<p>CI machines usually run in UTC while your laptop runs in your local zone. Any code that mixes UTC and local getters behaves differently between the two. Set <code>TZ</code> explicitly in the test and run it under more than one zone.</p>"
+    },
+    {
+      "q": "Which time zones should I test?",
+      "a": "<p>At least UTC, one zone west of UTC such as <code>America/New_York</code>, one far east such as <code>Pacific/Kiritimati</code>, and a zone with daylight saving time. breakhound uses six zones by default.</p>"
+    },
+    {
+      "q": "Should I use getUTC methods everywhere?",
+      "a": "<p>No. Use UTC for storage and comparisons between instants, and the viewer's zone for display. The bug is mixing the two inside one decision, not using either one.</p>"
+    },
+    {
+      "q": "Does setting process.env.TZ at runtime work in Node?",
+      "a": "<p>On modern Node versions, yes, assigning <code>process.env.TZ</code> updates the zone for later date calls. The generated tests rely on that, and restore the original value afterward.</p>"
+    },
+    {
+      "q": "Can breakhound check functions that take callbacks or Date objects?",
+      "a": "<p>Yes. It generates inputs from your <code>.d.ts</code> types, including dates and generated callbacks, then compares results across zones.</p>"
+    }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "headline": "Timezone bugs in JavaScript and how to catch them",
+        "description": "Why JavaScript date code breaks in other time zones: UTC vs local getters, DST, dates before 1970, and how to catch every case automatically.",
+        "url": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html",
+        "mainEntityOfPage": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html",
+        "image": "https://kwy404.github.io/breakhound/og.png",
+        "datePublished": "2026-10-12",
+        "dateModified": "2026-10-12",
+        "inLanguage": "en",
+        "proficiencyLevel": "Intermediate",
+        "author": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Alexandre Kohler",
+          "url": "https://github.com/kwy404"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "breakhound",
+          "url": "https://kwy404.github.io/breakhound/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Why does my date test pass locally but fail in CI?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "CI machines usually run in UTC while your laptop runs in your local zone. Any code that mixes UTC and local getters behaves differently between the two. Set TZ explicitly in the test and run it under more than one zone."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which time zones should I test?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "At least UTC, one zone west of UTC such as America/New_York, one far east such as Pacific/Kiritimati, and a zone with daylight saving time. breakhound uses six zones by default."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Should I use getUTC methods everywhere?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Use UTC for storage and comparisons between instants, and the viewer's zone for display. The bug is mixing the two inside one decision, not using either one."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does setting process.env.TZ at runtime work in Node?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "On modern Node versions, yes, assigning process.env.TZ updates the zone for later date calls. The generated tests rely on that, and restore the original value afterward."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can breakhound check functions that take callbacks or Date objects?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. It generates inputs from your .d.ts types, including dates and generated callbacks, then compares results across zones."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "breakhound",
+            "item": "https://kwy404.github.io/breakhound/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Timezone bugs in JavaScript and how to catch them",
+            "item": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html"
+          }
+        ]
+      }
+    ]
+  }
+}
+-->
+<section id="why-timezone-bugs-happen"><h2>Why timezone bugs in JavaScript are so common</h2>
+<p>A <code>Date</code> stores a single number: milliseconds since 1970-01-01T00:00:00Z. Everything else is interpretation. <code>getFullYear()</code>, <code>getMonth()</code> and <code>getHours()</code> interpret that number in the host time zone, set by the <code>TZ</code> environment variable on Node or the operating system in a browser. <code>getUTCFullYear()</code> and friends interpret it in UTC. <code>Intl.DateTimeFormat</code> and <code>toLocaleString</code> use the host zone unless you pass <code>timeZone</code>.</p>
+<p>That gives you at least three answers to the question "what year is this?", and they disagree for a few hours every day. Your laptop runs in one zone, your CI runner usually runs in UTC, and your users are everywhere. A test that passes locally and fails in CI, or the reverse, is the classic symptom.</p>
+</section>
+<section id="utc-vs-local-getters"><h2>Mixing UTC and local getters</h2>
+<p>The most common version of the bug is a comparison done in one zone and a display done in another. Here is a relative date label that shows "Mar 5" for dates in the current year and "Mar 5, 2024" otherwise:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="label.ts" data-bad="3">
+export function label(date: Date, now: Date): string {
+  // bug: the year is compared in UTC, but the text is rendered in the host zone
+  if (date.getUTCFullYear() === now.getUTCFullYear()) {
+    return date.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+  }
+  return date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+</pre>
+<p>It works all year. Then, on December 31 in New York, the evening has already become January 1 in UTC. The code decides the year is different and prints a year the viewer does not expect, or the reverse for a date on the other side of midnight. The bug only appears for a few hours per year in each zone, which is why tests and code review miss it.</p>
+<p>This is the same bug class fixed in <a href="https://github.com/github/relative-time-element/pull/384">github/relative-time-element#384</a>: the year check used UTC instead of the time zone the date was displayed in. The fix is to pick one zone per operation and use it for both the decision and the output:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="label.ts" data-ok="2">
+export function label(date: Date, now: Date, timeZone?: string): string {
+  const year = (d: Date) =&gt;
+    Number(new Intl.DateTimeFormat('en', { year: 'numeric', timeZone }).format(d));
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', timeZone };
+  if (year(date) !== year(now)) opts.year = 'numeric';
+  return date.toLocaleDateString('en', opts);
+}
+</pre>
+</section>
+<section id="daylight-saving-time"><h2>Daylight saving time breaks "one day equals 24 hours"</h2>
+<p>Twice a year in most zones, a local day is 23 or 25 hours long. Code that adds <code>days * 86400000</code> milliseconds lands an hour off on those days, and sometimes on the wrong calendar date:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="addDays.ts" data-bad="3">
+export function addDays(date: Date, days: number): Date {
+  // bug: a local day is not always 24 hours
+  return new Date(date.getTime() + days * 86400000);
+}
+</pre>
+<p>If you mean "the same wall clock time, N calendar days later", use the calendar setters, which handle the transition for you:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="addDays.ts" data-ok="3">
+export function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+</pre>
+<p>If you mean exactly 24 hours, keep the millisecond math but say so in the function name. The point is to make the choice on purpose. Spring forward and fall back are also where parsing goes wrong: a local time like 02:30 does not exist on one night and happens twice on another.</p>
+</section>
+<section id="dates-before-1970"><h2>Dates before 1970 and negative timestamps</h2>
+<p>Timestamp zero is midnight UTC on January 1, 1970. Anything west of UTC sees that instant as December 31, 1969. That makes timestamp zero, and small negative timestamps, a perfect probe for zone-dependent code. Negative values also expose rounding mistakes, for example when someone uses <code>Math.floor</code> on one side and integer division on the other.</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="yearLabel.ts" data-bad="2">
+export function yearLabel(ms: number): string {
+  return String(new Date(ms).getFullYear());
+}
+</pre>
+<p>This function is fine as long as everyone agrees it means "the year in the host zone". It is a bug when callers expect a stable answer for the same input, which is what a pure function with a number argument promises. Call it with <code>0</code> in UTC and you get <code>1970</code>. Call it in <code>America/Sao_Paulo</code> and you get <code>1969</code>. Either take a <code>timeZone</code> argument or use <code>getUTCFullYear()</code> and document it.</p>
+</section>
+<section id="how-breakhound-catches-it"><h2>How breakhound catches timezone bugs</h2>
+<p>You do not have to remember which instants are dangerous. breakhound reads the TypeScript types of your package and generates inputs for every parameter, including date edge cases from the edgegoat package: time zone boundaries, DST transitions and dates before 1970. Each function runs in an isolated child process under several <code>TZ</code> values (six by default, including UTC, America/Sao_Paulo, Pacific/Kiritimati and America/New_York). If the result changes only because the host zone changed, it reports a <code>timezone-dependent</code> finding.</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound ./my-lib --rules timezone-dependent
+</pre>
+<pre data-kind="output" data-lang="text" data-title="Terminal output">
+HIGH (1)
+  [timezone-dependent] yearLabel returns different results in different time zones (confidence medium)
+    TZ=UTC yearLabel(0)  -&gt; '1970'
+    TZ=America/Sao_Paulo yearLabel(0)  -&gt; '1969'
+    TZ=Pacific/Kiritimati yearLabel(0)  -&gt; '1969'
+    TZ=America/New_York yearLabel(0)  -&gt; '1969'
+</pre>
+<p>Every finding comes with a minimal reproduction script and a ready-made test that sets <code>TZ</code> itself, so you can paste it into your suite:</p>
+<pre data-kind="editor" data-numbered data-lang="ts" data-title="yearLabel.test.ts">
+import { expect, test } from 'vitest';
+import { yearLabel } from 'my-lib';
+
+test("yearLabel does not depend on the host time zone", () =&gt; {
+  const original = process.env.TZ;
+  try {
+    process.env.TZ = 'UTC';
+    const expected = yearLabel(0);
+    process.env.TZ = 'America/Sao_Paulo';
+    expect(yearLabel(0)).toEqual(expected);
+  } finally {
+    if (original === undefined) delete process.env.TZ;
+    else process.env.TZ = original;
+  }
+});
+</pre>
+<p>Runs are seeded (default seed 42), so the same command gives the same findings. Read <a href="find-bugs-automatically-javascript.html">how to find bugs automatically in JavaScript</a> for the full workflow, and <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a> to run it on every pull request.</p>
+<div class="callout"><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container.</p></div>
+</section>
+<section id="fix-checklist"><h2>A checklist that prevents the bug</h2>
+<ul>
+<li>Choose one zone per operation and use it for both comparison and display.</li>
+<li>Pass <code>timeZone</code> explicitly to <code>Intl.DateTimeFormat</code> and <code>toLocaleString</code> when the zone matters.</li>
+<li>Use calendar setters (<code>setDate</code>, <code>setMonth</code>) for calendar math, not millisecond constants.</li>
+<li>Test with at least UTC, a zone west of UTC, a zone far east, and a zone with DST.</li>
+<li>Include timestamp <code>0</code>, negative timestamps and the last hours of December 31 in your fixtures.</li>
+</ul>
+<p>Unicode edge cases cause a similar class of silent failures, covered in <a href="unicode-surrogate-pair-bugs.html">surrogate pair bugs</a>.</p>
+</section>
