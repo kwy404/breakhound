@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="favicon-title">
+  <title id="favicon-title">breakhound</title>
+  <defs>
+    <clipPath id="favicon-cap"><path d="M20 23C20 14 25 9 32 9C39 9 44 14 44 23Z"/></clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="31" fill="#1FA393"/>
+  <g stroke="#1B2440" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M22 23C13 23 8 32 9 41C10 49 14 54 18 53C22 52 23 44 23 36Z" fill="#9C5A2E"/>
+    <path d="M42 23C51 23 56 32 55 41C54 49 50 54 46 53C42 52 41 44 41 36Z" fill="#9C5A2E"/>
+    <path d="M20 23C20 16 44 16 44 23L45 41C45 50 40 54 32 54C24 54 19 50 19 41Z" fill="#9C5A2E"/>
+    <path d="M24.5 40C26 36 38 36 39.5 40C42 45 42 52 38 54C35.5 55 33 53.5 32 52C31 53.5 28.5 55 26 54C22 52 22 45 24.5 40Z" fill="#E9B97A"/>
+    <ellipse cx="32" cy="40.5" rx="4.6" ry="3.2" fill="#1B2440"/>
+    <path d="M32 44V47" fill="none" stroke-width="2"/>
+    <path d="M20 23C20 14 25 9 32 9C39 9 44 14 44 23Z" fill="#E9B97A"/>
+  </g>
+  <g clip-path="url(#favicon-cap)" stroke="#9C5A2E" stroke-width="1.8" fill="none">
+    <path d="M28 6V24M36 6V24M18 16.5H46"/>
+  </g>
+  <g stroke="#1B2440" stroke-width="2.5" stroke-linejoin="round" fill="none">
+    <path d="M20 23C20 14 25 9 32 9C39 9 44 14 44 23Z"/>
+    <path d="M21 22C26 28 38 28 43 22C38 24.5 26 24.5 21 22Z" fill="#E9B97A"/>
+  </g>
+  <circle cx="27" cy="32" r="2.8" fill="#1B2440"/>
+  <circle cx="37" cy="32" r="2.8" fill="#1B2440"/>
+  <circle cx="26" cy="31" r="0.9" fill="#FFFFFF"/>
+  <circle cx="36" cy="31" r="0.9" fill="#FFFFFF"/>
+</svg>

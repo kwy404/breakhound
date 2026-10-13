@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
+  <title>Oracle: timezone dependent</title>
+  <rect width="48" height="48" rx="12" fill="#1B2440"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3"><circle cx="24" cy="24" r="14"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#E9B97A" stroke-width="2"><ellipse cx="24" cy="24" rx="6" ry="14"/><path d="M10 24H38"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#1FA393" stroke-width="3.5"><path d="M24 24V14M24 24L31 28"/></g><circle cx="24" cy="24" r="2.5" fill="#1FA393"/>
+</svg>

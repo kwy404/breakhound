@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>breakhound social preview</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 1280px; height: 640px; overflow: hidden; background: #1B2440;
+    font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    display: flex; align-items: center; box-sizing: border-box; padding: 0 64px 0 56px; gap: 48px;
+    position: relative;
+  }
+  .mascot { flex: none; width: 460px; height: 460px; }
+  .mascot svg { display: block; }
+  .text { flex: 1; min-width: 0; }
+  h1 { margin: 0; font-size: 122px; line-height: 1; font-weight: 700; letter-spacing: -2px; color: #FFF4E3; }
+  h1 span { color: #E9B97A; }
+  p { margin: 26px 0 0; font-size: 38px; line-height: 1.3; font-weight: 700; color: #FFFFFF; }
+  .pill {
+    display: inline-block; margin-top: 34px; padding: 14px 28px; border-radius: 999px;
+    background: #0F1526; color: #FFF4E3; border: 3px solid #1FA393;
+    font-family: Consolas, "Cascadia Mono", Menlo, monospace; font-size: 31px; font-weight: 700;
+  }
+  .pill b { color: #1FA393; }
+  .pill i { color: #E9B97A; font-style: normal; }
+  .paws { position: absolute; top: 40px; right: 56px; opacity: 0.9; }
+</style>
+</head>
+<body>
+  <svg class="paws" viewBox="0 0 200 70" width="200" height="70" aria-hidden="true"><g fill="#1FA393"><g transform="translate(14 58) rotate(65)"><ellipse cx="0" cy="4" rx="9" ry="7.5"/><circle cx="-9" cy="-6" r="3.6"/><circle cx="-3" cy="-11" r="3.6"/><circle cx="4" cy="-11" r="3.6"/><circle cx="10" cy="-6" r="3.6"/></g><g transform="translate(66 28) rotate(55)"><ellipse cx="0" cy="4" rx="9" ry="7.5"/><circle cx="-9" cy="-6" r="3.6"/><circle cx="-3" cy="-11" r="3.6"/><circle cx="4" cy="-11" r="3.6"/><circle cx="10" cy="-6" r="3.6"/></g><g transform="translate(118 52) rotate(70)"><ellipse cx="0" cy="4" rx="9" ry="7.5"/><circle cx="-9" cy="-6" r="3.6"/><circle cx="-3" cy="-11" r="3.6"/><circle cx="4" cy="-11" r="3.6"/><circle cx="10" cy="-6" r="3.6"/></g><g transform="translate(170 22) rotate(55)"><ellipse cx="0" cy="4" rx="9" ry="7.5"/><circle cx="-9" cy="-6" r="3.6"/><circle cx="-3" cy="-11" r="3.6"/><circle cx="4" cy="-11" r="3.6"/><circle cx="10" cy="-6" r="3.6"/></g></g></svg>
+  <div class="mascot">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="460" height="460" role="img" aria-labelledby="sniff-title">
+        <title id="sniff-title">Sniff, the breakhound mascot: a bloodhound detective with a magnifying glass</title>
+        <defs>
+          <clipPath id="sniff-badge">
+            <circle cx="200" cy="200" r="184"/>
+          </clipPath>
+          <clipPath id="sniff-cap">
+            <path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z"/>
+          </clipPath>
+        </defs>
+        <circle cx="200" cy="200" r="188" fill="#1FA393" stroke="#1B2440" stroke-width="8"/>
+        <circle cx="200" cy="200" r="170" fill="none" stroke="#FFF4E3" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+        <g stroke="#1B2440" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+          <g clip-path="url(#sniff-badge)">
+            <path d="M62 410C70 330 130 296 200 296C270 296 330 330 338 410Z" fill="#9C5A2E"/>
+            <path d="M150 300L200 352L250 300" fill="#E9B97A"/>
+          </g>
+          <path d="M146 136C104 134 84 186 88 246C91 290 108 318 130 314C152 310 154 262 150 220Z" fill="#9C5A2E"/>
+          <path d="M254 136C296 134 316 186 312 246C309 290 292 318 270 314C248 310 246 262 250 220Z" fill="#9C5A2E"/>
+          <path d="M138 140C138 104 262 104 262 140L266 236C268 284 240 300 200 300C160 300 132 284 134 236Z" fill="#9C5A2E"/>
+          <circle cx="172" cy="200" r="13" fill="#1B2440" stroke="none"/>
+          <circle cx="228" cy="200" r="13" fill="#1B2440" stroke="none"/>
+          <circle cx="167" cy="195" r="4.5" fill="#FFFFFF" stroke="none"/>
+          <circle cx="223" cy="195" r="4.5" fill="#FFFFFF" stroke="none"/>
+          <path d="M154 180C162 172 176 168 188 170M212 170C224 168 238 172 246 180" fill="none" stroke-width="6"/>
+          <path d="M158 228C166 212 234 212 242 228C254 250 256 290 232 302C218 310 206 302 200 292C194 302 182 310 168 302C144 290 146 250 158 228Z" fill="#E9B97A"/>
+          <ellipse cx="200" cy="234" rx="27" ry="18" fill="#1B2440"/>
+          <ellipse cx="190" cy="228" rx="8" ry="4" fill="#FFFFFF" stroke="none"/>
+          <path d="M200 252V266C193 276 180 275 175 267M200 266C207 276 220 275 225 267" fill="none" stroke-width="6"/>
+          <g transform="rotate(-8 200 120) translate(200 142) scale(1.12) translate(-200 -142)">
+            <path d="M136 132C126 112 132 92 150 84L164 124Z" fill="#9C5A2E"/>
+            <path d="M264 132C274 112 268 92 250 84L236 124Z" fill="#9C5A2E"/>
+            <path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z" fill="#E9B97A"/>
+            <g clip-path="url(#sniff-cap)" fill="none" stroke="#9C5A2E" stroke-width="6">
+              <path d="M176 60V150M224 60V150M120 108H280"/>
+            </g>
+            <path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z" fill="none"/>
+            <path d="M140 138C166 168 234 168 260 138C232 150 168 150 140 138Z" fill="#E9B97A"/>
+            <path d="M200 76C188 62 174 64 176 72C178 80 192 80 200 76C208 80 222 80 224 72C226 64 212 62 200 76Z" fill="#9C5A2E" stroke-width="5"/>
+          </g>
+          <path d="M270 238L236 300" fill="none" stroke-width="18"/>
+          <circle cx="300" cy="196" r="44" fill="#FFF4E3" stroke-width="12"/>
+          <path d="M276 184C280 172 290 164 302 162" fill="none" stroke="#FFFFFF" stroke-width="7"/>
+          <ellipse cx="240" cy="300" rx="24" ry="20" fill="#9C5A2E"/>
+          <path d="M232 284V296M246 284V296" fill="none" stroke-width="5"/>
+          <g fill="#1B2440" stroke="none">
+            <ellipse cx="306" cy="210" rx="11" ry="14"/>
+            <circle cx="306" cy="192" r="7"/>
+          </g>
+          <path d="M296 200L288 196M316 200L324 196M295 212H287M317 212H325M296 222L289 227M316 222L323 227M302 186L298 180M310 186L314 180" fill="none" stroke-width="3"/>
+        </g>
+      </svg>
+  </div>
+  <div class="text">
+    <h1>break<span>hound</span></h1>
+    <p>Point it at any JavaScript package.<br>It sniffs out the bugs.</p>
+    <div class="pill"><b>$</b> npx breakhound <i>&lt;package&gt;</i></div>
+  </div>
+</body>
+</html>

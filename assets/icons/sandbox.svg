@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
+  <title>Feature: sandboxed child processes</title>
+  <rect width="48" height="48" rx="12" fill="#1B2440"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3"><path d="M8 17H32V37H8ZM8 17L12 11H28L32 17"/></g><path d="M33 19L41 22V28C41 33 37 36 33 38C29 36 25 33 25 28V22Z" fill="#1FA393" stroke="#1B2440" stroke-width="2.5" stroke-linejoin="round"/><path d="M29.5 28L32 30.5L36.5 26" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="2.5"/>
+</svg>
