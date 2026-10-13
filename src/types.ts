@@ -176,4 +176,32 @@ export interface HuntOptions {
   readonly keep?: boolean;
   /** Called with progress messages. */
   readonly onProgress?: (message: string) => void;
+  /** Called with live status updates (phase, calls, functions, findings). */
+  readonly onStatus?: (status: HuntStatus) => void;
+  /** Called with structured run events, for logs. */
+  readonly onEvent?: (event: HuntEvent) => void;
 }
+
+export type HuntPhase = 'resolving' | 'reading types' | 'generating inputs' | 'hunting' | 'shrinking' | 'done';
+
+export interface HuntStatus {
+  readonly phase: HuntPhase;
+  readonly calls: number;
+  /** Rough number of calls the hunt will make, for progress bars. */
+  readonly estimatedCalls: number;
+  readonly functionsDone: number;
+  readonly functionsTotal: number;
+  /** Candidate findings so far, before shrinking and confirmation. */
+  readonly findings: number;
+}
+
+/** A structured event of a hunt. Every event has a `type`; the CLI writes them as JSON Lines. */
+export type HuntEvent =
+  | { readonly type: 'target'; readonly name: string; readonly version: string; readonly source: 'local' | 'npm'; readonly types: string; readonly entry: string }
+  | { readonly type: 'signature'; readonly id: string; readonly signature: string }
+  | { readonly type: 'skipped'; readonly id: string; readonly reason: string }
+  | { readonly type: 'phase'; readonly phase: HuntPhase; readonly ms: number }
+  | { readonly type: 'calls'; readonly function: string; readonly inputs: number; readonly calls: number; readonly zones: readonly string[]; readonly ms: number }
+  | { readonly type: 'runner'; readonly kind: 'timeout' | 'crash' | 'restart'; readonly function?: string; readonly tz?: string; readonly detail: string }
+  | { readonly type: 'finding'; readonly rule: RuleId; readonly severity: Severity; readonly function: string; readonly title: string; readonly confirmed: boolean }
+  | { readonly type: 'unconfirmed'; readonly rule: RuleId; readonly function: string; readonly title: string };

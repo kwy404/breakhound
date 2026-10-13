@@ -6,7 +6,7 @@ import type { ExecContext, Plan, Violation } from './oracles/types';
 import { Pool, type CallResult } from './runner/pool';
 import { resolveTarget } from './resolve';
 import { shrinkCandidates } from './shrink';
-import type { Finding, FunctionInfo, HuntOptions, Report, Severity } from './types';
+import type { Finding, FunctionInfo, HuntOptions, HuntStatus, Report, Severity } from './types';
 import { argsComplexity, argsSource, valueKey } from './values';
 import { VERSION } from './version';
 
@@ -151,20 +151,42 @@ export async function hunt(target: string, options: HuntOptions = {}): Promise<R
   const zones = options.zones?.length ? [...options.zones] : DEFAULT_ZONES;
   const rules = options.rules?.length ? [...options.rules] : [...RULE_IDS];
   const progress = options.onProgress ?? (() => {});
+  const emit = options.onEvent ?? (() => {});
+  let phaseStart = Date.now();
+  let status: HuntStatus = { phase: 'resolving', calls: 0, estimatedCalls: 0, functionsDone: 0, functionsTotal: 0, findings: 0 };
+  const update = (next: Partial<HuntStatus>) => {
+    if (next.phase && next.phase !== status.phase) {
+      emit({ type: 'phase', phase: status.phase, ms: Date.now() - phaseStart });
+      phaseStart = Date.now();
+    }
+    status = { ...status, ...next };
+    options.onStatus?.(status);
+  };
+  update({});
   const resolved = resolveTarget(target, {
     ...(options.installDir ? { installDir: options.installDir } : {}),
     ...(options.keep ? { keep: options.keep } : {}),
     onProgress: progress,
   });
   try {
+    emit({ type: 'target', name: resolved.name, version: resolved.version, source: resolved.source, types: resolved.types, entry: resolved.entry });
+    update({ phase: 'reading types' });
     progress(`reading ${resolved.types}`);
     const extraction = extractSignatures(resolved.types, resolved.name);
+    for (const fn of extraction.functions) emit({ type: 'signature', id: fn.id, signature: fn.signature });
+    for (const s of extraction.skipped) emit({ type: 'skipped', id: s.id, reason: s.reason });
     let functions = extraction.functions;
     if (options.only?.length) functions = functions.filter((f) => matches(f, options.only ?? []));
     if (options.exclude?.length) functions = functions.filter((f) => !matches(f, options.exclude ?? []));
     const pkgId = packageIdentifier(resolved.name);
     const primarySize = Math.max(1, Math.min(3, cpus().length - 1));
-    const pool = new Pool({ entry: resolved.entry, now: Date.parse(FROZEN_NOW), timeout, sizes: { [zones[0] as string]: primarySize } });
+    const pool = new Pool({
+      entry: resolved.entry,
+      now: Date.parse(FROZEN_NOW),
+      timeout,
+      sizes: { [zones[0] as string]: primarySize },
+      onEvent: (e) => emit({ type: 'runner', ...e }),
+    });
     const engine = new Engine(pool, zones, FROZEN_NOW, pkgId, maxCalls);
     const findings: Finding[] = [];
     let unconfirmed = 0;
@@ -174,11 +196,17 @@ export async function hunt(target: string, options: HuntOptions = {}): Promise<R
       const tzInputs = Math.min(10, perFunction);
       const oracles = ORACLES.filter((o) => rules.includes(o.id));
       const hits = new Map<string, Hit[]>();
+      const estimatedCalls = Math.min(maxCalls, functions.length * (perFunction * 2 + tzInputs * 6 + 24));
+      update({ phase: 'generating inputs', functionsTotal: functions.length, estimatedCalls });
+      let done = 0;
 
       const huntFunction = async (fn: FunctionInfo): Promise<void> => {
         progress(`hunting ${fn.id}`);
+        const fnStart = Date.now();
+        const callsBefore = engine.perFunction.get(fn.id) ?? 0;
         const inputs = generateInputs(fn, { seed, budget: perFunction });
         const plans = oracles.flatMap((o) => o.plans(fn, extraction.functions, { tzInputs }));
+        update({ phase: 'hunting', calls: pool.calls });
         for (const plan of plans) {
           const planInputs = (plan.inputs ? plan.inputs(inputs) : inputs).slice(0, plan.maxInputs ?? Infinity);
           let found = 0;
@@ -191,8 +219,12 @@ export async function hunt(target: string, options: HuntOptions = {}): Promise<R
             const list = hits.get(key) ?? [];
             list.push({ plan, input, violation });
             hits.set(key, list);
+            update({ findings: hits.size, calls: pool.calls });
           }
         }
+        done++;
+        emit({ type: 'calls', function: fn.id, inputs: inputs.length, calls: (engine.perFunction.get(fn.id) ?? 0) - callsBefore, zones, ms: Date.now() - fnStart });
+        update({ functionsDone: done, calls: pool.calls });
       };
 
       const queue = [...functions];
@@ -202,6 +234,7 @@ export async function hunt(target: string, options: HuntOptions = {}): Promise<R
         }),
       );
 
+      update({ phase: 'shrinking', calls: pool.calls });
       for (const list of hits.values()) {
         list.sort((a, b) => a.input.rank - b.input.rank || a.input.order - b.input.order);
         let best = list[0] as Hit;
@@ -218,6 +251,7 @@ export async function hunt(target: string, options: HuntOptions = {}): Promise<R
             fresh.close();
           }
           if (!confirmed) {
+            emit({ type: 'unconfirmed', rule: best.plan.rule, function: best.plan.fn.id, title: best.violation.title });
             unconfirmed++;
             continue;
           }
@@ -260,10 +294,12 @@ export async function hunt(target: string, options: HuntOptions = {}): Promise<R
           test,
           confirmed,
         });
+        emit({ type: 'finding', rule: best.plan.rule, severity: v.severity, function: best.plan.fn.id, title: v.title, confirmed });
       }
     } finally {
       pool.close();
     }
+    update({ phase: 'done', calls: pool.calls });
     findings.sort(
       (a, b) =>
         SEVERITIES.indexOf(a.severity) - SEVERITIES.indexOf(b.severity) ||

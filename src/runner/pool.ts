@@ -180,6 +180,8 @@ export interface PoolOptions {
   readonly timeout: number;
   /** Workers per time zone. Zones not listed get one worker. */
   readonly sizes?: Readonly<Record<string, number>>;
+  /** Called when a call times out or a worker process ends and is restarted. */
+  readonly onEvent?: (event: { kind: 'timeout' | 'crash' | 'restart'; tz: string; function: string; detail: string }) => void;
 }
 
 /** Worker processes grouped by time zone, with a shared call counter. */
@@ -236,7 +238,14 @@ export class Pool {
     this.calls += Math.max(1, request.repeat ?? 1) + (request.then ? 1 : 0);
     const worker = await this.acquire(tz);
     try {
-      return await worker.call(request, this.options.timeout);
+      const result = await worker.call(request, this.options.timeout);
+      const first = result.outcomes[0];
+      if (first && (first.kind === 'timeout' || first.kind === 'crash')) {
+        const fn = request.path.join('.');
+        this.options.onEvent?.({ kind: first.kind, tz, function: fn, detail: first.preview });
+        this.options.onEvent?.({ kind: 'restart', tz, function: fn, detail: 'worker process restarted' });
+      }
+      return result;
     } catch (error) {
       return { outcomes: [{ kind: 'crash', preview: String(error instanceof Error ? error.message : error) }] };
     } finally {
