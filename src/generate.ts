@@ -1,7 +1,7 @@
 import { bigints, dates, emails, json, numbers, numericStrings, paths, strings, urls } from 'edgegoat';
 import type { FunctionInfo, Shape } from './types';
 import { createRng, deriveSeed, type Rng } from './random';
-import { argsComplexity, isWellFormedString, valueKey } from './values';
+import { argsComplexity, callback, isCallback, isWellFormedString, toSource, valueKey, type CallbackValue } from './values';
 
 /** One generated call: the argument list plus bookkeeping used for shrinking. */
 export interface Input {
@@ -66,7 +66,36 @@ export function baseValue(shape: Shape): unknown {
     }
     case 'union':
       return baseValue(shape.options[0] as Shape);
+    case 'function':
+      return callbackValues(shape)[0];
   }
+}
+
+function identifier(name: string | undefined, fallback: string): string {
+  return name && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name) ? name : fallback;
+}
+
+/**
+ * Callbacks for a function typed parameter, built from its declared
+ * signature: identity, simple transformers, constants of the return type,
+ * and a no-op for void callbacks. Each keeps its source for reproductions.
+ */
+export function callbackValues(shape: Extract<Shape, { kind: 'function' }>): CallbackValue[] {
+  const arg = identifier(shape.params[0], 'value');
+  const params = shape.params.length ? arg : '';
+  const out: string[] = [];
+  const returns = shape.returns;
+  if (!returns) {
+    out.push(`(${params}) => {}`);
+  } else {
+    const inputKind = shape.input?.kind;
+    if (inputKind && inputKind === returns.kind && inputKind !== 'literal') out.push(`(${arg}) => ${arg}`);
+    if (returns.kind === 'string' && inputKind === 'string') out.push(`(${arg}) => ${arg}.toUpperCase()`, `(${arg}) => ${arg} + ${arg}`);
+    if (returns.kind === 'number' && inputKind === 'number') out.push(`(${arg}) => ${arg} * 2`);
+    if (returns.kind === 'boolean') out.push('() => true', '() => false');
+    else for (const value of edgeValues(returns).slice(0, 4)) if (!isCallback(value)) out.push(`() => ${toSource(value)}`);
+  }
+  return [...new Set(out)].map(callback);
 }
 
 function stringPool(hint: string): readonly unknown[] {
@@ -106,6 +135,8 @@ export function edgeValues(shape: Shape, hint = '', depth = 0): unknown[] {
       return [...shape.values];
     case 'union':
       return interleave(shape.options.map((o) => edgeValues(o, hint, depth)));
+    case 'function':
+      return callbackValues(shape);
     case 'array': {
       const elements = depth > 1 ? [baseValue(shape.element)] : edgeValues(shape.element, hint, depth + 1).slice(0, 12);
       const out: unknown[] = [[], [baseValue(shape.element)]];
@@ -157,6 +188,8 @@ export function randomValue(shape: Shape, rng: Rng, depth = 0): unknown {
       return rng.pick(shape.values);
     case 'union':
       return randomValue(rng.pick(shape.options), rng, depth);
+    case 'function':
+      return rng.pick(callbackValues(shape));
     case 'array': {
       const length = depth > 1 ? rng.int(0, 2) : rng.int(0, 4);
       return Array.from({ length }, () => randomValue(shape.element, rng, depth + 1));

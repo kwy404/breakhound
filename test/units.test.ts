@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import { extractSignatures, generateInputs, packageIdentifier } from '../src/index';
+import { callbackValues } from '../src/generate';
 import { findPartners } from '../src/oracles/pairs';
 import { isEngineError, words } from '../src/oracles/util';
 import { shrinkCandidates } from '../src/shrink';
@@ -31,9 +32,19 @@ describe('signature extraction', () => {
     });
   });
 
-  test('skips callbacks with a reason', () => {
-    expect(skipped[0]?.id).toBe('mapWords');
-    expect(skipped[0]?.reason).toMatch(/unsupported type/);
+  test('reads callback parameters and skips classes with a reason', () => {
+    expect(get('mapWords').params[1]?.shape).toEqual({ kind: 'function', params: ['word'], input: { kind: 'string' }, returns: { kind: 'string' } });
+    expect(skipped.map((s) => [s.id, s.reason])).toEqual([['Counter', 'class (constructors are not called)']]);
+  });
+
+  test('builds callbacks from the declared signature', () => {
+    const shape = get('mapWords').params[1]?.shape;
+    if (shape?.kind !== 'function') throw new Error('expected a function shape');
+    const sources = callbackValues(shape).map((c) => c.__breakhoundCallback);
+    expect(sources.slice(0, 3)).toEqual(['(word) => word', '(word) => word.toUpperCase()', '(word) => word + word']);
+    expect(sources).toContain("() => ''");
+    expect(callbackValues({ kind: 'function', params: [], input: null, returns: { kind: 'boolean' } }).map((c) => c.__breakhoundCallback)).toEqual(['() => true', '() => false']);
+    expect(callbackValues({ kind: 'function', params: ['x'], input: null, returns: null }).map((c) => c.__breakhoundCallback)).toEqual(['(x) => {}']);
   });
 
   test('package identifiers', () => {

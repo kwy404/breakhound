@@ -1,5 +1,21 @@
 /** Helpers for the values breakhound generates: keys, well formedness, size and JavaScript source. */
 
+/**
+ * A generated callback. It travels to the worker as plain data and is
+ * rebuilt there from its source, which is also what reproductions print.
+ */
+export interface CallbackValue {
+  readonly __breakhoundCallback: string;
+}
+
+export function callback(source: string): CallbackValue {
+  return { __breakhoundCallback: source };
+}
+
+export function isCallback(value: unknown): value is CallbackValue {
+  return typeof value === 'object' && value !== null && typeof (value as CallbackValue).__breakhoundCallback === 'string';
+}
+
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 
 /** Index of the first lone surrogate in a string, or -1. Same as `!isWellFormed()` (Node 20+), available on Node 18. */
@@ -15,6 +31,10 @@ export function isWellFormedString(text: string): boolean {
 /** Calls `visit` for every primitive inside a value (arrays and plain objects are walked). */
 export function walk(value: unknown, visit: (v: unknown) => void, depth = 0): void {
   if (depth > 8) return;
+  if (isCallback(value)) {
+    visit(value);
+    return;
+  }
   if (Array.isArray(value)) {
     for (const item of value) walk(item, visit, depth + 1);
     return;
@@ -52,6 +72,7 @@ export function valueKey(value: unknown): string {
       break;
   }
   if (value instanceof Date) return `D(${value.getTime()})`;
+  if (isCallback(value)) return `F(${value.__breakhoundCallback})`;
   if (Array.isArray(value)) return `[${value.map(valueKey).join(',')}]`;
   if (typeof value === 'object') {
     return `{${Object.entries(value as Record<string, unknown>)
@@ -90,6 +111,7 @@ export function complexity(value: unknown): number {
       break;
   }
   if (value instanceof Date) return 4;
+  if (isCallback(value)) return 3;
   if (Array.isArray(value)) return 2 + value.reduce((sum: number, v) => sum + complexity(v), 0);
   if (typeof value === 'object') {
     return 2 + Object.entries(value as Record<string, unknown>).reduce((sum, [, v]) => sum + 1 + complexity(v), 0);
@@ -156,6 +178,7 @@ export function toSource(value: unknown): string {
     default:
       break;
   }
+  if (isCallback(value)) return value.__breakhoundCallback;
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? "new Date('invalid')" : `new Date('${value.toISOString()}')`;
   }

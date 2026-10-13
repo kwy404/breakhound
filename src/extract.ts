@@ -281,8 +281,27 @@ export function toShape(checker: ts.TypeChecker, type: ts.Type, depth: number): 
       if (!converted.ok) return { ok: false, reason: `array of ${converted.reason}` };
       return ok({ kind: 'array', element: converted.shape });
     }
-    if (type.getCallSignatures().length || type.getConstructSignatures().length) {
-      return { ok: false, reason: `function ${text()}` };
+    if (type.getConstructSignatures().length) return { ok: false, reason: `constructor ${text()}` };
+    const callSignatures = type.getCallSignatures();
+    if (callSignatures.length) {
+      const signature = callSignatures[0] as ts.Signature;
+      if (signature.typeParameters?.length) return { ok: false, reason: `generic callback ${text()}` };
+      const ret = signature.getReturnType();
+      let returns: Shape | null = null;
+      if (!(ret.flags & (ts.TypeFlags.Void | ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Undefined))) {
+        const converted = toShape(checker, ret, depth + 1);
+        if (!converted.ok) return { ok: false, reason: `callback returning ${checker.typeToString(ret)}` };
+        returns = converted.shape;
+      }
+      const params = signature.getParameters();
+      const first = params[0];
+      let input: Shape | null = null;
+      if (first) {
+        const firstType = first.valueDeclaration ? checker.getTypeOfSymbolAtLocation(first, first.valueDeclaration) : checker.getTypeOfSymbol(first);
+        const converted = toShape(checker, firstType, depth + 1);
+        input = converted.ok ? converted.shape : null;
+      }
+      return ok({ kind: 'function', params: params.map((p) => p.getName()), input, returns });
     }
     const symbol = type.getSymbol();
     if (symbol && symbol.flags & ts.SymbolFlags.Class) return { ok: false, reason: `class instance ${text()}` };

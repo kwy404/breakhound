@@ -27,11 +27,12 @@ describe('buggy-lib fixture', () => {
     ['encodeBase', 'roundtrip'],
     ['slugify', 'not-idempotent'],
     ['formatFixed', 'negative-zero-sign'],
+    ['mapWords', 'unexpected-crash'],
   ])('%s is flagged by %s', (fn, rule) => {
     expect(rulesFor(fn)).toContain(rule);
   });
 
-  test.each(['truncateSafe', 'yearLabelUtc', 'initialsSafe', 'averageSafe', 'labelSafe', 'encodeSafe', 'slugifySafe', 'formatFixedSafe', 'pad', 'percent'])(
+  test.each(['truncateSafe', 'yearLabelUtc', 'initialsSafe', 'averageSafe', 'labelSafe', 'encodeSafe', 'slugifySafe', 'formatFixedSafe', 'mapWordsSafe', 'pad', 'percent'])(
     'correct twin %s has no findings above info',
     (fn) => {
       expect(rulesFor(fn)).toEqual([]);
@@ -45,8 +46,9 @@ describe('buggy-lib fixture', () => {
   });
 
   test('unsupported signatures are reported as skipped', () => {
-    expect(report.skipped.map((s) => s.id)).toEqual(['mapWords']);
+    expect(report.skipped.map((s) => s.id)).toEqual(['Counter']);
     expect(report.stats.skipped).toBe(1);
+    expect(report.functions.map((f) => f.id)).toContain('mapWords');
   });
 
   test('every finding is confirmed and has a reproduction and a Vitest test', () => {
@@ -62,6 +64,9 @@ describe('buggy-lib fixture', () => {
     expect(lone?.input).toEqual(["'\\u{1F600}'", '1']);
     const crash = report.findings.find((f) => f.function === 'initials' && f.rule === 'unexpected-crash');
     expect(crash?.input).toEqual(["''"]);
+    const callback = report.findings.find((f) => f.function === 'mapWords');
+    expect(callback?.input).toEqual(["''", '(word) => word']);
+    expect(callback?.reproduction).toContain("mapWords('', (word) => word)");
   });
 
   test('the same seed gives the same findings', async () => {

@@ -302,6 +302,21 @@ function matchesKind(value, expected) {
   return kind === expected;
 }
 
+/**
+ * Rebuilds generated callbacks (sent as their source text) into functions.
+ * @param {unknown} value
+ * @returns {unknown}
+ */
+function revive(value) {
+  if (Array.isArray(value)) return value.map(revive);
+  if (value && typeof value === 'object' && !(value instanceof RealDate)) {
+    const source = /** @type {any} */ (value).__breakhoundCallback;
+    if (typeof source === 'string') return new Function(`return (${source});`)();
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, revive(v)]));
+  }
+  return value;
+}
+
 /** @param {any} message */
 async function handle(message) {
   const target = resolveFunction(message.path);
@@ -318,7 +333,7 @@ async function handle(message) {
   let firstValue;
   let firstKind = '';
   for (let i = 0; i < repeat; i++) {
-    const callArgs = i === repeat - 1 ? args : structuredClone(args);
+    const callArgs = /** @type {unknown[]} */ (revive(i === repeat - 1 ? args : structuredClone(args)));
     const { result, read, ms } = await invoke(target.fn, target.thisArg, callArgs);
     if (i === 0) {
       firstKind = result.kind;

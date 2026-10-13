@@ -124,7 +124,30 @@ export function pad(text: string, options: { width: number; side?: 'left' | 'rig
   return options.side === 'left' ? text.padStart(options.width) : text.padEnd(options.width);
 }
 
-/** Skipped: callback parameter. */
+/** Bug: crashes when the callback returns an empty string. */
 export function mapWords(text: string, fn: (word: string) => string): string {
-  return text.split(' ').map(fn).join(' ');
+  return text
+    .split(' ')
+    .map((word) => fn(word)[0]!.toUpperCase() + fn(word).slice(1))
+    .join(' ');
+}
+
+/** Correct twin with a callback parameter. */
+export function mapWordsSafe(text: string, fn: (word: string) => string): string {
+  return text
+    .split(' ')
+    .map((word) => {
+      const mapped = fn(word);
+      return mapped.charAt(0).toUpperCase() + mapped.slice(1);
+    })
+    .join(' ');
+}
+
+/** Skipped: classes are not called. */
+export class Counter {
+  count = 0;
+  increment(): number {
+    this.count += 1;
+    return this.count;
+  }
 }

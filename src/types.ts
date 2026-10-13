@@ -25,7 +25,16 @@ export type Shape =
   | { readonly kind: 'literal'; readonly values: readonly (string | number | boolean)[] }
   | { readonly kind: 'array'; readonly element: Shape }
   | { readonly kind: 'object'; readonly props: readonly PropShape[] }
-  | { readonly kind: 'union'; readonly options: readonly Shape[] };
+  | { readonly kind: 'union'; readonly options: readonly Shape[] }
+  | {
+      readonly kind: 'function';
+      /** Declared parameter names of the callback. */
+      readonly params: readonly string[];
+      /** Shape of the first callback parameter, when supported. */
+      readonly input: Shape | null;
+      /** Shape of the declared return type, or null for void, any and unknown. */
+      readonly returns: Shape | null;
+    };
 
 export interface PropShape {
   readonly name: string;
