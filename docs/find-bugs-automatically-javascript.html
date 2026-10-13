@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to find bugs automatically in a JavaScript library | breakhound</title>
+<meta name="description" content="Find bugs in any JavaScript or TypeScript library without writing tests. breakhound reads types, generates edge cases and checks invariants, then writes Vitest tests.">
+<link rel="canonical" href="https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to find bugs automatically in a JavaScript library | breakhound">
+<meta property="og:description" content="Find bugs in any JavaScript or TypeScript library without writing tests. breakhound reads types, generates edge cases and checks invariants, then writes Vitest tests.">
+<meta property="og:url" content="https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html">
+<meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to find bugs automatically in a JavaScript library | breakhound">
+<meta name="twitter:description" content="Find bugs in any JavaScript or TypeScript library without writing tests. breakhound reads types, generates edge cases and checks invariants, then writes Vitest tests.">
+<meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"How to find bugs automatically in a JavaScript library","description":"Find bugs in any JavaScript or TypeScript library without writing tests. breakhound reads types, generates edge cases and checks invariants, then writes Vitest tests.","url":"https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html","image":"https://kwy404.github.io/breakhound/og.png","author":{"@type":"Person","name":"Alexandre Kohler","url":"https://github.com/kwy404"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"breakhound","item":"https://kwy404.github.io/breakhound/"},{"@type":"ListItem","position":2,"name":"How to find bugs automatically in a JavaScript library","item":"https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to write tests first?","acceptedAnswer":{"@type":"Answer","text":"No. breakhound derives inputs from type signatures and checks built in invariants."}},{"@type":"Question","name":"How is this different from fuzzing?","acceptedAnswer":{"@type":"Answer","text":"Coverage guided fuzzers such as Jazzer.js mutate inputs to find crashes. breakhound uses typed edge cases and checks semantic invariants such as time zone independence and sign preservation."}}]}]}</script>
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+</head>
+<body>
+<nav>
+  <div class="wrap" v-data="{ light: false }">
+    <a class="brand" href="https://kwy404.github.io/breakhound/"><img src="https://kwy404.github.io/breakhound/assets/mascot.svg" alt="" width="34" height="34">breakhound</a>
+    <div class="links">
+      <a href="https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html" class="hide-sm">Find bugs</a>
+      <a href="https://kwy404.github.io/breakhound/timezone-bugs-javascript.html" class="hide-sm">Time zones</a>
+      <a href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html" class="hide-sm">Unicode</a>
+      <a href="https://github.com/kwy404/breakhound">GitHub</a>
+      <button class="toggle" type="button" aria-label="Toggle color theme" @click="light = !light"><span v-if="light">Dark mode</span><span v-if="!light">Light mode</span></button>
+      <span :class="{ 'theme-light': light }" hidden></span>
+    </div>
+  </div>
+</nav>
+<main>
+<article>
+<p class="muted"><a href="https://kwy404.github.io/breakhound/">breakhound</a> / Guides</p>
+<h1>How to find bugs automatically in a JavaScript library</h1>
+<p>Most libraries have tests for the inputs their authors thought about. The bugs live in the inputs nobody thought about: an emoji at the cut point, a user in Tokyo, a value of <code>-0.5</code>. breakhound finds those without you writing a single test.</p>
+<h2>Step 1: run it</h2>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="c"># a package from npm</span></span><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">some-package</span></span><span class="l"> </span><span class="l"><span class="c"># or a local folder</span></span><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">./my-lib</span></span></pre></div>
+<h2>Step 2: what happens</h2>
+<p>breakhound reads the TypeScript declarations to learn each parameter type. For a <code>string</code> it tries emoji, combining marks and lone surrogates. For a <code>Date</code> it tries DST transitions, year boundaries and dates before 1970. For a <code>number</code> it tries <code>-0</code>, <code>NaN</code>, values between -1 and 0 and huge values. These come from the <a href="https://kwy404.github.io/edgegoat/">edgegoat</a> catalog.</p>
+<p>Each call runs in an isolated child process with a timeout, under several <code>TZ</code> values, and the results are checked against invariants: no lone surrogates, no time zone dependence, no crash on valid input, no NaN leak, working roundtrips, idempotent normalization, preserved sign and determinism.</p>
+<h2>Step 3: keep the test</h2>
+<p>Every finding comes with a minimal reproduction and a Vitest test. Example output, illustrative only:</p>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">truncate.breakhound.test.ts</span></div>
+<pre><span class="l"><span class="p">import</span> { <span class="v">test</span>, <span class="v">expect</span> } <span class="p">from</span> <span class="s">"vitest"</span>;</span><span class="l"><span class="p">import</span> { <span class="v">truncate</span> } <span class="p">from</span> <span class="s">"example-strings"</span>;</span><span class="l"> </span><span class="l"><span class="c">// breakhound: lone surrogate in output</span></span><span class="l"><span class="f">test</span>(<span class="s">"truncate never splits an emoji"</span>, () <span class="k">=&gt;</span> {</span><span class="l">  <span class="k">const</span> <span class="v">out</span> = <span class="f">truncate</span>(<span class="s">"hi \u{1F44B} there"</span>, <span class="n">4</span>);</span><span class="l">  <span class="f">expect</span>(<span class="v">out</span>.<span class="f">isWellFormed</span>()).<span class="f">toBe</span>(<span class="k">true</span>);</span><span class="l">});</span></pre></div>
+<h2>Step 4: gate CI</h2>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">.</span> <span class="k">--fail-on</span> <span class="s">high</span> <span class="k">--json</span> &gt; <span class="s">findings.json</span></span></pre></div>
+<p>breakhound executes the code it scans, so run it on code you trust or inside a container. Installs use <code>--ignore-scripts</code>.</p>
+<h2>FAQ</h2>
+<div class="faq"><details><summary>Do I need to write tests first?</summary><div class="a">No. breakhound derives inputs from type signatures and checks built in invariants.</div></details>
+<details><summary>How is this different from fuzzing?</summary><div class="a">Coverage guided fuzzers such as Jazzer.js mutate inputs to find crashes. breakhound uses typed edge cases and checks semantic invariants such as time zone independence and sign preservation.</div></details></div>
+<div class="card" style="margin-top:36px"><h3>Try it now</h3><p class="muted">Point it at any JavaScript package. It sniffs out the bugs.</p><div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">your-package</span></span></pre></div><p><a href="https://kwy404.github.io/breakhound/">Back to breakhound</a></p></div>
+</article>
+</main>
+<footer>
+  <div class="wrap">
+    <div>
+      <p><strong>breakhound</strong> by <a href="https://github.com/kwy404">Alexandre Kohler (kwy404)</a>. MIT License.</p>
+      <p>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+    <div>
+      <p><strong>More from kwy404</strong></p>
+      <p><a href="https://kwy404.github.io/graphemely/">graphemely</a> · <a href="https://kwy404.github.io/edgegoat/">edgegoat</a> · <a href="https://kwy404.github.io/vueleap/">vueleap</a> · <a href="https://kwy404.github.io/numberparrot/">numberparrot</a> · <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>breakhound: find bugs in any JavaScript library automatically</title>
+<meta name="description" content="breakhound finds bugs in any JavaScript or TypeScript library with zero tests: time zone bugs, emoji split by surrogate pairs, NaN leaks, lost negative signs. Each finding ships a Vitest test.">
+<link rel="canonical" href="https://kwy404.github.io/breakhound/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="breakhound: find bugs in any JavaScript library automatically">
+<meta property="og:description" content="Point it at any JavaScript package. It sniffs out the bugs. No tests required.">
+<meta property="og:url" content="https://kwy404.github.io/breakhound/">
+<meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="breakhound: find bugs in any JavaScript library automatically">
+<meta name="twitter:description" content="Point it at any JavaScript package. It sniffs out the bugs. No tests required.">
+<meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+<meta name="theme-color" content="#0b0d14">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"SoftwareApplication","name":"breakhound","applicationCategory":"DeveloperApplication","operatingSystem":"Node.js","description":"Find bugs in any JavaScript or TypeScript library automatically, no tests required.","url":"https://kwy404.github.io/breakhound/","downloadUrl":"https://www.npmjs.com/package/breakhound","license":"https://opensource.org/licenses/MIT","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Alexandre Kohler","url":"https://github.com/kwy404"}},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How do I find bugs automatically in a JavaScript library?","acceptedAnswer":{"@type":"Answer","text":"Run npx breakhound with a package name or path. It reads the TypeScript types, generates edge case inputs and reports invariant violations with a minimal reproduction and a Vitest test."}},
+{"@type":"Question","name":"How is this different from property based testing?","acceptedAnswer":{"@type":"Answer","text":"Property based testing asks you to write properties and generators. breakhound ships the properties and derives generators from type signatures."}},
+{"@type":"Question","name":"Is it safe to run on any package?","acceptedAnswer":{"@type":"Answer","text":"It executes the target code. Run it on code you trust or inside a container. Installs use --ignore-scripts and calls run in child processes with timeouts."}}
+]}]}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+</head>
+<body>
+<nav>
+  <div class="wrap" v-data="{ light: false }">
+    <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="34" height="34">breakhound</a>
+    <div class="links">
+      <a href="#checks" class="hide-sm">Checks</a>
+      <a href="#ci" class="hide-sm">CI</a>
+      <a href="find-bugs-automatically-javascript.html" class="hide-sm">Guides</a>
+      <a href="https://github.com/kwy404/breakhound">GitHub</a>
+      <button class="toggle" type="button" aria-label="Toggle color theme" @click="light = !light"><span v-if="light">Dark mode</span><span v-if="!light">Light mode</span></button>
+      <span :class="{ 'theme-light': light }" hidden></span>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="mascot" src="assets/mascot.svg" alt="Sniff, a bloodhound detective holding a magnifying glass" width="180" height="180">
+    <h1>Find bugs in any <span class="grad">JavaScript library</span> automatically, no tests required</h1>
+    <p class="lead">Point it at any JavaScript package. It sniffs out the bugs. breakhound reads the types, throws edge cases at every function and hands you a minimal repro plus a ready Vitest test.</p>
+    <div class="tabs" v-data="{ tab: 'npm' }">
+      <div class="tabbar" role="tablist">
+        <button type="button" :class="{ on: tab === 'npm' }" @click="tab = 'npm'">npm</button>
+        <button type="button" :class="{ on: tab === 'pnpm' }" @click="tab = 'pnpm'">pnpm</button>
+        <button type="button" :class="{ on: tab === 'yarn' }" @click="tab = 'yarn'">yarn</button>
+        <button type="button" :class="{ on: tab === 'bun' }" @click="tab = 'bun'">bun</button>
+      </div>
+      <div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+        <pre v-if="tab === 'npm'"><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">date-fns</span></span></pre>
+        <pre v-if="tab === 'pnpm'"><span class="l"><span class="f">pnpm</span> <span class="k">dlx</span> <span class="v">breakhound</span> <span class="s">date-fns</span></span></pre>
+        <pre v-if="tab === 'yarn'"><span class="l"><span class="f">yarn</span> <span class="k">dlx</span> <span class="v">breakhound</span> <span class="s">date-fns</span></span></pre>
+        <pre v-if="tab === 'bun'"><span class="l"><span class="f">bunx</span> <span class="v">breakhound</span> <span class="s">date-fns</span></span></pre>
+      </div>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="#how">How it works</a>
+      <a class="btn ghost" href="https://github.com/kwy404/breakhound">Star on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="how">
+  <div class="wrap">
+    <h2>How it sniffs</h2>
+    <div class="grid">
+      <div class="card"><h3>1. Read the types</h3><p class="muted">Loads the package's TypeScript declarations to learn what each exported function accepts.</p></div>
+      <div class="card"><h3>2. Generate edge cases</h3><p class="muted">Builds inputs per parameter type from <a href="https://kwy404.github.io/edgegoat/">edgegoat</a>: DST, time zones, emoji, <code>-0</code>, <code>NaN</code>, dates before 1970.</p></div>
+      <div class="card"><h3>3. Run in isolation</h3><p class="muted">Every call runs in a child process with a timeout, under several <code>TZ</code> values.</p></div>
+      <div class="card"><h3>4. Check invariants</h3><p class="muted">Reports violations with a minimal reproduction and a Vitest test you can commit.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="checks">
+  <div class="wrap">
+    <h2>What it checks</h2>
+    <div class="card" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Invariant</th><th>What breaks</th></tr></thead>
+      <tbody>
+        <tr><td>Lone surrogate in output</td><td>An emoji is split in half by <code>slice</code> or <code>substr</code></td></tr>
+        <tr><td>Host time zone dependence</td><td>Output changes when the machine's <code>TZ</code> changes</td></tr>
+        <tr><td>Crash on valid input</td><td>Unexpected <code>TypeError</code> for a value the types allow</td></tr>
+        <tr><td>NaN leak</td><td><code>NaN</code> returned where a number was expected</td></tr>
+        <tr><td>Broken roundtrip</td><td><code>decode(encode(x))</code> is not <code>x</code></td></tr>
+        <tr><td>Normalize not idempotent</td><td>Normalizing twice gives a different result</td></tr>
+        <tr><td>Lost negative sign</td><td><code>-0.5</code> formats as <code>0.5</code></td></tr>
+        <tr><td>Nondeterminism</td><td>Same call, same input, different result</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="output">
+  <div class="wrap">
+    <h2>Every finding becomes a test</h2>
+    <p class="muted">Example output, illustrative only. A finding like a lost negative sign turns into this file:</p>
+    <div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">formatNumber.breakhound.test.ts</span></div>
+<pre><span class="l"><span class="p">import</span> { <span class="v">test</span>, <span class="v">expect</span> } <span class="p">from</span> <span class="s">"vitest"</span>;</span><span class="l"><span class="p">import</span> { <span class="v">formatNumber</span> } <span class="p">from</span> <span class="s">"example-format"</span>;</span><span class="l"> </span><span class="l"><span class="c">// breakhound: negative number lost its sign</span></span><span class="l"><span class="f">test</span>(<span class="s">"keeps the sign of values between -1 and 0"</span>, () <span class="k">=&gt;</span> {</span><span class="l">  <span class="f">expect</span>(<span class="f">formatNumber</span>(<span class="n">-0.5</span>)).<span class="f">toBe</span>(<span class="s">"-0.5"</span>);</span><span class="l">});</span></pre>
+    </div>
+  </div>
+</section>
+
+<section id="ci">
+  <div class="wrap">
+    <h2>Gate your CI</h2>
+    <p class="muted">Use <code>--fail-on</code> to break the build on high severity findings and <code>--json</code> to keep the report.</p>
+    <div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">.github/workflows/breakhound.yml</span></div>
+<pre><span class="l"><span class="v">name</span>: <span class="s">breakhound</span></span><span class="l"><span class="v">on</span>: [<span class="s">push</span>, <span class="s">pull_request</span>]</span><span class="l"><span class="v">jobs</span>:</span><span class="l">  <span class="v">sniff</span>:</span><span class="l">    <span class="v">runs-on</span>: <span class="s">ubuntu-latest</span></span><span class="l">    <span class="v">steps</span>:</span><span class="l">      - <span class="v">uses</span>: <span class="s">actions/checkout@v4</span></span><span class="l">      - <span class="v">uses</span>: <span class="s">actions/setup-node@v4</span></span><span class="l">        <span class="v">with</span>: { <span class="v">node-version</span>: <span class="n">20</span> }</span><span class="l">      - <span class="v">run</span>: <span class="s">npm ci --ignore-scripts</span></span><span class="l">      - <span class="v">run</span>: <span class="s">npx breakhound . --fail-on high</span></span></pre>
+    </div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="wrap">
+    <div class="card">
+      <h2>Safety first</h2>
+      <p class="muted">breakhound executes the code it scans. Run it on code you trust or inside a container. Installs from npm use <code>--ignore-scripts</code>, and each call runs in an isolated child process with a timeout.</p>
+    </div>
+  </div>
+</section>
+
+<section id="proof">
+  <div class="wrap">
+    <h2>Born from 130 real bug fixes</h2>
+    <p class="muted">Built by Alexandre Kohler (kwy404), with 130 merged bug fixes at Google, Microsoft, GitHub, Vue and more. The checks encode bugs like these:</p>
+    <div class="grid">
+      <a class="card" href="https://github.com/github/relative-time-element/pull/384"><h3>github/relative-time-element</h3><p class="muted">Year check used UTC instead of the display time zone.</p></a>
+      <a class="card" href="https://github.com/google/budoux/pull/1411"><h3>google/budoux</h3><p class="muted">Surrogate pairs split.</p></a>
+      <a class="card" href="https://github.com/microsoft/vscode-js-debug/pull/2423"><h3>microsoft/vscode-js-debug</h3><p class="muted">Surrogate pairs split.</p></a>
+      <a class="card" href="https://github.com/mozilla/pdf.js/pull/22017"><h3>mozilla/pdf.js</h3><p class="muted">Negative numbers above -1 lost their sign.</p></a>
+      <a class="card" href="https://github.com/vuejs/core/pull/15618"><h3>vuejs/core</h3><p class="muted">Merged fix in Vue core.</p></a>
+    </div>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="wrap">
+    <h2>breakhound, fast-check and Jazzer.js</h2>
+    <div class="card" style="overflow-x:auto">
+    <table>
+      <thead><tr><th></th><th>breakhound</th><th>fast-check</th><th>Jazzer.js</th></tr></thead>
+      <tbody>
+        <tr><td>Approach</td><td>Type driven invariant checks</td><td>Property based testing</td><td>Coverage guided fuzzing</td></tr>
+        <tr><td>You write</td><td>Nothing</td><td>Properties and arbitraries</td><td>Fuzz targets</td></tr>
+        <tr><td>Best at</td><td>Unicode, time zone, number bugs in public APIs</td><td>Precise properties of your own code</td><td>Crashes in parsers</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="muted">They are complementary: sweep with breakhound, encode key properties with fast-check, fuzz parsers with Jazzer.js.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap faq" v-data="{ open: 1 }">
+    <h2>FAQ</h2>
+    <div class="item"><button class="q" type="button" @click="open = open === 1 ? 0 : 1">How do I find bugs automatically in a JavaScript library?</button><div class="a" v-show="open === 1">Run npx breakhound with a package name or a path. It reads the TypeScript types, generates edge case inputs and reports invariant violations, each with a minimal reproduction and a Vitest test.</div></div>
+    <div class="item"><button class="q" type="button" @click="open = open === 2 ? 0 : 2">How is this different from property based testing?</button><div class="a" v-show="open === 2">Property based testing asks you to write the properties and generators. breakhound ships a fixed set of invariants and derives generators from the type signatures, so it works on code you have never read.</div></div>
+    <div class="item"><button class="q" type="button" @click="open = open === 3 ? 0 : 3">Is it safe to run on any package?</button><div class="a" v-show="open === 3">It executes the package code, so scan untrusted packages inside a container. Installs use the ignore scripts flag and every call runs in a child process with a timeout.</div></div>
+    <div class="item"><button class="q" type="button" @click="open = open === 4 ? 0 : 4">Does it need TypeScript?</button><div class="a" v-show="open === 4">It works best with type declarations, bundled or from DefinitelyTyped. Without them it falls back to generic inputs.</div></div>
+  </div>
+</section>
+
+<section id="guides">
+  <div class="wrap">
+    <h2>Guides</h2>
+    <div class="grid">
+      <a class="card" href="find-bugs-automatically-javascript.html"><h3>Find bugs automatically in JavaScript</h3><p class="muted">Zero test bug hunting for any npm package.</p></a>
+      <a class="card" href="timezone-bugs-javascript.html"><h3>Time zone bugs in JavaScript</h3><p class="muted">Why your date code breaks in Tokyo and how to catch it.</p></a>
+      <a class="card" href="unicode-surrogate-pair-bugs.html"><h3>Unicode surrogate pair bugs</h3><p class="muted">How emoji get split in half and how to stop it.</p></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p><strong>breakhound</strong> by <a href="https://github.com/kwy404">Alexandre Kohler (kwy404)</a>. MIT License.</p>
+      <p>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+    <div>
+      <p><strong>More from kwy404</strong></p>
+      <p><a href="https://kwy404.github.io/graphemely/">graphemely</a> · <a href="https://kwy404.github.io/edgegoat/">edgegoat</a> · <a href="https://kwy404.github.io/vueleap/">vueleap</a> · <a href="https://kwy404.github.io/numberparrot/">numberparrot</a> · <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unicode surrogate pair bugs: why emoji get split | breakhound</title>
+<meta name="description" content="Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.">
+<link rel="canonical" href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unicode surrogate pair bugs: why emoji get split | breakhound">
+<meta property="og:description" content="Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.">
+<meta property="og:url" content="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
+<meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Unicode surrogate pair bugs: why emoji get split | breakhound">
+<meta name="twitter:description" content="Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.">
+<meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Unicode surrogate pair bugs: why emoji get split in JavaScript","description":"Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.","url":"https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html","image":"https://kwy404.github.io/breakhound/og.png","author":{"@type":"Person","name":"Alexandre Kohler","url":"https://github.com/kwy404"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"breakhound","item":"https://kwy404.github.io/breakhound/"},{"@type":"ListItem","position":2,"name":"Unicode surrogate pair bugs: why emoji get split in JavaScript","item":"https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a lone surrogate?","acceptedAnswer":{"@type":"Answer","text":"Half of a UTF-16 surrogate pair without its partner. It is not a valid character and breaks encodeURIComponent and many serializers."}},{"@type":"Question","name":"Is code point slicing enough?","acceptedAnswer":{"@type":"Answer","text":"It avoids lone surrogates, but grapheme clusters such as flags and family emoji can still be split. Use Intl.Segmenter for those."}}]}]}</script>
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+</head>
+<body>
+<nav>
+  <div class="wrap" v-data="{ light: false }">
+    <a class="brand" href="https://kwy404.github.io/breakhound/"><img src="https://kwy404.github.io/breakhound/assets/mascot.svg" alt="" width="34" height="34">breakhound</a>
+    <div class="links">
+      <a href="https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html" class="hide-sm">Find bugs</a>
+      <a href="https://kwy404.github.io/breakhound/timezone-bugs-javascript.html" class="hide-sm">Time zones</a>
+      <a href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html" class="hide-sm">Unicode</a>
+      <a href="https://github.com/kwy404/breakhound">GitHub</a>
+      <button class="toggle" type="button" aria-label="Toggle color theme" @click="light = !light"><span v-if="light">Dark mode</span><span v-if="!light">Light mode</span></button>
+      <span :class="{ 'theme-light': light }" hidden></span>
+    </div>
+  </div>
+</nav>
+<main>
+<article>
+<p class="muted"><a href="https://kwy404.github.io/breakhound/">breakhound</a> / Guides</p>
+<h1>Unicode surrogate pair bugs: why emoji get split in JavaScript</h1>
+<p>JavaScript strings are sequences of UTF-16 code units. Characters outside the Basic Multilingual Plane, including most emoji, take two code units called a surrogate pair. <code>length</code>, <code>slice</code>, <code>substr</code> and <code>charAt</code> count code units, so cutting at the wrong index leaves half a character behind: a lone surrogate that renders as a replacement box and breaks JSON and URL encoding.</p>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">split.ts</span></div>
+<pre><span class="l"><span class="k">const</span> <span class="v">s</span> = <span class="s">"hi \u{1F44B}"</span>;</span><span class="l"><span class="v">s</span>.<span class="v">length</span>;              <span class="c">// 5, not 4</span></span><span class="l"><span class="v">s</span>.<span class="f">slice</span>(<span class="n">0</span>, <span class="n">4</span>);         <span class="c">// "hi \uD83D" lone surrogate</span></span><span class="l">[...<span class="v">s</span>].<span class="f">slice</span>(<span class="n">0</span>, <span class="n">4</span>).<span class="f">join</span>(<span class="s">""</span>); <span class="c">// safe: iterates code points</span></span></pre></div>
+<h2>Real bugs</h2>
+<p>This bug class was fixed in <a href="https://github.com/google/budoux/pull/1411">google/budoux#1411</a> and <a href="https://github.com/microsoft/vscode-js-debug/pull/2423">microsoft/vscode-js-debug#2423</a>, both maintained by teams that know Unicode well. It is easy to miss because tests rarely include emoji at the cut point.</p>
+<h2>How breakhound catches it</h2>
+<p>For every <code>string</code> parameter breakhound feeds emoji, flags, skin tone sequences and combining marks at many positions, then checks each string in the output with <code>isWellFormed</code>. A lone surrogate is reported as <strong>lone surrogate in output</strong>, with the shortest input that reproduces it.</p>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">./my-string-lib</span></span></pre></div>
+<h2>How to fix it</h2>
+<ul><li>Iterate with <code>for...of</code> or spread to work on code points.</li><li>Use <code>Intl.Segmenter</code> or <a href="https://kwy404.github.io/graphemely/">graphemely</a> when you need user perceived characters.</li><li>Use <code>String.prototype.toWellFormed</code> as a last line of defense.</li></ul>
+<h2>FAQ</h2>
+<div class="faq"><details><summary>What is a lone surrogate?</summary><div class="a">Half of a UTF-16 surrogate pair without its partner. It is not a valid character and breaks encodeURIComponent and many serializers.</div></details>
+<details><summary>Is code point slicing enough?</summary><div class="a">It avoids lone surrogates, but grapheme clusters such as flags and family emoji can still be split. Use Intl.Segmenter for those.</div></details></div>
+<div class="card" style="margin-top:36px"><h3>Try it now</h3><p class="muted">Point it at any JavaScript package. It sniffs out the bugs.</p><div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">your-package</span></span></pre></div><p><a href="https://kwy404.github.io/breakhound/">Back to breakhound</a></p></div>
+</article>
+</main>
+<footer>
+  <div class="wrap">
+    <div>
+      <p><strong>breakhound</strong> by <a href="https://github.com/kwy404">Alexandre Kohler (kwy404)</a>. MIT License.</p>
+      <p>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+    <div>
+      <p><strong>More from kwy404</strong></p>
+      <p><a href="https://kwy404.github.io/graphemely/">graphemely</a> · <a href="https://kwy404.github.io/edgegoat/">edgegoat</a> · <a href="https://kwy404.github.io/vueleap/">vueleap</a> · <a href="https://kwy404.github.io/numberparrot/">numberparrot</a> · <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time zone bugs in JavaScript: find and fix them | breakhound</title>
+<meta name="description" content="Why JavaScript date code breaks in other time zones, how mixing UTC and local getters causes off by one year bugs, and how to catch them automatically with breakhound.">
+<link rel="canonical" href="https://kwy404.github.io/breakhound/timezone-bugs-javascript.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Time zone bugs in JavaScript: find and fix them | breakhound">
+<meta property="og:description" content="Why JavaScript date code breaks in other time zones, how mixing UTC and local getters causes off by one year bugs, and how to catch them automatically with breakhound.">
+<meta property="og:url" content="https://kwy404.github.io/breakhound/timezone-bugs-javascript.html">
+<meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Time zone bugs in JavaScript: find and fix them | breakhound">
+<meta name="twitter:description" content="Why JavaScript date code breaks in other time zones, how mixing UTC and local getters causes off by one year bugs, and how to catch them automatically with breakhound.">
+<meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Time zone bugs in JavaScript and how to catch them","description":"Why JavaScript date code breaks in other time zones, how mixing UTC and local getters causes off by one year bugs, and how to catch them automatically with breakhound.","url":"https://kwy404.github.io/breakhound/timezone-bugs-javascript.html","image":"https://kwy404.github.io/breakhound/og.png","author":{"@type":"Person","name":"Alexandre Kohler","url":"https://github.com/kwy404"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"breakhound","item":"https://kwy404.github.io/breakhound/"},{"@type":"ListItem","position":2,"name":"Time zone bugs in JavaScript and how to catch them","item":"https://kwy404.github.io/breakhound/timezone-bugs-javascript.html"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why does my date test pass locally but fail in CI?","acceptedAnswer":{"@type":"Answer","text":"CI machines usually run in UTC while your laptop runs in your local zone. Any code that mixes UTC and local getters will behave differently."}},{"@type":"Question","name":"Which time zones should I test?","acceptedAnswer":{"@type":"Answer","text":"At least UTC, one zone west of UTC and one far east such as Asia/Tokyo, plus a zone with DST."}}]}]}</script>
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+</head>
+<body>
+<nav>
+  <div class="wrap" v-data="{ light: false }">
+    <a class="brand" href="https://kwy404.github.io/breakhound/"><img src="https://kwy404.github.io/breakhound/assets/mascot.svg" alt="" width="34" height="34">breakhound</a>
+    <div class="links">
+      <a href="https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html" class="hide-sm">Find bugs</a>
+      <a href="https://kwy404.github.io/breakhound/timezone-bugs-javascript.html" class="hide-sm">Time zones</a>
+      <a href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html" class="hide-sm">Unicode</a>
+      <a href="https://github.com/kwy404/breakhound">GitHub</a>
+      <button class="toggle" type="button" aria-label="Toggle color theme" @click="light = !light"><span v-if="light">Dark mode</span><span v-if="!light">Light mode</span></button>
+      <span :class="{ 'theme-light': light }" hidden></span>
+    </div>
+  </div>
+</nav>
+<main>
+<article>
+<p class="muted"><a href="https://kwy404.github.io/breakhound/">breakhound</a> / Guides</p>
+<h1>Time zone bugs in JavaScript and how to catch them</h1>
+<p>A <code>Date</code> in JavaScript is a single instant, but every getter answers in some time zone. <code>getFullYear</code> answers in the host zone, <code>getUTCFullYear</code> in UTC, and <code>Intl.DateTimeFormat</code> in whatever zone you pass. Mix two of them and your code is correct on your laptop and wrong for half the planet.</p>
+<h2>A real example</h2>
+<p>In <a href="https://github.com/github/relative-time-element/pull/384">github/relative-time-element#384</a> the year check used UTC while the date was displayed in the user's zone. Around New Year, users saw the wrong format. A simplified version of that bug class:</p>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">format.ts</span></div>
+<pre><span class="l"><span class="k">export</span> <span class="k">function</span> <span class="f">label</span>(<span class="v">date</span>: <span class="t">Date</span>, <span class="v">now</span>: <span class="t">Date</span>) {</span><span class="l">  <span class="c">// bug: compares the UTC year, but displays local time</span></span><span class="l">  <span class="p">if</span> (<span class="v">date</span>.<span class="f">getUTCFullYear</span>() === <span class="v">now</span>.<span class="f">getUTCFullYear</span>()) {</span><span class="l">    <span class="p">return</span> <span class="v">date</span>.<span class="f">toLocaleDateString</span>(<span class="s">"en"</span>, { <span class="v">month</span>: <span class="s">"short"</span>, <span class="v">day</span>: <span class="s">"numeric"</span> });</span><span class="l">  }</span><span class="l">  <span class="p">return</span> <span class="v">date</span>.<span class="f">toLocaleDateString</span>(<span class="s">"en"</span>);</span><span class="l">}</span></pre></div>
+<h2>How breakhound catches it</h2>
+<p>breakhound calls every function with the same arguments under several <code>TZ</code> values, such as <code>UTC</code>, <code>America/Los_Angeles</code> and <code>Asia/Tokyo</code>, in separate child processes. If the output differs only because the host zone changed, it reports <strong>output depends on host time zone</strong> with the exact instant that triggers it. Inputs include DST transitions, year boundaries and dates before 1970, where negative timestamps expose rounding bugs.</p>
+<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">./my-date-lib</span></span></pre></div>
+<h2>How to fix it</h2>
+<ul><li>Pick one zone per operation and use it for both comparison and display.</li><li>Pass <code>timeZone</code> explicitly to <code>Intl.DateTimeFormat</code> when the zone matters.</li><li>Lock the zone in tests with <code>TZ</code> and run the suite under more than one zone.</li></ul>
+<h2>FAQ</h2>
+<div class="faq"><details><summary>Why does my date test pass locally but fail in CI?</summary><div class="a">CI machines usually run in UTC while your laptop runs in your local zone. Any code that mixes UTC and local getters will behave differently.</div></details>
+<details><summary>Which time zones should I test?</summary><div class="a">At least UTC, one zone west of UTC and one far east such as Asia/Tokyo, plus a zone with DST.</div></details></div>
+<div class="card" style="margin-top:36px"><h3>Try it now</h3><p class="muted">Point it at any JavaScript package. It sniffs out the bugs.</p><div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
+<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">your-package</span></span></pre></div><p><a href="https://kwy404.github.io/breakhound/">Back to breakhound</a></p></div>
+</article>
+</main>
+<footer>
+  <div class="wrap">
+    <div>
+      <p><strong>breakhound</strong> by <a href="https://github.com/kwy404">Alexandre Kohler (kwy404)</a>. MIT License.</p>
+      <p>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+    <div>
+      <p><strong>More from kwy404</strong></p>
+      <p><a href="https://kwy404.github.io/graphemely/">graphemely</a> · <a href="https://kwy404.github.io/edgegoat/">edgegoat</a> · <a href="https://kwy404.github.io/vueleap/">vueleap</a> · <a href="https://kwy404.github.io/numberparrot/">numberparrot</a> · <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
