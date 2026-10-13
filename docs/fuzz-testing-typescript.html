@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fuzz Testing TypeScript Without Writing Harnesses</title>
+  <meta name="description" content="Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.">
+  <link rel="canonical" href="https://kwy404.github.io/breakhound/fuzz-testing-typescript.html">
+  <meta name="theme-color" content="#fffbf4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11162a" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="breakhound">
+  <meta property="og:title" content="Fuzz Testing TypeScript Without Writing Harnesses">
+  <meta property="og:description" content="Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.">
+  <meta property="og:url" content="https://kwy404.github.io/breakhound/fuzz-testing-typescript.html">
+  <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+  <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fuzz Testing TypeScript Without Writing Harnesses">
+  <meta name="twitter:description" content="Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.">
+  <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+  <link rel="stylesheet" href="style.css">
+  <script>try{var t=localStorage.getItem('voodoo:theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+  <script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "headline": "Fuzz testing TypeScript without writing harnesses",
+      "description": "Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.",
+      "url": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html",
+      "mainEntityOfPage": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html",
+      "image": "https://kwy404.github.io/breakhound/og.png",
+      "datePublished": "2026-10-12",
+      "dateModified": "2026-10-12",
+      "inLanguage": "en",
+      "proficiencyLevel": "Intermediate",
+      "author": {
+        "@type": "Person",
+        "name": "Alexandre Kohler",
+        "url": "https://github.com/kwy404"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Alexandre Kohler",
+        "url": "https://github.com/kwy404"
+      },
+      "about": {
+        "@type": "SoftwareApplication",
+        "name": "breakhound",
+        "url": "https://kwy404.github.io/breakhound/"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is this real fuzz testing for TypeScript?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It is type driven fuzzing: inputs are generated from your declared types plus a curated edge case catalog, and results are checked against invariants. It is not coverage guided, so it does not mutate bytes to reach new branches the way Jazzer.js does."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to write fuzz targets or arbitraries?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Run npx breakhound ./my-lib and it reads the .d.ts types, generates inputs for each parameter, including generated callbacks, and reports findings with a reproduction."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I restrict it to certain functions or rules?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Use --only and --exclude with wildcards for functions, and --rules to pick rule ids such as nan-leak or roundtrip."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if a function hangs or runs forever?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each call runs in a separate child process with a timeout, which you can change with --timeout. A hang is contained and does not stop the rest of the run."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it replace my unit tests?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It finds the inputs you did not think of, and every finding becomes a Vitest test you can keep next to your existing ones. Start with the guide to finding bugs automatically for the full workflow."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "breakhound",
+          "item": "https://kwy404.github.io/breakhound/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Guides",
+          "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fuzz testing TypeScript without writing harnesses",
+          "item": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html"
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site" v-data="{ menu: false }" @keydown.esc="menu = false">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="38" height="38">breakhound</a>
+      <nav class="site" id="site-nav" aria-label="Main" :class="{ open: menu }" @click="menu = false">
+        <a href="./#bugs">Bugs it finds</a>
+        <a href="./#how">How it works</a>
+        <a href="./#ci">CI</a>
+        <a href="./#compare">Compare</a>
+        <a href="find-bugs-automatically-javascript.html">Guides</a>
+        <a href="./#faq">FAQ</a>
+      </nav>
+      <a class="stars" href="https://github.com/kwy404/breakhound" aria-label="Star breakhound on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="stars-label">Star</span><img src="https://img.shields.io/github/stars/kwy404/breakhound?style=flat&amp;label=&amp;color=1fa692" alt="GitHub stars" width="34" height="20" loading="lazy"></a>
+      <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" :aria-expanded="menu ? 'true' : 'false'" @click="menu = !menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <button class="icon-btn theme-toggle" type="button" v-theme-toggle>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span class="visually-hidden">Toggle dark theme</span>
+      </button>
+    </div>
+  </header>
+  <main id="main">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="./">breakhound</a></li>
+          <li><a href="find-bugs-automatically-javascript.html">Guides</a></li>
+          <li aria-current="page">Fuzz testing TypeScript</li>
+        </ol>
+      </nav>
+      <header class="article-head">
+        <p class="eyebrow">Guide</p>
+        <h1>Fuzz testing TypeScript without writing harnesses</h1>
+        <p class="lead">Your TypeScript types already describe every valid input. breakhound uses them to fuzz a library with edge cases, checks invariants on the results and gives you a Vitest test for each bug, with no fuzz targets or arbitraries to write.</p>
+        <p class="meta"><span>By <a href="https://github.com/kwy404">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-12">October 12, 2026</time></span><span>4 min read</span></p>
+      </header>
+      <div class="article-grid">
+        <aside class="toc" aria-labelledby="toc-title">
+          <h2 id="toc-title">On this page</h2>
+          <ol>
+            <li><a href="#types-as-fuzz-input">Your types are already a fuzzing spec</a></li>
+            <li><a href="#a-typed-bug">A typed function that is quietly wrong</a></li>
+            <li><a href="#how-types-drive-inputs">How breakhound turns types into inputs</a></li>
+            <li><a href="#run-it">Run it and read the output</a></li>
+            <li><a href="#compare-tools">breakhound, fast-check and Jazzer.js</a></li>
+            <li><a href="#make-it-repeatable">Make the fuzz run repeatable</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#related">Related guides</a></li>
+          </ol>
+          <div class="toc-cta">
+            <p>Try it on your library</p>
+            <code>npx breakhound ./my-lib</code>
+          </div>
+        </aside>
+        <article class="prose">
+<section id="types-as-fuzz-input"><h2>Your types are already a fuzzing spec</h2>
+<p>Classic fuzzing feeds random bytes into a parser and waits for a crash. That works well for C code and binary formats, but most TypeScript libraries do not take bytes. They take a <code>string</code>, a <code>Date</code>, a <code>number[]</code> and a callback. The interesting question is rarely "does it crash" and more often "does it return something wrong".</p>
+<p>A type signature tells a fuzzer what shape to generate. Random strings of that shape are weak, though. A bug in a text function hides in an emoji or a lone surrogate, not in the 500th random ASCII word. Type driven fuzzing means generating values that are valid for the type and chosen to be nasty.</p>
+</section>
+<section id="a-typed-bug"><h2>A typed function that is quietly wrong</h2>
+<p>Consider a small formatter. Its types are correct, it compiles with <code>strict</code> on, and its unit tests with 1.5, 100 and 0 all pass.</p>
+<figure class="code editor numbered" data-lang="ts" data-title="formatFixed.ts" data-bad="2">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>formatFixed.ts</span><button type="button" class="code-copy" v-copy-from="#code-1" aria-label="Copy formatFixed.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-1"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line mark-bad"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">trunc</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> frac</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> - </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">whole</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">2</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slice</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">1</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> `</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">${</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">whole</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}${</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">frac</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">`</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre>
+</figure>
+<p>For <code>-0.5</code>, <code>Math.trunc</code> returns <code>-0</code>, and a template literal prints <code>-0</code> as <code>"0"</code>. The result is <code>"0.50"</code>, the same as for <code>0.5</code>. The sign is gone, so a refund of 50 cents shows up as a charge. This is one of the <a href="negative-zero-javascript-bugs.html">negative zero bugs</a> that only appears for values between -1 and 0.</p>
+<p>The fix decides the sign from the original value and formats the absolute value:</p>
+<figure class="code editor numbered" data-lang="ts" data-title="formatFixed.ts" data-ok="2">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>formatFixed.ts</span><button type="button" class="code-copy" v-copy-from="#code-2" aria-label="Copy formatFixed.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-2"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line mark-ok"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> sign</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> &#x3C; </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> ? </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">"-"</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> : </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">""</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> sign</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> + </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Math</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">abs</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">2</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre>
+</figure>
+</section>
+<section id="how-types-drive-inputs"><h2>How breakhound turns types into inputs</h2>
+<p>breakhound reads the declaration file for each exported function. For the function above it sees this:</p>
+<figure class="code editor" data-lang="ts" data-title="formatFixed.d.ts">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>formatFixed.d.ts</span><button type="button" class="code-copy" v-copy-from="#code-3" aria-label="Copy formatFixed.d.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-3"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> declare</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">value</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span></code></pre>
+</figure>
+<p>A <code>number</code> parameter gets <code>0</code>, <code>-0</code>, <code>NaN</code>, <code>Infinity</code>, values between -1 and 0 and very large magnitudes, all from the edgegoat catalog. A <code>string</code> gets empty strings, emoji, combining marks and lone surrogates. A <code>Date</code> gets daylight saving boundaries and dates before 1970. If a parameter is a function, such as <code>(word: string) =&gt; string</code>, breakhound generates callbacks for it too, so higher order helpers like a <code>mapWords</code> are exercised.</p>
+<p>Then it checks oracles on the results. These are not crash only checks: a function that returns <code>NaN</code> for finite input, changes its answer with the <code>TZ</code> environment variable or loses a minus sign is flagged even though it never throws.</p>
+</section>
+<section id="run-it"><h2>Run it and read the output</h2>
+<figure class="code terminal" data-lang="bash">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-bash" aria-hidden="true"></span>Terminal</span><button type="button" class="code-copy" v-copy-from="#code-4" aria-label="Copy command">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-4"><span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">npx</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> breakhound</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> ./my-lib</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --seed</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8"> 42</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --max-calls</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8"> 20000</span></span></code></pre>
+</figure>
+<p>Both flags show their defaults here: seed 42 and a budget of 20000 calls. Every call runs in an isolated child process with a timeout (2000 ms by default), so a function that hangs or blows the stack does not take the run down. The output on the buggy-lib fixture includes this finding:</p>
+<figure class="code output" data-lang="text" data-title="Terminal output">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-text" aria-hidden="true"></span>Terminal output</span><button type="button" class="code-copy" v-copy-from="#code-5" aria-label="Copy Terminal output">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-5"><span class="line"><span>MEDIUM (5)</span></span>
+<span class="line"><span>  [negative-zero-sign] formatFixed drops the minus sign of numbers between -1 and 0 (confidence medium)</span></span>
+<span class="line"><span>    formatFixed(-0.5)  -> '0.50'</span></span>
+<span class="line"><span>    formatFixed(0.5)  -> '0.50'</span></span>
+<span class="line"><span>    formatFixed(-1.5)  -> '-1.50'</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>INFO (2)</span></span>
+<span class="line"><span>  [unexpected-crash] percent throws RangeError for some inputs that match its types (confidence high)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Summary: 5 high, 5 medium, 0 low, 2 info</span></span></code></pre>
+</figure>
+<p>The generated test pins the behavior down so it keeps failing until you fix it:</p>
+<figure class="code editor numbered" data-lang="ts" data-title="formatFixed.breakhound.test.ts" data-bad="5">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>formatFixed.breakhound.test.ts</span><button type="button" class="code-copy" v-copy-from="#code-6" aria-label="Copy formatFixed.breakhound.test.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-6"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'vitest'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'buggy-lib'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">"formatFixed keeps the sign of -0.5"</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, () </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">=></span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line mark-bad"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(-</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">)).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toBe</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">));</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre>
+</figure>
+</section>
+<section id="compare-tools"><h2>breakhound, fast-check and Jazzer.js</h2>
+<p>These tools solve different problems, and many projects benefit from more than one.</p>
+<table>
+<tr><th>Tool</th><th>What you write</th><th>Best at</th></tr>
+<tr><td>fast-check</td><td>Properties and arbitraries</td><td>Domain specific invariants, with shrinking to a minimal counterexample</td></tr>
+<tr><td>Jazzer.js</td><td>Fuzz targets</td><td>Crashes and security bugs in parsers, guided by code coverage</td></tr>
+<tr><td>breakhound</td><td>Nothing</td><td>Generic invariant checks driven by types, across a whole package</td></tr>
+</table>
+<p>If your library has rules only you know (a sorted list stays sorted, a diff applied to the old text gives the new text), write those properties with fast-check. If it parses untrusted input, add a Jazzer.js target. Use breakhound first because it costs one command and covers the class of bugs shared by almost every library. The related guide on <a href="property-based-testing-without-writing-tests.html">property based testing without writing tests</a> goes further on that tradeoff.</p>
+</section>
+<section id="make-it-repeatable"><h2>Make the fuzz run repeatable</h2>
+<p>Fuzzing that cannot be reproduced is noise. breakhound is seeded, so a failure on a laptop is a failure in CI with the same <code>--seed</code>. It also keeps the evidence: a run is saved to <code>.breakhound/last-run.jsonl</code> and <code>.breakhound/report.json</code>, and <code>--log</code> writes a JSON Lines log you can attach to an issue.</p>
+<figure class="code terminal" data-lang="bash">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-bash" aria-hidden="true"></span>Terminal</span><button type="button" class="code-copy" v-copy-from="#code-7" aria-label="Copy command">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-7"><span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">npx</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> breakhound</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> .</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --fail-on</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> high</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --zones</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> UTC,America/Sao_Paulo</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --timeout</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8"> 1000</span></span></code></pre>
+</figure>
+<p>In GitHub Actions it adds annotations and a job summary automatically, as shown in <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a>. Wiring a fuzz pass into pull requests is where it pays off most, since the cost of a regression is smallest on the commit that caused it.</p>
+<div class="callout"><p>breakhound runs the package code it analyzes. Use it on code you trust or in a container. The child process isolation protects the run from hangs and crashes, but it is not a security sandbox.</p></div>
+</section>
+          <section id="faq" class="faq-list">
+            <h2>FAQ</h2>
+<div class="q"><h3>Is this real fuzz testing for TypeScript?</h3><p>It is type driven fuzzing: inputs are generated from your declared types plus a curated edge case catalog, and results are checked against invariants. It is not coverage guided, so it does not mutate bytes to reach new branches the way Jazzer.js does.</p></div>
+<div class="q"><h3>Do I need to write fuzz targets or arbitraries?</h3><p>No. Run <code>npx breakhound ./my-lib</code> and it reads the <code>.d.ts</code> types, generates inputs for each parameter, including generated callbacks, and reports findings with a reproduction.</p></div>
+<div class="q"><h3>Can I restrict it to certain functions or rules?</h3><p>Yes. Use <code>--only</code> and <code>--exclude</code> with wildcards for functions, and <code>--rules</code> to pick rule ids such as <code>nan-leak</code> or <code>roundtrip</code>.</p></div>
+<div class="q"><h3>What if a function hangs or runs forever?</h3><p>Each call runs in a separate child process with a timeout, which you can change with <code>--timeout</code>. A hang is contained and does not stop the rest of the run.</p></div>
+<div class="q"><h3>Does it replace my unit tests?</h3><p>No. It finds the inputs you did not think of, and every finding becomes a Vitest test you can keep next to your existing ones. Start with the <a href="find-bugs-automatically-javascript.html">guide to finding bugs automatically</a> for the full workflow.</p></div>
+          </section>
+          <aside class="guide-cta" aria-label="Get started">
+            <img src="assets/mascot.svg" alt="" width="88" height="88" loading="lazy">
+            <div>
+              <h2>Let Sniff hunt your library</h2>
+              <p>No install, no config, no tests to write. Run <code>npx breakhound ./my-lib</code> and get a reproduction plus a Vitest test for every bug.</p>
+              <a class="btn btn-primary" href="./#install">Get started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+          </aside>
+          <section id="related">
+            <h2>Related guides</h2>
+            <div class="related">
+              <a href="timezone-bugs-javascript.html">Timezone bugs<span>UTC vs local getters, DST, dates before 1970.</span></a>
+              <a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs<span>Why slice and charAt split emoji in half.</span></a>
+              <a href="property-based-testing-without-writing-tests.html">Property testing, no tests<span>Invariants for free, straight from types.</span></a>
+            </div>
+          </section>
+        </article>
+      </div>
+    </div>
+  </main>
+  <footer class="site">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div class="foot-about">
+          <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="38" height="38" loading="lazy">breakhound</a>
+          <p>Point it at any JavaScript package. It sniffs out the bugs, then hands you a reproduction and a Vitest test for each one.</p>
+          <p><a href="https://github.com/kwy404/breakhound">GitHub</a> &middot; <a href="https://www.npmjs.com/package/breakhound">npm</a> &middot; <a href="https://github.com/kwy404/breakhound/blob/main/LICENSE">MIT license</a></p>
+        </div>
+        <div>
+          <h2>Guides</h2>
+          <ul>
+            <li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li>
+            <li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li>
+            <li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li>
+            <li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>More guides</h2>
+          <ul>
+            <li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li>
+            <li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li>
+            <li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li>
+            <li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>More from kwy404</h2>
+          <ul>
+            <li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li>
+            <li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li>
+            <li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li>
+            <li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li>
+            <li><a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>Made by <a href="https://github.com/kwy404">Alexandre Kohler</a>. MIT licensed.</span>
+        <span>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a>.</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

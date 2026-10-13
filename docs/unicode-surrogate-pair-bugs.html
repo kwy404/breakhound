@@ -1,72 +1,357 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Unicode surrogate pair bugs: why emoji get split | breakhound</title>
-<meta name="description" content="Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.">
-<link rel="canonical" href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Unicode surrogate pair bugs: why emoji get split | breakhound">
-<meta property="og:description" content="Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.">
-<meta property="og:url" content="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
-<meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Unicode surrogate pair bugs: why emoji get split | breakhound">
-<meta name="twitter:description" content="Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.">
-<meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
-<link rel="stylesheet" href="style.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Unicode surrogate pair bugs: why emoji get split in JavaScript","description":"Learn why slice, substr and charAt split emoji into lone surrogates in JavaScript, see real bugs fixed in Google and Microsoft projects, and catch them automatically.","url":"https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html","image":"https://kwy404.github.io/breakhound/og.png","author":{"@type":"Person","name":"Alexandre Kohler","url":"https://github.com/kwy404"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"breakhound","item":"https://kwy404.github.io/breakhound/"},{"@type":"ListItem","position":2,"name":"Unicode surrogate pair bugs: why emoji get split in JavaScript","item":"https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a lone surrogate?","acceptedAnswer":{"@type":"Answer","text":"Half of a UTF-16 surrogate pair without its partner. It is not a valid character and breaks encodeURIComponent and many serializers."}},{"@type":"Question","name":"Is code point slicing enough?","acceptedAnswer":{"@type":"Answer","text":"It avoids lone surrogates, but grapheme clusters such as flags and family emoji can still be split. Use Intl.Segmenter for those."}}]}]}</script>
-<script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Surrogate pair bugs in JavaScript: lone surrogates</title>
+  <meta name="description" content="Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.">
+  <link rel="canonical" href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
+  <meta name="theme-color" content="#fffbf4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11162a" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="breakhound">
+  <meta property="og:title" content="Surrogate pair bugs in JavaScript: lone surrogates">
+  <meta property="og:description" content="Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.">
+  <meta property="og:url" content="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
+  <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
+  <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Surrogate pair bugs in JavaScript: lone surrogates">
+  <meta name="twitter:description" content="Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.">
+  <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
+  <link rel="stylesheet" href="style.css">
+  <script>try{var t=localStorage.getItem('voodoo:theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+  <script src="https://cdn.jsdelivr.net/npm/voodoojs@0.13.0/dist/voodoo.full.min.js" defer></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "headline": "Surrogate pair bugs in JavaScript: why emoji get split",
+      "description": "Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.",
+      "url": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
+      "mainEntityOfPage": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
+      "image": "https://kwy404.github.io/breakhound/og.png",
+      "datePublished": "2026-10-12",
+      "dateModified": "2026-10-12",
+      "inLanguage": "en",
+      "proficiencyLevel": "Intermediate",
+      "author": {
+        "@type": "Person",
+        "name": "Alexandre Kohler",
+        "url": "https://github.com/kwy404"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Alexandre Kohler",
+        "url": "https://github.com/kwy404"
+      },
+      "about": {
+        "@type": "SoftwareApplication",
+        "name": "breakhound",
+        "url": "https://kwy404.github.io/breakhound/"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a lone surrogate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Half of a UTF-16 surrogate pair without its partner. It is not a valid character, and it breaks encodeURIComponent, TextEncoder round trips and many serializers."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is code point slicing enough?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It avoids lone surrogates, but grapheme clusters such as flags, skin tone sequences and family emoji can still be split into odd pieces. Use Intl.Segmenter when the user sees the result."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I check a string for lone surrogates?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "On Node 20 and newer, call str.isWellFormed(). On older runtimes, use a regular expression that matches an unpaired high or low surrogate, as in the generated test above."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does substr have the same problem as slice?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. substr is deprecated and counts code units like slice and substring, so it can cut a pair in half too."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to write emoji test cases myself?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. breakhound reads your TypeScript types and feeds emoji, flags and lone surrogates to every string parameter automatically. You only run npx breakhound ./my-lib."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "breakhound",
+          "item": "https://kwy404.github.io/breakhound/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Guides",
+          "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Surrogate pair bugs in JavaScript: why emoji get split",
+          "item": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html"
+        }
+      ]
+    }
+  ]
+}
+  </script>
 </head>
 <body>
-<nav>
-  <div class="wrap" v-data="{ light: false }">
-    <a class="brand" href="https://kwy404.github.io/breakhound/"><img src="https://kwy404.github.io/breakhound/assets/mascot.svg" alt="" width="34" height="34">breakhound</a>
-    <div class="links">
-      <a href="https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html" class="hide-sm">Find bugs</a>
-      <a href="https://kwy404.github.io/breakhound/timezone-bugs-javascript.html" class="hide-sm">Time zones</a>
-      <a href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html" class="hide-sm">Unicode</a>
-      <a href="https://github.com/kwy404/breakhound">GitHub</a>
-      <button class="toggle" type="button" aria-label="Toggle color theme" @click="light = !light"><span v-if="light">Dark mode</span><span v-if="!light">Light mode</span></button>
-      <span :class="{ 'theme-light': light }" hidden></span>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site" v-data="{ menu: false }" @keydown.esc="menu = false">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="38" height="38">breakhound</a>
+      <nav class="site" id="site-nav" aria-label="Main" :class="{ open: menu }" @click="menu = false">
+        <a href="./#bugs">Bugs it finds</a>
+        <a href="./#how">How it works</a>
+        <a href="./#ci">CI</a>
+        <a href="./#compare">Compare</a>
+        <a href="find-bugs-automatically-javascript.html">Guides</a>
+        <a href="./#faq">FAQ</a>
+      </nav>
+      <a class="stars" href="https://github.com/kwy404/breakhound" aria-label="Star breakhound on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="stars-label">Star</span><img src="https://img.shields.io/github/stars/kwy404/breakhound?style=flat&amp;label=&amp;color=1fa692" alt="GitHub stars" width="34" height="20" loading="lazy"></a>
+      <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" :aria-expanded="menu ? 'true' : 'false'" @click="menu = !menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <button class="icon-btn theme-toggle" type="button" v-theme-toggle>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span class="visually-hidden">Toggle dark theme</span>
+      </button>
     </div>
-  </div>
-</nav>
-<main>
-<article>
-<p class="muted"><a href="https://kwy404.github.io/breakhound/">breakhound</a> / Guides</p>
-<h1>Unicode surrogate pair bugs: why emoji get split in JavaScript</h1>
-<p>JavaScript strings are sequences of UTF-16 code units. Characters outside the Basic Multilingual Plane, including most emoji, take two code units called a surrogate pair. <code>length</code>, <code>slice</code>, <code>substr</code> and <code>charAt</code> count code units, so cutting at the wrong index leaves half a character behind: a lone surrogate that renders as a replacement box and breaks JSON and URL encoding.</p>
-<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">split.ts</span></div>
-<pre><span class="l"><span class="k">const</span> <span class="v">s</span> = <span class="s">"hi \u{1F44B}"</span>;</span><span class="l"><span class="v">s</span>.<span class="v">length</span>;              <span class="c">// 5, not 4</span></span><span class="l"><span class="v">s</span>.<span class="f">slice</span>(<span class="n">0</span>, <span class="n">4</span>);         <span class="c">// "hi \uD83D" lone surrogate</span></span><span class="l">[...<span class="v">s</span>].<span class="f">slice</span>(<span class="n">0</span>, <span class="n">4</span>).<span class="f">join</span>(<span class="s">""</span>); <span class="c">// safe: iterates code points</span></span></pre></div>
-<h2>Real bugs</h2>
-<p>This bug class was fixed in <a href="https://github.com/google/budoux/pull/1411">google/budoux#1411</a> and <a href="https://github.com/microsoft/vscode-js-debug/pull/2423">microsoft/vscode-js-debug#2423</a>, both maintained by teams that know Unicode well. It is easy to miss because tests rarely include emoji at the cut point.</p>
-<h2>How breakhound catches it</h2>
-<p>For every <code>string</code> parameter breakhound feeds emoji, flags, skin tone sequences and combining marks at many positions, then checks each string in the output with <code>isWellFormed</code>. A lone surrogate is reported as <strong>lone surrogate in output</strong>, with the shortest input that reproduces it.</p>
-<div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
-<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">./my-string-lib</span></span></pre></div>
-<h2>How to fix it</h2>
-<ul><li>Iterate with <code>for...of</code> or spread to work on code points.</li><li>Use <code>Intl.Segmenter</code> or <a href="https://kwy404.github.io/graphemely/">graphemely</a> when you need user perceived characters.</li><li>Use <code>String.prototype.toWellFormed</code> as a last line of defense.</li></ul>
-<h2>FAQ</h2>
-<div class="faq"><details><summary>What is a lone surrogate?</summary><div class="a">Half of a UTF-16 surrogate pair without its partner. It is not a valid character and breaks encodeURIComponent and many serializers.</div></details>
-<details><summary>Is code point slicing enough?</summary><div class="a">It avoids lone surrogates, but grapheme clusters such as flags and family emoji can still be split. Use Intl.Segmenter for those.</div></details></div>
-<div class="card" style="margin-top:36px"><h3>Try it now</h3><p class="muted">Point it at any JavaScript package. It sniffs out the bugs.</p><div class="vsc"><div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="tab">terminal</span></div>
-<pre><span class="l"><span class="f">npx</span> <span class="v">breakhound</span> <span class="s">your-package</span></span></pre></div><p><a href="https://kwy404.github.io/breakhound/">Back to breakhound</a></p></div>
-</article>
-</main>
-<footer>
-  <div class="wrap">
-    <div>
-      <p><strong>breakhound</strong> by <a href="https://github.com/kwy404">Alexandre Kohler (kwy404)</a>. MIT License.</p>
-      <p>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+  </header>
+  <main id="main">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="./">breakhound</a></li>
+          <li><a href="find-bugs-automatically-javascript.html">Guides</a></li>
+          <li aria-current="page">Surrogate pair bugs</li>
+        </ol>
+      </nav>
+      <header class="article-head">
+        <p class="eyebrow">Guide</p>
+        <h1>Surrogate pair bugs in JavaScript: why emoji get split</h1>
+        <p class="lead">JavaScript strings are UTF-16, so cutting one at the wrong index can leave half an emoji behind. That half is a lone surrogate, and it breaks JSON, URLs and rendering.</p>
+        <p class="meta"><span>By <a href="https://github.com/kwy404">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-12">October 12, 2026</time></span><span>3 min read</span></p>
+      </header>
+      <div class="article-grid">
+        <aside class="toc" aria-labelledby="toc-title">
+          <h2 id="toc-title">On this page</h2>
+          <ol>
+            <li><a href="#what-is-a-surrogate-pair">What a surrogate pair is, and what a lone surrogate is</a></li>
+            <li><a href="#slice-substr-charat">How slice, substr and charAt split emoji</a></li>
+            <li><a href="#real-bugs">Real bugs fixed in the wild</a></li>
+            <li><a href="#how-to-fix-it">How to fix it</a></li>
+            <li><a href="#how-breakhound-catches-it">How breakhound catches lone surrogates</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#related">Related guides</a></li>
+          </ol>
+          <div class="toc-cta">
+            <p>Try it on your library</p>
+            <code>npx breakhound ./my-lib</code>
+          </div>
+        </aside>
+        <article class="prose">
+<section id="what-is-a-surrogate-pair"><h2>What a surrogate pair is, and what a lone surrogate is</h2>
+<p>A JavaScript string is a sequence of 16-bit code units. Characters in the Basic Multilingual Plane fit in one unit. Everything above U+FFFF, including most emoji, needs two: a high surrogate (0xD800 to 0xDBFF) followed by a low surrogate (0xDC00 to 0xDFFF). Together they form a surrogate pair.</p>
+<p>A <strong>lone surrogate</strong> is one half of that pair with no partner. It is not a valid character. It renders as a replacement box, <code>encodeURIComponent</code> throws a <code>URIError</code> on it, <code>TextEncoder</code> silently replaces it with U+FFFD, and many JSON serializers and databases reject or corrupt it. The bug is hard to notice because the broken string only shows up when real text contains an emoji at exactly the wrong position.</p>
+</section>
+<section id="slice-substr-charat"><h2>How slice, substr and charAt split emoji</h2>
+<p><code>length</code>, <code>slice</code>, <code>substring</code>, <code>substr</code> and <code>charAt</code> all count code units, not characters. One emoji has a length of 2:</p>
+<figure class="code editor numbered" data-lang="ts" data-title="split.ts" data-bad="3">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>split.ts</span><button type="button" class="code-copy" v-copy-from="#code-1" aria-label="Copy split.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-1"><span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> s</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'hi </span><span style="--shiki-light:#EE0000;--shiki-dark:#D7BA7D">\u{1F44B}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">s</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">length</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;                    </span><span style="--shiki-light:#008000;--shiki-dark:#6A9955">// 5, not 4</span></span>
+<span class="line mark-bad"><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">s</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slice</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">4</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);               </span><span style="--shiki-light:#008000;--shiki-dark:#6A9955">// 'hi \uD83D', a lone high surrogate</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">[...</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">s</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">].</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slice</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">4</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">join</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">); </span><span style="--shiki-light:#008000;--shiki-dark:#6A9955">// 'hi \u{1F44B}', code points are kept whole</span></span></code></pre>
+</figure>
+<p>Here are the usual suspects and what each one counts:</p>
+<table>
+<tr><th>Method</th><th>Counts</th><th>Can leave a lone surrogate</th></tr>
+<tr><td><code>slice(a, b)</code>, <code>substring(a, b)</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>substr(a, n)</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>charAt(i)</code>, <code>str[i]</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>split('')</code></td><td>code units</td><td>yes</td></tr>
+<tr><td><code>[...str]</code>, <code>for...of</code>, <code>Array.from</code></td><td>code points</td><td>no</td></tr>
+</table>
+<p>The classic victims are helper functions that every project has: truncate with an ellipsis, take the first letter for an avatar, pad or wrap to a column width.</p>
+<figure class="code editor numbered" data-lang="ts" data-title="truncate.ts" data-bad="3">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>truncate.ts</span><button type="button" class="code-copy" v-copy-from="#code-2" aria-label="Copy truncate.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-2"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> truncate</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="--shiki-light:#008000;--shiki-dark:#6A9955">  // bug: slice counts UTF-16 code units, so it can cut an emoji in half</span></span>
+<span class="line mark-bad"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">length</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> > </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> ? </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slice</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">) : </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> initials</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">name</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> name</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">charAt</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toUpperCase</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">();</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre>
+</figure>
+<p>With input <code>'\u{1F600}'</code> and a limit of 1, <code>truncate</code> returns <code>'\uD83D'</code>. <code>initials</code> does the same for a name that starts with an emoji.</p>
+</section>
+<section id="real-bugs"><h2>Real bugs fixed in the wild</h2>
+<p>This is not a beginner mistake. It was fixed in <a href="https://github.com/google/budoux/pull/1411">google/budoux#1411</a> and <a href="https://github.com/microsoft/vscode-js-debug/pull/2423">microsoft/vscode-js-debug#2423</a>, both merged. Those projects are maintained by people who know Unicode well, and the bug still got in, because unit tests rarely put an emoji at the cut point. The lesson is that you cannot rely on remembering; you need inputs that deliberately land on the boundary.</p>
+</section>
+<section id="how-to-fix-it"><h2>How to fix it</h2>
+<p>The smallest fix is to work in code points instead of code units:</p>
+<figure class="code editor numbered" data-lang="ts" data-title="truncate.ts" data-ok="3">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>truncate.ts</span><button type="button" class="code-copy" v-copy-from="#code-3" aria-label="Copy truncate.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-3"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> truncate</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> chars</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Array</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">from</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line mark-ok"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> chars</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">length</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> > </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> ? </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">chars</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slice</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">join</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">) : </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> initials</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">name</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> [</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF">first</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">] = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Array</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">from</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">name</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> first</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toUpperCase</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">();</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre>
+</figure>
+<p>That removes lone surrogates, but a code point is still not what a user sees as one character. Flags, skin tone sequences and family emoji are several code points joined together, and combining accents are separate code points as well. When you need user-perceived characters, use <code>Intl.Segmenter</code> with <code>granularity: 'grapheme'</code>:</p>
+<figure class="code editor numbered" data-lang="ts" data-title="graphemes.ts">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>graphemes.ts</span><button type="button" class="code-copy" v-copy-from="#code-4" aria-label="Copy graphemes.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-4"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">export</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> truncateGraphemes</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">: </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">number</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">): </span><span style="--shiki-light:#267F99;--shiki-dark:#4EC9B0">string</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> seg</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">new</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> Intl</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">Segmenter</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">undefined</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">granularity:</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'grapheme'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> });</span></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> parts</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">Array</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">from</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">seg</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">segment</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">), (</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">s</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">) </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">=></span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> s</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">segment</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">  return</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE"> parts</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">length</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> > </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> ? </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">parts</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slice</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">max</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">join</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">) : </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">text</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre>
+</figure>
+<p>As a last line of defense at an output boundary, <code>String.prototype.toWellFormed()</code> (Node 20+) replaces any lone surrogate with U+FFFD, and <code>isWellFormed()</code> lets you check first. Use them to contain damage, not to hide the cause.</p>
+</section>
+<section id="how-breakhound-catches-it"><h2>How breakhound catches lone surrogates</h2>
+<p>For every <code>string</code> parameter, breakhound generates edge cases from the edgegoat package: emoji, flags, lone surrogates and other awkward Unicode, plus numeric arguments that move the cut position. Each call runs in an isolated child process with a timeout. The <code>lone-surrogate-output</code> rule then checks every string in the result and reports the shortest input that produces a broken one.</p>
+<figure class="code terminal" data-lang="bash">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-bash" aria-hidden="true"></span>Terminal</span><button type="button" class="code-copy" v-copy-from="#code-5" aria-label="Copy command">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-5"><span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">npx</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> breakhound</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> ./my-lib</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --rules</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> lone-surrogate-output</span></span></code></pre>
+</figure>
+<figure class="code output" data-lang="text" data-title="Terminal output">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-text" aria-hidden="true"></span>Terminal output</span><button type="button" class="code-copy" v-copy-from="#code-6" aria-label="Copy Terminal output">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-6"><span class="line"><span>breakhound v0.1.0  buggy-lib@1.0.0 (local)</span></span>
+<span class="line"><span>23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42 | 6.8s</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>HIGH (2)</span></span>
+<span class="line"><span>  [lone-surrogate-output] truncate returns a string with a lone surrogate (confidence high)</span></span>
+<span class="line"><span>    truncate('\u{1F600}', 1)  -> '\ud83d'</span></span>
+<span class="line"><span>  [lone-surrogate-output] initials returns a string with a lone surrogate (confidence high)</span></span>
+<span class="line"><span>    initials('\u{1F600}')  -> '\ud83d'</span></span></code></pre>
+</figure>
+<p>Each finding includes a reproduction script and a ready Vitest test you can keep as a regression test:</p>
+<figure class="code editor numbered" data-lang="ts" data-title="truncate.test.ts">
+<div class="code-bar"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-tab"><span class="file-icon file-icon-ts" aria-hidden="true"></span>truncate.test.ts</span><button type="button" class="code-copy" v-copy-from="#code-7" aria-label="Copy truncate.test.ts">Copy</button></div>
+<pre tabindex="0" class="shiki shiki-themes light-plus dark-plus" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><code id="code-7"><span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'vitest'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">import</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> { </span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">truncate</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> } </span><span style="--shiki-light:#AF00DB;--shiki-dark:#C586C0">from</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> 'my-lib'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> LONE_SURROGATE</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> =</span><span style="--shiki-light:#811F3F;--shiki-dark:#D16969"> /</span><span style="--shiki-light:#D16969;--shiki-dark:#CE9178">[</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uD800</span><span style="--shiki-light:#811F3F;--shiki-dark:#D16969">-</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uDBFF</span><span style="--shiki-light:#D16969;--shiki-dark:#CE9178">](?![</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uDC00</span><span style="--shiki-light:#811F3F;--shiki-dark:#D16969">-</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uDFFF</span><span style="--shiki-light:#D16969;--shiki-dark:#CE9178">])</span><span style="--shiki-light:#EE0000;--shiki-dark:#DCDCAA">|</span><span style="--shiki-light:#D16969;--shiki-dark:#CE9178">(?&#x3C;![</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uD800</span><span style="--shiki-light:#811F3F;--shiki-dark:#D16969">-</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uDBFF</span><span style="--shiki-light:#D16969;--shiki-dark:#CE9178">])[</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uDC00</span><span style="--shiki-light:#811F3F;--shiki-dark:#D16969">-</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">\uDFFF</span><span style="--shiki-light:#D16969;--shiki-dark:#CE9178">]</span><span style="--shiki-light:#811F3F;--shiki-dark:#D16969">/</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">"truncate returns well formed UTF-16"</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, () </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">=></span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> result</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">truncate</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'</span><span style="--shiki-light:#EE0000;--shiki-dark:#D7BA7D">\u{1F600}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">1</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">result</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toMatch</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF">LONE_SURROGATE</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
+<span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre>
+</figure>
+<p>The same run also reports crashes, <code>NaN</code> leaks and zone-dependent output, so one command covers more than strings. See <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a> for the full list of rules, <a href="timezone-bugs-javascript.html">timezone bugs</a> for the date side, and <a href="fuzz-testing-typescript.html">fuzz testing TypeScript</a> for how this compares with writing your own fuzzers.</p>
+<div class="callout"><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container.</p></div>
+</section>
+          <section id="faq" class="faq-list">
+            <h2>FAQ</h2>
+<div class="q"><h3>What is a lone surrogate?</h3><p>Half of a UTF-16 surrogate pair without its partner. It is not a valid character, and it breaks <code>encodeURIComponent</code>, <code>TextEncoder</code> round trips and many serializers.</p></div>
+<div class="q"><h3>Is code point slicing enough?</h3><p>It avoids lone surrogates, but grapheme clusters such as flags, skin tone sequences and family emoji can still be split into odd pieces. Use <code>Intl.Segmenter</code> when the user sees the result.</p></div>
+<div class="q"><h3>How do I check a string for lone surrogates?</h3><p>On Node 20 and newer, call <code>str.isWellFormed()</code>. On older runtimes, use a regular expression that matches an unpaired high or low surrogate, as in the generated test above.</p></div>
+<div class="q"><h3>Does <code>substr</code> have the same problem as <code>slice</code>?</h3><p>Yes. <code>substr</code> is deprecated and counts code units like <code>slice</code> and <code>substring</code>, so it can cut a pair in half too.</p></div>
+<div class="q"><h3>Do I need to write emoji test cases myself?</h3><p>No. breakhound reads your TypeScript types and feeds emoji, flags and lone surrogates to every string parameter automatically. You only run <code>npx breakhound ./my-lib</code>.</p></div>
+          </section>
+          <aside class="guide-cta" aria-label="Get started">
+            <img src="assets/mascot.svg" alt="" width="88" height="88" loading="lazy">
+            <div>
+              <h2>Let Sniff hunt your library</h2>
+              <p>No install, no config, no tests to write. Run <code>npx breakhound ./my-lib</code> and get a reproduction plus a Vitest test for every bug.</p>
+              <a class="btn btn-primary" href="./#install">Get started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+          </aside>
+          <section id="related">
+            <h2>Related guides</h2>
+            <div class="related">
+              <a href="property-based-testing-without-writing-tests.html">Property testing, no tests<span>Invariants for free, straight from types.</span></a>
+              <a href="roundtrip-testing-encode-decode.html">Roundtrip testing<span>Check that decode(encode(x)) gives x back.</span></a>
+              <a href="negative-zero-javascript-bugs.html">Negative zero bugs<span>How -0.5 turns into 0.5 in formatters.</span></a>
+            </div>
+          </section>
+        </article>
+      </div>
     </div>
-    <div>
-      <p><strong>More from kwy404</strong></p>
-      <p><a href="https://kwy404.github.io/graphemely/">graphemely</a> · <a href="https://kwy404.github.io/edgegoat/">edgegoat</a> · <a href="https://kwy404.github.io/vueleap/">vueleap</a> · <a href="https://kwy404.github.io/numberparrot/">numberparrot</a> · <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a></p>
+  </main>
+  <footer class="site">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div class="foot-about">
+          <a class="brand" href="./"><img src="assets/mascot.svg" alt="" width="38" height="38" loading="lazy">breakhound</a>
+          <p>Point it at any JavaScript package. It sniffs out the bugs, then hands you a reproduction and a Vitest test for each one.</p>
+          <p><a href="https://github.com/kwy404/breakhound">GitHub</a> &middot; <a href="https://www.npmjs.com/package/breakhound">npm</a> &middot; <a href="https://github.com/kwy404/breakhound/blob/main/LICENSE">MIT license</a></p>
+        </div>
+        <div>
+          <h2>Guides</h2>
+          <ul>
+            <li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li>
+            <li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li>
+            <li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li>
+            <li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>More guides</h2>
+          <ul>
+            <li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li>
+            <li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li>
+            <li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li>
+            <li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>More from kwy404</h2>
+          <ul>
+            <li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li>
+            <li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li>
+            <li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li>
+            <li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li>
+            <li><a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>Made by <a href="https://github.com/kwy404">Alexandre Kohler</a>. MIT licensed.</span>
+        <span>Interactive parts built with <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a>.</span>
+      </div>
     </div>
-  </div>
-</footer>
+  </footer>
 </body>
 </html>

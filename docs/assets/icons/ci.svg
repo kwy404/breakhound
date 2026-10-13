@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
+  <title>Feature: runs in CI</title>
+  <rect width="48" height="48" rx="12" fill="#1B2440"/>
+  <path d="M11 24H30" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3"/><circle cx="10" cy="24" r="4" fill="#FFFFFF"/><circle cx="21" cy="24" r="4" fill="#FFFFFF"/><circle cx="34" cy="24" r="9" fill="#1FA393"/><path d="M30 24L33 27L38.5 21" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#FFFFFF" stroke-width="3"/>
+</svg>

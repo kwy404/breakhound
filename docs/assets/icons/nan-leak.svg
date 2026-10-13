@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
+  <title>Oracle: NaN leak</title>
+  <rect width="48" height="48" rx="12" fill="#1B2440"/>
+  <path d="M24 7C24 7 12 21 12 29A12 12 0 0 0 36 29C36 21 24 7 24 7Z" fill="#1FA393"/><text x="24" y="33" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-weight="bold" font-size="10" fill="#FFFFFF">NaN</text>
+</svg>
