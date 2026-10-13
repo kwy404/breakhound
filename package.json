@@ -1,0 +1,103 @@
+{
+  "name": "breakhound",
+  "version": "0.1.0",
+  "description": "Find bugs in any JavaScript or TypeScript library automatically, no tests required: breakhound reads the TypeScript types, generates edge case inputs (time zones, unicode, -0, NaN), runs every exported function and reports crashes, NaN leaks, lone surrogates, time zone bugs and broken round trips.",
+  "keywords": [
+    "find bugs automatically",
+    "find bugs automatically javascript",
+    "fuzz testing",
+    "fuzz testing typescript",
+    "fuzzing",
+    "fuzzer",
+    "javascript fuzzer",
+    "automated testing",
+    "automated edge case testing",
+    "edge cases",
+    "edge case testing",
+    "property based testing",
+    "property based testing without writing tests",
+    "test generation",
+    "invariants",
+    "oracle",
+    "timezone bugs",
+    "test library for timezone bugs",
+    "timezone testing",
+    "unicode",
+    "surrogate pairs",
+    "negative zero",
+    "nan",
+    "roundtrip testing",
+    "idempotence",
+    "bug finder",
+    "static analysis",
+    "typescript",
+    "cli",
+    "ci"
+  ],
+  "homepage": "https://kwy404.github.io/breakhound/",
+  "bugs": {
+    "url": "https://github.com/kwy404/breakhound/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kwy404/breakhound.git"
+  },
+  "license": "MIT",
+  "author": "Alexandre Kohler (https://github.com/kwy404)",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "breakhound": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "SECURITY.md"
+  ],
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fixture": "node scripts/build-fixture.mjs",
+    "docs": "node scripts/build-docs.mjs && node scripts/highlight-docs.mjs",
+    "docs:highlight": "node scripts/highlight-docs.mjs",
+    "demo": "node scripts/build-demo.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "dependencies": {
+    "edgegoat": "^0.1.0",
+    "typescript": "~5.9.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^20.19.43",
+    "eslint": "^9.39.5",
+    "shiki": "^3.23.0",
+    "tsup": "^8.5.1",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^6.4.4",
+    "vitest": "^3.2.7"
+  }
+}
