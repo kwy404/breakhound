@@ -1,6 +1,6 @@
 {
   "name": "breakhound",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Find bugs in any JavaScript or TypeScript library automatically, no tests required: breakhound reads the TypeScript types, generates edge case inputs (time zones, unicode, -0, NaN), runs every exported function and reports crashes, NaN leaks, lone surrogates, time zone bugs and broken round trips.",
   "keywords": [
     "find bugs automatically",
