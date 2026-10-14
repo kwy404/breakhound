@@ -155,7 +155,13 @@ Criado por Alexandre Kohler ([kwy404](https://github.com/kwy404)), com 130 corre
 - [edgegoat](https://kwy404.github.io/edgegoat/)
 - [vueleap](https://kwy404.github.io/vueleap/)
 - [numberparrot](https://kwy404.github.io/numberparrot/)
-- [Voodoo.js](https://github.com/kwy404/Voodoo.js)
+- [Voodoo.js](https://kwy404.github.io/Voodoo.js/)
+- [Monsoon](https://kwy404.github.io/monsoon/)
+- [cookieowl](https://kwy404.github.io/cookieowl/)
+- [installkite](https://kwy404.github.io/installkite/)
+- [a11ymedic](https://kwy404.github.io/a11ymedic/)
+- [fontsketch](https://kwy404.github.io/fontsketch/)
+- [kastor](https://kwy404.github.io/kastor/)
 
 ## Licença
 

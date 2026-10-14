@@ -31,6 +31,11 @@ export const MORE = [
   ['graphemely', 'https://kwy404.github.io/graphemely/', 'Grapheme aware string utilities'],
   ['numberparrot', 'https://kwy404.github.io/numberparrot/', 'Parse localized numbers'],
   ['edgegoat', 'https://kwy404.github.io/edgegoat/', 'Edge case inputs for JavaScript testing'],
+  ['cookieowl', 'https://kwy404.github.io/cookieowl/', 'Cookie consent for LGPD and GDPR'],
+  ['installkite', 'https://kwy404.github.io/installkite/', 'Make any website installable and offline capable'],
+  ['a11ymedic', 'https://kwy404.github.io/a11ymedic/', 'Accessibility checker with the exact fix'],
+  ['fontsketch', 'https://kwy404.github.io/fontsketch/', 'Turn your handwriting into a font'],
+  ['kastor', 'https://kwy404.github.io/kastor/', 'The TypeScript ORM for almost every database'],
 ];
 
 const THEME_SNIPPET = `<script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>`;

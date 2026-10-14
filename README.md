@@ -190,10 +190,15 @@ Each of these would have been caught by one of the checks above.
 
 - [graphemely](https://kwy404.github.io/graphemely/): grapheme aware string utilities.
 - [edgegoat](https://kwy404.github.io/edgegoat/): edge case inputs for JavaScript testing.
-- [vueleap](https://kwy404.github.io/vueleap/)
-- [numberparrot](https://kwy404.github.io/numberparrot/)
+- [vueleap](https://kwy404.github.io/vueleap/): migrate Vue 2 to Vue 3 with one command.
+- [numberparrot](https://kwy404.github.io/numberparrot/): parse localized number and currency strings.
 - [Voodoo.js](https://kwy404.github.io/Voodoo.js/): tiny reactive attributes for plain HTML.
 - [Monsoon](https://kwy404.github.io/monsoon/): utility-first CSS with no build step.
+- [cookieowl](https://kwy404.github.io/cookieowl/): free cookie consent banner for LGPD and GDPR that really blocks trackers.
+- [installkite](https://kwy404.github.io/installkite/): make any website installable and offline capable.
+- [a11ymedic](https://kwy404.github.io/a11ymedic/): the accessibility checker that explains every problem and gives the exact fix.
+- [fontsketch](https://kwy404.github.io/fontsketch/): turn your handwriting into a font, free in your browser.
+- [kastor](https://kwy404.github.io/kastor/): the TypeScript ORM for almost every database.
 
 ## Author
 
