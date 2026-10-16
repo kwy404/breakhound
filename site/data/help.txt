@@ -1,7 +1,9 @@
 breakhound
 Point it at any JavaScript package. It sniffs out the bugs.
 
-Usage: breakhound <npm package | local path> [options]
+Usage: breakhound [npm package | local path] [options]
+
+With no target, breakhound hunts the package in the current folder.
 
 Options:
   --only <names>        Only these functions (comma separated, * wildcards)
@@ -12,6 +14,9 @@ Options:
   --timeout <ms>        Per call timeout (default 2000)
   --zones <list>        Time zones, the first is the primary one
   --fail-on <severity>  Exit with code 1 when a finding has this severity or higher (high, medium, low, info)
+  --baseline <file>     Compare with an earlier JSON report and list new and fixed findings.
+                        "last" means the previous run saved in .breakhound/report.json.
+                        With --fail-on, only new findings fail the run
   --json                Print the report as JSON
   --output <file>       Write the report to a file instead of stdout
   --plain               Plain text output: no colors, boxes or spinner

@@ -249,8 +249,8 @@
 [90m│[0m suggests randomness, time or unique ids, so this is likely intended.         [90m│[0m
 [90m│[0m                                                                              [90m│[0m
 [90m│[0m input:                                                                       [90m│[0m
-[90m│[0m [2mrandomToken() -> 'bnk5aob6ju'                                               [0m [90m│[0m
-[90m│[0m [2mrandomToken() -> 'oorw3fflsp'                                               [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> '64cdg76rwd8'                                              [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> 'q283ferzkli'                                              [0m [90m│[0m
 [90m│[0m                                                                              [90m│[0m
 [90m│[0m [2mreproduction:                                                               [0m [90m│[0m
 [90m│[0m   // randomToken returns a different result on each call                     [90m│[0m
@@ -275,7 +275,7 @@
   nondeterministic           1  [90minfo[0m
   unexpected-crash           1  [90minfo[0m
 
-[1m[31m12 bugs sniffed out in 23 functions, 4.8 s[0m[0m
+[1m[31m12 bugs sniffed out in 23 functions, 7.9 s[0m[0m
 
 [2mSkipped 1 signature:[0m
 [2m  Counter: class (constructors are not called)[0m

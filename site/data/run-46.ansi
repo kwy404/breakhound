@@ -341,8 +341,8 @@
 [90m│[0m likely intended.                           [90m│[0m
 [90m│[0m                                            [90m│[0m
 [90m│[0m input:                                     [90m│[0m
-[90m│[0m [2mrandomToken() -> '2t5cwz13q9i'            [0m [90m│[0m
-[90m│[0m [2mrandomToken() -> 'n055jw8udos'            [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> '7a5hwz3jyhc'            [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> 'asy5lxac6z'             [0m [90m│[0m
 [90m│[0m                                            [90m│[0m
 [90m│[0m [2mreproduction:                             [0m [90m│[0m
 [90m│[0m   // randomToken returns a different       [90m│[0m
@@ -369,7 +369,7 @@
   nondeterministic           1  [90minfo[0m
   unexpected-crash           1  [90minfo[0m
 
-[1m[31m12 bugs sniffed out in 23 functions, 3.5 s[0m[0m
+[1m[31m12 bugs sniffed out in 23 functions, 5.3 s[0m[0m
 
 [2mSkipped 1 signature:[0m
 [2m  Counter: class (constructors are not called)[0m
