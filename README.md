@@ -2,189 +2,93 @@
 
 <img src="https://cdn.jsdelivr.net/gh/kwy404/breakhound@main/assets/mascot.svg" alt="Sniff, the breakhound bloodhound detective with a magnifying glass" width="160">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/kwy404/breakhound@main/assets/banner-dark.svg">
-  <img src="https://cdn.jsdelivr.net/gh/kwy404/breakhound@main/assets/banner.svg" alt="breakhound banner: point it at any JavaScript package, it sniffs out the bugs" width="100%">
-</picture>
-
-# breakhound: find bugs in any JavaScript library automatically, no tests required
+# breakhound
 
 **Point it at any JavaScript package. It sniffs out the bugs.**
 
 [![npm version](https://img.shields.io/npm/v/breakhound.svg)](https://www.npmjs.com/package/breakhound)
-[![npm downloads](https://img.shields.io/npm/dm/breakhound.svg)](https://www.npmjs.com/package/breakhound)
 [![CI](https://github.com/kwy404/breakhound/actions/workflows/ci.yml/badge.svg)](https://github.com/kwy404/breakhound/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kwy404/breakhound/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178C6.svg)](https://www.typescriptlang.org/)
 
 English | [Português (Brasil)](https://github.com/kwy404/breakhound/blob/main/i18n/README.pt-BR.md)
 
-[Website](https://kwy404.github.io/breakhound/) · [Guides](https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html) · [npm](https://www.npmjs.com/package/breakhound)
+[Website and live demo](https://kwy404.github.io/breakhound/) · [Guides](https://kwy404.github.io/breakhound/guides.html) · [npm](https://www.npmjs.com/package/breakhound)
 
 </div>
 
-breakhound is a zero config bug finder for JavaScript and TypeScript libraries. It reads the package's TypeScript types, generates nasty inputs for every parameter (time zones, DST transitions, emoji and unicode, `-0`, `NaN`, dates before 1970), runs each call in an isolated child process with timeouts, and checks invariants that real libraries break all the time. Every finding ships with a minimal reproduction and a ready to paste Vitest test.
-
-## Table of contents
-
-- [Quick start](#quick-start)
-- [What it checks](#what-it-checks)
-- [Example output](#example-output)
-- [Use it in CI](#use-it-in-ci)
-- [Safety](#safety)
-- [FAQ](#faq)
-- [Comparison with fast-check and Jazzer.js](#comparison-with-fast-check-and-jazzerjs)
-- [Born from 130 real bug fixes](#born-from-130-real-bug-fixes)
-- [More from kwy404](#more-from-kwy404)
-- [Author](#author)
-- [License](#license)
+breakhound reads the TypeScript declarations of a library, feeds every exported function edge case inputs (time zones, dates before 1970, emoji, `-0`, `NaN` and more), runs each call in a child process with a timeout and checks a few rules that real libraries break all the time. Every finding comes with a minimal reproduction and a ready to paste Vitest test.
 
 ## Quick start
 
-No install, no config, no tests to write:
-
 ```bash
-# any package from npm
-npx breakhound date-fns
-
-# a local project or library folder
-npx breakhound ./path/to/your-lib
+npx breakhound date-fns          # a package from npm
+npx breakhound ./path/to/my-lib  # a local folder
+npx breakhound                   # the package in the current folder
 ```
 
-Machine readable output and CI gating:
+Useful options:
 
 ```bash
-npx breakhound my-lib --json > findings.json
-npx breakhound my-lib --fail-on high
+npx breakhound my-lib --fail-on high            # exit with code 1 on high findings
+npx breakhound my-lib --json --output report.json
+npx breakhound my-lib --only 'format*' --rules nan-leak,roundtrip
 ```
+
+Run `npx breakhound --help` for every option. A typo such as `--jsn` gets a "did you mean" hint.
+
+## Compare two versions
+
+Save a report, then pass it as the baseline of a later run. breakhound lists the findings that are new and the ones that were fixed, and `--fail-on` counts only the new ones.
+
+```bash
+npx breakhound my-lib@1 --json --output v1.json
+npx breakhound my-lib@2 --baseline v1.json --fail-on high
+```
+
+`--baseline last` compares with the previous run saved in `.breakhound/report.json`. The [website](https://kwy404.github.io/breakhound/#try) also has a small in-browser demo: paste two versions of one function and see every input where the answers differ.
 
 ## What it checks
 
-| Invariant | What breaks | Typical real world cause |
-| --- | --- | --- |
-| Lone surrogate in output | An emoji or astral character is split in half | `str.slice`, `substr` or `charAt` cutting UTF-16 code units |
-| Host time zone dependence | Same input gives different output when `TZ` changes | Mixing `getUTC*` and local getters, formatting in the wrong zone |
-| Crash on valid input | Unexpected `TypeError` for a value the types allow | Missing handling of empty strings, `-0`, old dates, unicode |
-| NaN leak | `NaN` returned where a number was expected | Parsing or math on edge values without guards |
-| Broken roundtrip | `decode(encode(x))` is not `x` | Lossy escaping, surrogate handling, precision loss |
-| Normalize not idempotent | `normalize(normalize(x))` differs from `normalize(x)` | Order dependent replacements, partial trimming |
-| Lost negative sign | `-0.5` formats as `0.5` | Sign taken from the integer part, `Math.trunc` of values above -1 |
-| Nondeterminism | Same call, same input, different result | Hidden global state, `Date.now`, `Math.random` |
+| Rule | What breaks |
+| --- | --- |
+| `lone-surrogate-output` | An emoji or astral character is cut in half |
+| `timezone-dependent` | The same input gives a different result when `TZ` changes |
+| `unexpected-crash` | A value the types allow throws a `TypeError` |
+| `nan-leak` | `NaN` comes out of finite input |
+| `roundtrip` | `decode(encode(x))` is not `x` |
+| `not-idempotent` | `normalize(normalize(x))` differs from `normalize(x)` |
+| `negative-zero-sign` | `-0.5` is printed without its minus sign |
+| `nondeterministic` | The same call returns different results |
 
-Inputs come from [edgegoat](https://kwy404.github.io/edgegoat/), a curated catalog of edge cases for JavaScript.
+Inputs come from [edgegoat](https://kwy404.github.io/edgegoat/), a catalog of edge cases for JavaScript. breakhound needs TypeScript declarations (bundled `.d.ts` files or `@types`); without them it stops with a clear message.
 
-## Example output
-
-> Example output, illustrative only. Real output depends on the package you scan.
-
-```text
-breakhound v0.1.0  scanning example-format@2.3.1
-
-  Sniffing 14 exported functions, 1,820 calls, 4 time zones
-
-  HIGH  formatRelative  output depends on host time zone
-        input:  new Date("2024-12-31T23:30:00Z")
-        TZ=UTC            "this year"
-        TZ=Asia/Tokyo     "last year"
-
-  HIGH  truncate        lone surrogate in output (emoji split)
-        input:  ("hi \u{1F44B} there", 4)
-        output: "hi \uD83D"
-
-  MED   formatNumber    negative number lost its sign
-        input:  -0.5
-        output: "0.5"
-
-  3 findings  (2 high, 1 medium)
-  Vitest tests written to ./breakhound-tests/
-```
-
-Each finding also produces a test you can drop into your suite:
+Each finding includes a test like this one:
 
 ```ts
-import { test, expect } from "vitest";
-import { formatNumber } from "example-format";
+import { expect, test } from 'vitest';
+import { formatFixed } from 'buggy-lib';
 
-test("formatNumber keeps the sign of values between -1 and 0", () => {
-  expect(formatNumber(-0.5)).toBe("-0.5");
+test("formatFixed keeps the sign of -0.5", () => {
+  expect(formatFixed(-0.5)).not.toBe(formatFixed(0.5));
 });
 ```
 
 ## Use it in CI
 
 ```yaml
-# .github/workflows/breakhound.yml
-name: breakhound
-on: [push, pull_request]
-jobs:
-  sniff:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci --ignore-scripts
-      - run: npx breakhound . --fail-on high
+- run: npm ci --ignore-scripts
+- run: npx breakhound . --fail-on high
 ```
 
-`--fail-on` exits with a non zero code when a finding at or above the given severity is found. Combine it with `--json` to store the report as a build artifact.
+Inside GitHub Actions, breakhound also writes annotations and a job summary. See the [GitHub Actions guide](https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html).
 
 ## Safety
 
-breakhound **executes the code it scans**. That is how it finds real bugs instead of guessing.
+breakhound **executes the code it scans**. Run it on code you trust, or inside a container. npm installs use `--ignore-scripts`, and every call runs in a child process with a timeout. That isolation keeps a hang or a crash from stopping the run; it is not a security sandbox.
 
-- Run it on code you trust, or inside a container or disposable VM.
-- When breakhound installs a package from npm it uses `--ignore-scripts`, so install hooks do not run.
-- Every call runs in an isolated child process with a timeout, so a hanging or crashing function cannot take down the scan. This is isolation for robustness, not a security sandbox.
+## Where the rules come from
 
-## FAQ
-
-### How do I find bugs automatically in a JavaScript library?
-
-Run `npx breakhound <package or path>`. breakhound reads the TypeScript types to learn what each exported function accepts, feeds it edge case inputs, and reports calls that violate invariants such as roundtrips, idempotence, sign preservation or time zone independence. You do not need to write any test first.
-
-### How is this different from property based testing?
-
-Property based testing tools such as fast-check ask you to write the properties and generators yourself. breakhound ships the properties (a fixed set of invariants that hold for most libraries) and derives the generators from the type signatures, so it works on code you have never read. When it finds something, it hands you a regular Vitest test you can keep.
-
-### Is it safe to run on any package?
-
-It runs the package code, so treat it like running the package's own test suite. Installs use `--ignore-scripts` and calls run in child processes with timeouts, but you should still scan untrusted packages inside a container.
-
-### Does it work with plain JavaScript without types?
-
-It works best with TypeScript declarations (bundled `.d.ts` files or DefinitelyTyped). Without types it falls back to a smaller set of generic inputs.
-
-### Will it report false positives?
-
-Some invariants, such as time zone dependence, can be intentional for a given function. Every finding includes a minimal reproduction so you can judge it in seconds.
-
-## Comparison with fast-check and Jazzer.js
-
-breakhound complements these tools rather than replacing them.
-
-| | breakhound | fast-check | Jazzer.js |
-| --- | --- | --- | --- |
-| Approach | Type driven invariant checks | Property based testing library | Coverage guided fuzzing |
-| You write | Nothing | Properties and arbitraries | Fuzz targets |
-| Input source | Types plus edgegoat edge cases | Your arbitraries, with shrinking | Mutation guided by coverage |
-| Best at | Unicode, time zone, number formatting bugs in public APIs | Precise properties of your own code | Crashes and security issues in parsers |
-| Output | Repro plus ready Vitest test | Failing counterexample | Crashing input |
-
-A good workflow: run breakhound first for a free sweep, then encode the important properties with fast-check, and fuzz parsers with Jazzer.js.
-
-## Born from 130 real bug fixes
-
-breakhound is built by Alexandre Kohler ([kwy404](https://github.com/kwy404)), who has landed 130 merged bug fixes in projects at Google, Microsoft, GitHub, Vue and more. The invariants come straight from that work:
-
-- [github/relative-time-element#384](https://github.com/github/relative-time-element/pull/384): the year check used UTC instead of the display time zone.
-- [google/budoux#1411](https://github.com/google/budoux/pull/1411): surrogate pairs were split.
-- [microsoft/vscode-js-debug#2423](https://github.com/microsoft/vscode-js-debug/pull/2423): surrogate pairs were split.
-- [mozilla/pdf.js#22017](https://github.com/mozilla/pdf.js/pull/22017): negative numbers above -1 lost their sign.
-- [vuejs/core#15618](https://github.com/vuejs/core/pull/15618)
-
-Each of these would have been caught by one of the checks above.
+Each rule comes from a bug that Alexandre Kohler fixed in open source, for example [github/relative-time-element#384](https://github.com/github/relative-time-element/pull/384) (time zone), [google/budoux#1411](https://github.com/google/budoux/pull/1411) (split surrogate pairs) and [mozilla/pdf.js#22017](https://github.com/mozilla/pdf.js/pull/22017) (lost minus sign).
 
 ## More from kwy404
 
@@ -194,11 +98,11 @@ Each of these would have been caught by one of the checks above.
 - [numberparrot](https://kwy404.github.io/numberparrot/): parse localized number and currency strings.
 - [Voodoo.js](https://kwy404.github.io/Voodoo.js/): tiny reactive attributes for plain HTML.
 - [Monsoon](https://kwy404.github.io/monsoon/): utility-first CSS with no build step.
-- [cookieowl](https://kwy404.github.io/cookieowl/): free cookie consent banner for LGPD and GDPR that really blocks trackers.
-- [installkite](https://kwy404.github.io/installkite/): make any website installable and offline capable.
-- [a11ymedic](https://kwy404.github.io/a11ymedic/): the accessibility checker that explains every problem and gives the exact fix.
-- [fontsketch](https://kwy404.github.io/fontsketch/): turn your handwriting into a font, free in your browser.
-- [kastor](https://kwy404.github.io/kastor/): the TypeScript ORM for almost every database.
+- [cookieowl](https://kwy404.github.io/cookieowl/): cookie consent banner for LGPD and GDPR that blocks trackers until consent.
+- [installkite](https://kwy404.github.io/installkite/): make a website installable and offline capable.
+- [a11ymedic](https://kwy404.github.io/a11ymedic/): an accessibility checker that explains each problem and its fix.
+- [fontsketch](https://kwy404.github.io/fontsketch/): turn your handwriting into a font in the browser.
+- [kastor](https://kwy404.github.io/kastor/): a TypeScript ORM for many databases.
 
 ## Author
 

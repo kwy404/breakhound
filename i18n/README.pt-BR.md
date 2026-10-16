@@ -2,166 +2,102 @@
 
 <img src="https://cdn.jsdelivr.net/gh/kwy404/breakhound@main/assets/mascot.svg" alt="Sniff, o bloodhound detetive do breakhound com uma lupa" width="160">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/kwy404/breakhound@main/assets/banner-dark.svg">
-  <img src="https://cdn.jsdelivr.net/gh/kwy404/breakhound@main/assets/banner.svg" alt="banner do breakhound" width="100%">
-</picture>
-
-# breakhound: encontre bugs em qualquer biblioteca JavaScript automaticamente, sem escrever testes
+# breakhound
 
 **Aponte para qualquer pacote JavaScript. Ele fareja os bugs.**
 
 [![npm version](https://img.shields.io/npm/v/breakhound.svg)](https://www.npmjs.com/package/breakhound)
-[![npm downloads](https://img.shields.io/npm/dm/breakhound.svg)](https://www.npmjs.com/package/breakhound)
 [![CI](https://github.com/kwy404/breakhound/actions/workflows/ci.yml/badge.svg)](https://github.com/kwy404/breakhound/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kwy404/breakhound/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178C6.svg)](https://www.typescriptlang.org/)
 
 [English](https://github.com/kwy404/breakhound/blob/main/README.md) | Português (Brasil)
 
-[Site](https://kwy404.github.io/breakhound/) · [npm](https://www.npmjs.com/package/breakhound)
+[Site e demo ao vivo](https://kwy404.github.io/breakhound/) · [Guias](https://kwy404.github.io/breakhound/guides.html) · [npm](https://www.npmjs.com/package/breakhound)
 
 </div>
 
-O breakhound é um caçador de bugs sem configuração para bibliotecas JavaScript e TypeScript. Ele lê os tipos TypeScript do pacote, gera entradas difíceis para cada parâmetro (fusos horários, horário de verão, emoji e unicode, `-0`, `NaN`, datas antes de 1970), executa cada chamada em um processo filho isolado com timeout e verifica invariantes que bibliotecas reais quebram o tempo todo. Cada achado vem com uma reprodução mínima e um teste Vitest pronto para colar.
-
-## Sumário
-
-- [Início rápido](#início-rápido)
-- [O que ele verifica](#o-que-ele-verifica)
-- [Exemplo de saída](#exemplo-de-saída)
-- [Uso em CI](#uso-em-ci)
-- [Segurança](#segurança)
-- [Perguntas frequentes](#perguntas-frequentes)
-- [Comparação com fast-check e Jazzer.js](#comparação-com-fast-check-e-jazzerjs)
-- [Nascido de 130 correções de bugs reais](#nascido-de-130-correções-de-bugs-reais)
-- [Mais de kwy404](#mais-de-kwy404)
-- [Licença](#licença)
+O breakhound lê as declarações TypeScript de uma biblioteca, testa cada função exportada com entradas de casos extremos (fusos horários, datas antes de 1970, emoji, `-0`, `NaN` e outras), executa cada chamada em um processo filho com timeout e verifica algumas regras que bibliotecas reais quebram o tempo todo. Cada achado vem com uma reprodução mínima e um teste Vitest pronto para colar.
 
 ## Início rápido
 
-Sem instalação, sem configuração, sem testes para escrever:
-
 ```bash
-# qualquer pacote do npm
-npx breakhound date-fns
-
-# um projeto ou biblioteca local
-npx breakhound ./caminho/para/sua-lib
+npx breakhound date-fns           # um pacote do npm
+npx breakhound ./caminho/da-lib   # uma pasta local
+npx breakhound                    # o pacote da pasta atual
 ```
 
-Saída para máquinas e bloqueio em CI:
+Opções úteis:
 
 ```bash
-npx breakhound minha-lib --json > findings.json
-npx breakhound minha-lib --fail-on high
+npx breakhound minha-lib --fail-on high            # sai com código 1 se houver achado high
+npx breakhound minha-lib --json --output report.json
+npx breakhound minha-lib --only 'format*' --rules nan-leak,roundtrip
 ```
+
+Rode `npx breakhound --help` para ver todas as opções. Um erro de digitação como `--jsn` recebe uma sugestão.
+
+## Comparar duas versões
+
+Salve um relatório e passe ele como base de uma execução posterior. O breakhound lista os achados novos e os corrigidos, e o `--fail-on` conta só os novos.
+
+```bash
+npx breakhound minha-lib@1 --json --output v1.json
+npx breakhound minha-lib@2 --baseline v1.json --fail-on high
+```
+
+`--baseline last` compara com a execução anterior salva em `.breakhound/report.json`. O [site](https://kwy404.github.io/breakhound/#try) também tem uma demo no navegador: cole duas versões de uma função e veja cada entrada em que as respostas mudam.
 
 ## O que ele verifica
 
-| Invariante | O que quebra | Causa comum |
-| --- | --- | --- |
-| Surrogate solto na saída | Um emoji é cortado ao meio | `slice`, `substr` ou `charAt` cortando unidades UTF-16 |
-| Depende do fuso do host | A mesma entrada muda quando `TZ` muda | Mistura de `getUTC*` com getters locais |
-| Crash com entrada válida | `TypeError` inesperado para um valor que os tipos aceitam | Strings vazias, `-0`, datas antigas, unicode |
-| Vazamento de NaN | `NaN` onde se esperava um número | Parsing ou contas sem proteção |
-| Roundtrip quebrado | `decode(encode(x))` diferente de `x` | Escape com perda, perda de precisão |
-| Normalize não idempotente | `normalize(normalize(x))` diferente de `normalize(x)` | Substituições dependentes de ordem |
-| Sinal negativo perdido | `-0.5` vira `0.5` | Sinal tirado da parte inteira |
-| Não determinismo | Mesma chamada, resultados diferentes | Estado global, `Date.now`, `Math.random` |
+| Regra | O que quebra |
+| --- | --- |
+| `lone-surrogate-output` | Um emoji ou caractere astral é cortado ao meio |
+| `timezone-dependent` | A mesma entrada dá outro resultado quando o `TZ` muda |
+| `unexpected-crash` | Um valor aceito pelos tipos lança `TypeError` |
+| `nan-leak` | Sai `NaN` de uma entrada finita |
+| `roundtrip` | `decode(encode(x))` não é `x` |
+| `not-idempotent` | `normalize(normalize(x))` difere de `normalize(x)` |
+| `negative-zero-sign` | `-0.5` é impresso sem o sinal de menos |
+| `nondeterministic` | A mesma chamada devolve resultados diferentes |
 
-As entradas vêm do [edgegoat](https://kwy404.github.io/edgegoat/), um catálogo de casos extremos para JavaScript.
-
-## Exemplo de saída
-
-> Exemplo ilustrativo. A saída real depende do pacote analisado.
-
-```text
-breakhound v0.1.0  scanning example-format@2.3.1
-
-  HIGH  formatRelative  output depends on host time zone
-        input:  new Date("2024-12-31T23:30:00Z")
-        TZ=UTC            "this year"
-        TZ=Asia/Tokyo     "last year"
-
-  MED   formatNumber    negative number lost its sign
-        input:  -0.5
-        output: "0.5"
-
-  2 findings  (1 high, 1 medium)
-```
-
-```ts
-import { test, expect } from "vitest";
-import { formatNumber } from "example-format";
-
-test("formatNumber mantém o sinal de valores entre -1 e 0", () => {
-  expect(formatNumber(-0.5)).toBe("-0.5");
-});
-```
+As entradas vêm do [edgegoat](https://kwy404.github.io/edgegoat/), um catálogo de casos extremos para JavaScript. O breakhound precisa das declarações TypeScript (arquivos `.d.ts` no pacote ou `@types`); sem elas ele para com uma mensagem clara.
 
 ## Uso em CI
 
 ```yaml
-name: breakhound
-on: [push, pull_request]
-jobs:
-  sniff:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci --ignore-scripts
-      - run: npx breakhound . --fail-on high
+- run: npm ci --ignore-scripts
+- run: npx breakhound . --fail-on high
 ```
+
+No GitHub Actions, o breakhound também escreve anotações e um resumo do job. Veja o [guia do GitHub Actions](https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html).
 
 ## Segurança
 
-O breakhound **executa o código analisado**. Rode em código confiável ou dentro de um container. Instalações a partir do npm usam `--ignore-scripts`, e cada chamada roda em um processo filho com timeout. Isso garante robustez, não é um sandbox de segurança.
+O breakhound **executa o código que analisa**. Rode em código confiável ou dentro de um contêiner. Instalações do npm usam `--ignore-scripts`, e cada chamada roda em um processo filho com timeout. Esse isolamento evita que um travamento pare a execução; não é uma sandbox de segurança.
 
-## Perguntas frequentes
+## De onde vêm as regras
 
-### Como encontrar bugs automaticamente em uma biblioteca JavaScript?
-
-Rode `npx breakhound <pacote ou caminho>`. Ele lê os tipos, gera entradas extremas e relata chamadas que violam invariantes, sem que você escreva nenhum teste.
-
-### Qual a diferença para property based testing?
-
-Ferramentas como fast-check pedem que você escreva propriedades e geradores. O breakhound já traz as propriedades e deriva os geradores das assinaturas de tipo, e entrega um teste Vitest comum para cada achado.
-
-### É seguro rodar em qualquer pacote?
-
-Ele executa o código do pacote. Use um container para pacotes não confiáveis.
-
-## Comparação com fast-check e Jazzer.js
-
-São ferramentas complementares. fast-check é uma biblioteca de property based testing em que você escreve as propriedades. Jazzer.js faz fuzzing guiado por cobertura, ótimo para crashes em parsers. O breakhound faz uma varredura sem configuração focada em unicode, fusos horários e formatação de números em APIs públicas.
-
-## Nascido de 130 correções de bugs reais
-
-Criado por Alexandre Kohler ([kwy404](https://github.com/kwy404)), com 130 correções de bugs aceitas em projetos do Google, Microsoft, GitHub, Vue e outros:
-
-- [github/relative-time-element#384](https://github.com/github/relative-time-element/pull/384): checagem de ano usava UTC em vez do fuso de exibição.
-- [google/budoux#1411](https://github.com/google/budoux/pull/1411): pares surrogate cortados.
-- [microsoft/vscode-js-debug#2423](https://github.com/microsoft/vscode-js-debug/pull/2423): pares surrogate cortados.
-- [mozilla/pdf.js#22017](https://github.com/mozilla/pdf.js/pull/22017): números negativos acima de -1 perdiam o sinal.
-- [vuejs/core#15618](https://github.com/vuejs/core/pull/15618)
+Cada regra vem de um bug que Alexandre Kohler corrigiu em código aberto, por exemplo [github/relative-time-element#384](https://github.com/github/relative-time-element/pull/384) (fuso horário), [google/budoux#1411](https://github.com/google/budoux/pull/1411) (pares substitutos cortados) e [mozilla/pdf.js#22017](https://github.com/mozilla/pdf.js/pull/22017) (sinal de menos perdido).
 
 ## Mais de kwy404
 
-- [graphemely](https://kwy404.github.io/graphemely/)
-- [edgegoat](https://kwy404.github.io/edgegoat/)
-- [vueleap](https://kwy404.github.io/vueleap/)
-- [numberparrot](https://kwy404.github.io/numberparrot/)
-- [Voodoo.js](https://kwy404.github.io/Voodoo.js/)
-- [Monsoon](https://kwy404.github.io/monsoon/)
-- [cookieowl](https://kwy404.github.io/cookieowl/)
-- [installkite](https://kwy404.github.io/installkite/)
-- [a11ymedic](https://kwy404.github.io/a11ymedic/)
-- [fontsketch](https://kwy404.github.io/fontsketch/)
-- [kastor](https://kwy404.github.io/kastor/)
+- [graphemely](https://kwy404.github.io/graphemely/): utilitários de string que respeitam grafemas.
+- [edgegoat](https://kwy404.github.io/edgegoat/): entradas de casos extremos para testes em JavaScript.
+- [vueleap](https://kwy404.github.io/vueleap/): migre de Vue 2 para Vue 3 com um comando.
+- [numberparrot](https://kwy404.github.io/numberparrot/): leia números e moedas localizados.
+- [Voodoo.js](https://kwy404.github.io/Voodoo.js/): atributos reativos para HTML puro.
+- [Monsoon](https://kwy404.github.io/monsoon/): CSS utilitário sem etapa de build.
+- [cookieowl](https://kwy404.github.io/cookieowl/): banner de consentimento de cookies para LGPD e GDPR que bloqueia rastreadores até o consentimento.
+- [installkite](https://kwy404.github.io/installkite/): torne um site instalável e com funcionamento offline.
+- [a11ymedic](https://kwy404.github.io/a11ymedic/): verificador de acessibilidade que explica cada problema e a correção.
+- [fontsketch](https://kwy404.github.io/fontsketch/): transforme sua letra em uma fonte no navegador.
+- [kastor](https://kwy404.github.io/kastor/): um ORM TypeScript para vários bancos de dados.
+
+## Autor
+
+Feito por Alexandre Kohler ([GitHub](https://github.com/kwy404), [LinkedIn](https://www.linkedin.com/in/alexandre-silva-173687256/)).
+
+O [site](https://kwy404.github.io/breakhound/) é feito com [Monsoon](https://kwy404.github.io/monsoon/), e as partes interativas com [Voodoo.js](https://kwy404.github.io/Voodoo.js/).
 
 ## Licença
 
