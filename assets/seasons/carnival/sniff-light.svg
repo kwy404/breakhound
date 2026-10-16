@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Sniff, the breakhound mascot, dressed for Carnival">
+<defs><clipPath id="sb"><circle cx="200" cy="200" r="184"/></clipPath><clipPath id="sc"><path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z"/></clipPath></defs>
+<circle cx="200" cy="200" r="188" fill="#1FA393" stroke="#1B2440" stroke-width="8"/>
+<circle cx="200" cy="200" r="170" fill="none" stroke="#FFF4E3" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+<g stroke="#1B2440" stroke-linejoin="round" stroke-linecap="round" stroke-width="6"><rect x="64" y="117" width="12" height="6" rx="1.5" fill="#b5367a" stroke="none" transform="rotate(0 70 120)"/><rect x="90" y="73" width="12" height="6" rx="1.5" fill="#f2c14e" stroke="none" transform="rotate(47 96 76)"/><rect x="314" y="71" width="12" height="6" rx="1.5" fill="#2f8f83" stroke="none" transform="rotate(94 320 74)"/><rect x="338" y="147" width="12" height="6" rx="1.5" fill="#b5367a" stroke="none" transform="rotate(141 344 150)"/><rect x="54" y="247" width="12" height="6" rx="1.5" fill="#2f8f83" stroke="none" transform="rotate(8 60 250)"/><rect x="332" y="297" width="12" height="6" rx="1.5" fill="#f2c14e" stroke="none" transform="rotate(55 338 300)"/><rect x="114" y="357" width="12" height="6" rx="1.5" fill="#b5367a" stroke="none" transform="rotate(102 120 360)"/><rect x="274" y="357" width="12" height="6" rx="1.5" fill="#2f8f83" stroke="none" transform="rotate(149 280 360)"/></g>
+<g stroke="#1B2440" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+<g clip-path="url(#sb)"><path d="M62 410C70 330 130 296 200 296C270 296 330 330 338 410Z" fill="#9C5A2E"/><path d="M150 300L200 352L250 300" fill="#E9B97A"/></g>
+<path d="M146 136C104 134 84 186 88 246C91 290 108 318 130 314C152 310 154 262 150 220Z" fill="#9C5A2E"/>
+<path d="M254 136C296 134 316 186 312 246C309 290 292 318 270 314C248 310 246 262 250 220Z" fill="#9C5A2E"/>
+<path d="M138 140C138 104 262 104 262 140L266 236C268 284 240 300 200 300C160 300 132 284 134 236Z" fill="#9C5A2E"/>
+<circle cx="172" cy="200" r="13" fill="#1B2440" stroke="none"/><circle cx="228" cy="200" r="13" fill="#1B2440" stroke="none"/>
+<circle cx="167" cy="195" r="4.5" fill="#fff" stroke="none"/><circle cx="223" cy="195" r="4.5" fill="#fff" stroke="none"/>
+<path d="M154 180C162 172 176 168 188 170M212 170C224 168 238 172 246 180" fill="none" stroke-width="6"/>
+<path d="M158 228C166 212 234 212 242 228C254 250 256 290 232 302C218 310 206 302 200 292C194 302 182 310 168 302C144 290 146 250 158 228Z" fill="#E9B97A"/>
+<ellipse cx="200" cy="234" rx="27" ry="18" fill="#1B2440"/><ellipse cx="190" cy="228" rx="8" ry="4" fill="#fff" stroke="none"/>
+<path d="M200 252V266C193 276 180 275 175 267M200 266C207 276 220 275 225 267" fill="none" stroke-width="6"/>
+<g transform="rotate(-8 200 120) translate(200 142) scale(1.12) translate(-200 -142)">
+<path d="M136 132C126 112 132 92 150 84L164 124Z" fill="#9C5A2E"/><path d="M264 132C274 112 268 92 250 84L236 124Z" fill="#9C5A2E"/>
+<path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z" fill="#E9B97A"/>
+<g clip-path="url(#sc)" fill="none" stroke="#9C5A2E" stroke-width="6"><path d="M176 60V150M224 60V150M120 108H280"/></g>
+<path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z" fill="none"/>
+<path d="M140 138C166 168 234 168 260 138C232 150 168 150 140 138Z" fill="#E9B97A"/>
+<path d="M200 76C188 62 174 64 176 72C178 80 192 80 200 76C208 80 222 80 224 72C226 64 212 62 200 76Z" fill="#9C5A2E" stroke-width="5"/></g>
+<path d="M270 238L236 300" fill="none" stroke-width="18"/>
+<circle cx="300" cy="196" r="44" fill="#FFF4E3" stroke-width="12"/>
+<path d="M276 184C280 172 290 164 302 162" fill="none" stroke="#fff" stroke-width="7"/>
+<ellipse cx="240" cy="300" rx="24" ry="20" fill="#9C5A2E"/><path d="M232 284V296M246 284V296" fill="none" stroke-width="5"/>
+<g fill="#1B2440" stroke="none"><ellipse cx="306" cy="210" rx="11" ry="14"/><circle cx="306" cy="192" r="7"/></g>
+<path d="M296 200L288 196M316 200L324 196M295 212H287M317 212H325M296 222L289 227M316 222L323 227M302 186L298 180M310 186L314 180" fill="none" stroke-width="3"/>
+</g>
+<g stroke="#1B2440" stroke-linejoin="round" stroke-linecap="round" stroke-width="6"><g><path d="M140 196C150 176 182 174 200 186C218 174 250 176 260 196C262 212 248 222 230 220C216 218 208 210 200 206C192 210 184 218 170 220C152 222 138 212 140 196Z" fill="#b5367a"/>
+<ellipse cx="172" cy="200" rx="13" ry="10" fill="#1B2440"/><ellipse cx="228" cy="200" rx="13" ry="10" fill="#1B2440"/>
+<circle cx="168" cy="196" r="4" fill="#fff" stroke="none"/><circle cx="224" cy="196" r="4" fill="#fff" stroke="none"/>
+<path d="M256 188C270 160 268 132 252 108C276 124 290 156 268 192Z" fill="#2f8f83" stroke-width="5"/>
+<path d="M262 194C290 176 312 150 314 120C326 150 312 184 270 200Z" fill="#f2c14e" stroke-width="5"/>
+<circle cx="200" cy="190" r="5" fill="#f2c14e" stroke-width="3"/></g>
+<path d="M80 320C96 300 112 330 128 310S156 300 170 318" fill="none" stroke="#f2c14e" stroke-width="6"/></g>
+</svg>

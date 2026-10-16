@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Sniff, the breakhound mascot, dressed for Midsummer">
+<defs><clipPath id="sb"><circle cx="200" cy="200" r="184"/></clipPath><clipPath id="sc"><path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z"/></clipPath></defs>
+<circle cx="200" cy="200" r="188" fill="#1FA393" stroke="#1B2440" stroke-width="8"/>
+<circle cx="200" cy="200" r="170" fill="none" stroke="#FFF4E3" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+<g stroke="#1B2440" stroke-linejoin="round" stroke-linecap="round" stroke-width="6"><path d="M40 156Q200 216 360 156" fill="none" stroke="#1B2440" stroke-width="3"/><path d="M69.0 169.1H91.0L80.0 193.1Z" fill="#3f7d4a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/><path d="M109.0 178.5H131.0L120.0 202.5Z" fill="#e7c46a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/><path d="M149.0 184.1H171.0L160.0 208.1Z" fill="#c9692a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/><path d="M189.0 186.0H211.0L200.0 210.0Z" fill="#3f7d4a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/><path d="M229.0 184.1H251.0L240.0 208.1Z" fill="#e7c46a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/><path d="M269.0 178.5H291.0L280.0 202.5Z" fill="#c9692a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/><path d="M309.0 169.1H331.0L320.0 193.1Z" fill="#3f7d4a" stroke="#1B2440" stroke-width="3" stroke-linejoin="round"/></g>
+<g stroke="#1B2440" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+<g clip-path="url(#sb)"><path d="M62 410C70 330 130 296 200 296C270 296 330 330 338 410Z" fill="#9C5A2E"/><path d="M150 300L200 352L250 300" fill="#E9B97A"/></g>
+<path d="M146 136C104 134 84 186 88 246C91 290 108 318 130 314C152 310 154 262 150 220Z" fill="#9C5A2E"/>
+<path d="M254 136C296 134 316 186 312 246C309 290 292 318 270 314C248 310 246 262 250 220Z" fill="#9C5A2E"/>
+<path d="M138 140C138 104 262 104 262 140L266 236C268 284 240 300 200 300C160 300 132 284 134 236Z" fill="#9C5A2E"/>
+<circle cx="172" cy="200" r="13" fill="#1B2440" stroke="none"/><circle cx="228" cy="200" r="13" fill="#1B2440" stroke="none"/>
+<circle cx="167" cy="195" r="4.5" fill="#fff" stroke="none"/><circle cx="223" cy="195" r="4.5" fill="#fff" stroke="none"/>
+<path d="M154 180C162 172 176 168 188 170M212 170C224 168 238 172 246 180" fill="none" stroke-width="6"/>
+<path d="M158 228C166 212 234 212 242 228C254 250 256 290 232 302C218 310 206 302 200 292C194 302 182 310 168 302C144 290 146 250 158 228Z" fill="#E9B97A"/>
+<ellipse cx="200" cy="234" rx="27" ry="18" fill="#1B2440"/><ellipse cx="190" cy="228" rx="8" ry="4" fill="#fff" stroke="none"/>
+<path d="M200 252V266C193 276 180 275 175 267M200 266C207 276 220 275 225 267" fill="none" stroke-width="6"/>
+<g transform="rotate(-8 200 120)"><path d="M138 140C138 100 166 80 200 80C234 80 262 100 262 140Z" fill="#E9B97A"/></g><g transform="rotate(-8 200 120)">
+<ellipse cx="200" cy="126" rx="122" ry="22" fill="#e7c46a"/>
+<path d="M146 122C146 82 172 66 200 66C228 66 254 82 254 122Z" fill="#e7c46a"/>
+<path d="M148 110C176 118 224 118 252 110L254 122C226 130 174 130 146 122Z" fill="#c9692a" stroke-width="5"/>
+<path d="M98 126L120 136M126 140L148 142M252 142L274 140M280 136L302 126M176 82L170 104M200 74V100M224 82L230 104" fill="none" stroke="#9C5A2E" stroke-width="4"/></g>
+<path d="M270 238L236 300" fill="none" stroke-width="18"/>
+<circle cx="300" cy="196" r="44" fill="#FFF4E3" stroke-width="12"/>
+<path d="M276 184C280 172 290 164 302 162" fill="none" stroke="#fff" stroke-width="7"/>
+<ellipse cx="240" cy="300" rx="24" ry="20" fill="#9C5A2E"/><path d="M232 284V296M246 284V296" fill="none" stroke-width="5"/>
+<g fill="#1B2440" stroke="none"><ellipse cx="306" cy="210" rx="11" ry="14"/><circle cx="306" cy="192" r="7"/></g>
+<path d="M296 200L288 196M316 200L324 196M295 212H287M317 212H325M296 222L289 227M316 222L323 227M302 186L298 180M310 186L314 180" fill="none" stroke-width="3"/>
+</g>
+<g stroke="#1B2440" stroke-linejoin="round" stroke-linecap="round" stroke-width="6"><g><g transform="translate(92 340)"><path d="M-30 18L30 -2M-30 -2L30 18" fill="none" stroke="#9C5A2E" stroke-width="12"/>
+<path d="M0 -50C14 -34 24 -22 20 -6C18 4 10 10 0 10C-10 10 -18 4 -20 -6C-22 -20 -10 -28 -4 -40C-2 -30 2 -26 6 -26C4 -34 2 -42 0 -50Z" fill="#c9692a"/>
+<path d="M0 -20C6 -14 10 -8 8 -2C6 4 -6 4 -8 -2C-9 -8 -4 -12 0 -20Z" fill="#e7c46a" stroke-width="4"/></g></g></g>
+</svg>

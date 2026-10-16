@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Sniff, the breakhound mascot, dressed for Christmas">
+<defs><clipPath id="sb"><circle cx="200" cy="200" r="184"/></clipPath><clipPath id="sc"><path d="M138 140C138 96 166 74 200 74C234 74 262 96 262 140Z"/></clipPath></defs>
+<circle cx="200" cy="200" r="188" fill="#17786d" stroke="#0d1220" stroke-width="8"/>
+<circle cx="200" cy="200" r="170" fill="none" stroke="#d9cdb8" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+<g stroke="#0d1220" stroke-linejoin="round" stroke-linecap="round" stroke-width="6"><g fill="#fff" stroke="none" opacity=".85"><circle cx="70" cy="140" r="5"/><circle cx="110" cy="80" r="4"/><circle cx="330" cy="110" r="5"/><circle cx="350" cy="250" r="4"/><circle cx="62" cy="230" r="3.5"/><circle cx="290" cy="58" r="3.5"/></g></g>
+<g stroke="#0d1220" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+<g clip-path="url(#sb)"><path d="M62 410C70 330 130 296 200 296C270 296 330 330 338 410Z" fill="#8e5129"/><path d="M150 300L200 352L250 300" fill="#dcaa6a"/></g>
+<path d="M146 136C104 134 84 186 88 246C91 290 108 318 130 314C152 310 154 262 150 220Z" fill="#8e5129"/>
+<path d="M254 136C296 134 316 186 312 246C309 290 292 318 270 314C248 310 246 262 250 220Z" fill="#8e5129"/>
+<path d="M138 140C138 104 262 104 262 140L266 236C268 284 240 300 200 300C160 300 132 284 134 236Z" fill="#8e5129"/>
+<circle cx="172" cy="200" r="13" fill="#0d1220" stroke="none"/><circle cx="228" cy="200" r="13" fill="#0d1220" stroke="none"/>
+<circle cx="167" cy="195" r="4.5" fill="#fff" stroke="none"/><circle cx="223" cy="195" r="4.5" fill="#fff" stroke="none"/>
+<path d="M154 180C162 172 176 168 188 170M212 170C224 168 238 172 246 180" fill="none" stroke-width="6"/>
+<path d="M158 228C166 212 234 212 242 228C254 250 256 290 232 302C218 310 206 302 200 292C194 302 182 310 168 302C144 290 146 250 158 228Z" fill="#dcaa6a"/>
+<ellipse cx="200" cy="234" rx="27" ry="18" fill="#0d1220"/><ellipse cx="190" cy="228" rx="8" ry="4" fill="#fff" stroke="none"/>
+<path d="M200 252V266C193 276 180 275 175 267M200 266C207 276 220 275 225 267" fill="none" stroke-width="6"/>
+<g transform="rotate(-8 200 120)"><path d="M138 140C138 100 166 80 200 80C234 80 262 100 262 140Z" fill="#dcaa6a"/></g><g transform="rotate(-8 200 120)">
+<path d="M144 116C150 70 190 44 236 48C270 52 296 74 304 104C292 96 278 92 266 96L256 116Z" fill="#e8575f"/>
+<circle cx="306" cy="108" r="17" fill="#f4efe6"/>
+<rect x="134" y="104" width="134" height="26" rx="13" fill="#f4efe6"/></g>
+<path d="M270 238L236 300" fill="none" stroke-width="18"/>
+<circle cx="300" cy="196" r="44" fill="#efe4cf" stroke-width="12"/>
+<path d="M276 184C280 172 290 164 302 162" fill="none" stroke="#fff" stroke-width="7"/>
+<ellipse cx="240" cy="300" rx="24" ry="20" fill="#8e5129"/><path d="M232 284V296M246 284V296" fill="none" stroke-width="5"/>
+<g fill="#0d1220" stroke="none"><ellipse cx="306" cy="210" rx="11" ry="14"/><circle cx="306" cy="192" r="7"/></g>
+<path d="M296 200L288 196M316 200L324 196M295 212H287M317 212H325M296 222L289 227M316 222L323 227M302 186L298 180M310 186L314 180" fill="none" stroke-width="3"/>
+</g>
+<g stroke="#0d1220" stroke-linejoin="round" stroke-linecap="round" stroke-width="6"><g><path d="M146 296C172 312 228 312 254 296L258 318C230 334 170 334 142 318Z" fill="#e8575f"/>
+<path d="M232 312L246 372L274 366L256 306Z" fill="#e8575f"/>
+<path d="M166 304L160 324M190 310L186 330M214 310L214 330M238 304L242 322M248 330L268 326M252 350L272 346" fill="none" stroke="#f4efe6" stroke-width="6"/></g></g>
+</svg>
