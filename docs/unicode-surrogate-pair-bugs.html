@@ -5,24 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>
-<title>Surrogate pair bugs in JavaScript: lone surrogates</title>
-<meta name="description" content="Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.">
+<script src="seasons.js"></script>
+<title>Surrogate pairs and split emoji | breakhound</title>
+<meta name="description" content="Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.">
 <link rel="canonical" href="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
 <meta name="author" content="Alexandre Kohler">
 <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1220" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="breakhound">
-<meta property="og:title" content="Surrogate pair bugs in JavaScript: lone surrogates">
-<meta property="og:description" content="Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.">
+<meta property="og:title" content="Surrogate pairs and split emoji | breakhound">
+<meta property="og:description" content="Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.">
 <meta property="og:url" content="https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html">
 <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Surrogate pair bugs in JavaScript: lone surrogates">
-<meta name="twitter:description" content="Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.">
+<meta name="twitter:title" content="Surrogate pairs and split emoji | breakhound">
+<meta name="twitter:description" content="Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.">
 <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -39,13 +40,13 @@
   "@graph": [
     {
       "@type": "TechArticle",
-      "headline": "Surrogate pair bugs in JavaScript: why emoji get split",
-      "description": "Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.",
+      "headline": "Surrogate pairs and split emoji",
+      "description": "Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.",
       "url": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
       "mainEntityOfPage": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
       "image": "https://kwy404.github.io/breakhound/og.png",
       "datePublished": "2026-10-12",
-      "dateModified": "2026-10-13",
+      "dateModified": "2026-10-15",
       "inLanguage": "en",
       "proficiencyLevel": "Intermediate",
       "author": {
@@ -131,7 +132,7 @@
         {
           "@type": "ListItem",
           "position": 3,
-          "name": "Surrogate pair bugs in JavaScript: why emoji get split",
+          "name": "Surrogate pairs",
           "item": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html"
         }
       ]
@@ -146,7 +147,7 @@
 <header class="topbar" v-data="{ open: false }" @keydown.escape="open = false">
   <div class="wrap topbar-in">
     <a href="./" class="brand" aria-label="breakhound home"><img src="assets/mascot.svg" width="34" height="34" alt=""><span class="brand-name">breakhound</span><span class="brand-file">case files</span></a>
-    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#board" class="top-link">Evidence board</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Case index</a></nav>
+    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#try" class="top-link">Try it</a><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Guides</a></nav>
     <div class="top-right">
       <button type="button" class="search-btn" data-search-open v-hotkey="mod+k" aria-haspopup="dialog" aria-label="Search the site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="search-label">Search</span><kbd class="kbd kbd-sm">Ctrl K</kbd></button>
       <a href="https://github.com/kwy404/breakhound" class="icon-btn" aria-label="breakhound on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a>
@@ -158,13 +159,13 @@
 <main id="main">
 <div class="read-progress" aria-hidden="true"></div>
 <div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="./">breakhound</a></li><li><a href="guides.html">Guides</a></li><li><span aria-current="page">Surrogate pair bugs</span></li></ol></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="./">breakhound</a></li><li><a href="guides.html">Guides</a></li><li><span aria-current="page">Surrogate pairs</span></li></ol></nav>
   <header class="cover">
     <div class="cover-text">
-      <p class="cover-file"><span class="file-no">Case file G-04</span><span class="file-topic">Unicode</span></p>
-      <h1>Surrogate pair bugs in JavaScript: why emoji get split</h1>
+      <p class="cover-file"><span class="file-no">Case file G-02</span><span class="file-topic">Unicode</span></p>
+      <h1>Surrogate pairs and split emoji</h1>
       <p class="lead">JavaScript strings are UTF-16, so cutting one at the wrong index can leave half an emoji behind. That half is a lone surrogate, and it breaks JSON, URLs and rendering.</p>
-      <p class="cover-meta"><span>By <a href="https://github.com/kwy404" rel="author">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-13">October 13, 2026</time></span><span>3 min read</span></p>
+      <p class="cover-meta"><span>By <a href="https://github.com/kwy404" rel="author">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-15">October 15, 2026</time></span><span>3 min read</span></p>
     </div>
     <div class="cover-art" aria-hidden="true"><svg class="ill cover-folders" viewBox="0 0 240 170" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="2.2">
 <path d="M46 40h52l10 12h86a8 8 0 0 1 8 8v82a8 8 0 0 1-8 8H46a8 8 0 0 1-8-8V48a8 8 0 0 1 8-8Z" style="fill:var(--paper,#f6ecd2)" transform="rotate(-6 120 95)"/>
@@ -254,7 +255,7 @@
 <span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">  const</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF"> result</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> = </span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">truncate</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'</span><span style="--shiki-light:#EE0000;--shiki-dark:#D7BA7D">\u{1F600}</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">'</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, </span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">1</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">result</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toMatch</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#0070C1;--shiki-dark:#4FC1FF">LONE_SURROGATE</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
-<p>The same run also reports crashes, <code>NaN</code> leaks and zone-dependent output, so one command covers more than strings. See <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a> for the full list of rules, <a href="timezone-bugs-javascript.html">timezone bugs</a> for the date side, and <a href="fuzz-testing-typescript.html">fuzz testing TypeScript</a> for how this compares with writing your own fuzzers.</p>
+<p>The same run also reports crashes, <code>NaN</code> leaks and zone-dependent output, so one command covers more than strings. See the <a href="./#cases">eight case files</a> for the full list of rules and <a href="timezone-bugs-javascript.html">time zone bugs</a> for the date side.</p>
 <div class="callout callout-warning"><p class="callout-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-isolation"/></svg>Handle with care</p><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container.</p></div>
 </section>
 
@@ -264,7 +265,7 @@
         <div><h2>Let Sniff work your library</h2><p>No install, no config, no tests to write. You get a reproduction and a Vitest test for every bug.</p>
         <div class="close-cmd"><code id="cta-cmd">npx breakhound ./my-lib</code><button type="button" class="copy-btn" v-copy-from="#cta-cmd" aria-label="Copy the command"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div></div>
       </aside>
-      <section id="related" class="chapter"><h2><a href="#related" class="anchor" aria-hidden="true" tabindex="-1">#</a>Related case files</h2><div class="related"><a href="property-based-testing-without-writing-tests.html" class="rel"><span class="rel-no">Case file G-05</span><strong>Property based testing without writing tests</strong><span>Property based testing without writing tests: breakhound checks idempotence, roundtrip and determinism from your types, no properties to author.</span></a><a href="roundtrip-testing-encode-decode.html" class="rel"><span class="rel-no">Case file G-06</span><strong>Roundtrip testing for encode and decode functions</strong><span>Roundtrip testing for encode decode pairs: breakhound finds encodeX/decodeX and toY/fromY partners by name and checks they invert each other.</span></a><a href="negative-zero-javascript-bugs.html" class="rel"><span class="rel-no">Case file G-07</span><strong>Negative zero in JavaScript: the bugs it causes and how to catch them</strong><span>How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.</span></a></div></section>
+      <section id="related" class="chapter"><h2><a href="#related" class="anchor" aria-hidden="true" tabindex="-1">#</a>Related case files</h2><div class="related"><a href="timezone-bugs-javascript.html" class="rel"><span class="rel-no">Case file G-01</span><strong>Time zone bugs in JavaScript dates</strong><span>How mixing UTC and local getters breaks date code in other time zones, and how breakhound catches it.</span></a><a href="negative-zero-javascript-bugs.html" class="rel"><span class="rel-no">Case file G-03</span><strong>Negative zero and lost minus signs</strong><span>How -0 and Math.trunc drop the minus sign of values between -1 and 0, and how to catch it.</span></a><a href="automated-testing-in-github-actions.html" class="rel"><span class="rel-no">Case file G-04</span><strong>Running breakhound in GitHub Actions</strong><span>A workflow that fails pull requests on new bugs, with annotations, a job summary and reproducible seeds.</span></a></div></section>
     </article>
   </div>
 </div>
@@ -278,9 +279,9 @@
         <p class="foot-links"><a href="https://github.com/kwy404/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>GitHub</a><a href="https://www.npmjs.com/package/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-npm"/></svg>npm</a><a href="https://github.com/kwy404/breakhound/blob/main/CHANGELOG.md"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Changelog</a></p>
       </div>
       <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
-        <li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
+        <li><a href="./#try">Paste and see</a></li><li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
       </ul></nav>
-      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li><li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li><li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li><li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li><li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li><li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li></ul></nav>
+      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="timezone-bugs-javascript.html">Time zone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pairs</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero</a></li><li><a href="automated-testing-in-github-actions.html">GitHub Actions</a></li></ul></nav>
       <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more"><li><a href="https://kwy404.github.io/monsoon/">Monsoon</a><small>Utility-first CSS with no build step</small></li><li><a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li><li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li><li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li><li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li><li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li><li><a href="https://kwy404.github.io/cookieowl/">cookieowl</a><small>Cookie consent for LGPD and GDPR</small></li><li><a href="https://kwy404.github.io/installkite/">installkite</a><small>Make any website installable and offline capable</small></li><li><a href="https://kwy404.github.io/a11ymedic/">a11ymedic</a><small>Accessibility checker with the exact fix</small></li><li><a href="https://kwy404.github.io/fontsketch/">fontsketch</a><small>Turn your handwriting into a font</small></li><li><a href="https://kwy404.github.io/kastor/">kastor</a><small>The TypeScript ORM for almost every database</small></li></ul></nav>
     </div>
     <div class="foot-bottom">

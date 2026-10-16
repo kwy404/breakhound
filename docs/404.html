@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>
+<script src="/breakhound/seasons.js"></script>
 <title>Page not found | breakhound</title>
-<meta name="description" content="This page could not be found. Sniff lost the trail. Head back to breakhound and find bugs in any JavaScript library automatically.">
+<meta name="description" content="This page could not be found.">
 <meta name="robots" content="noindex">
 <meta name="author" content="Alexandre Kohler">
 <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)">
@@ -14,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="breakhound">
 <meta property="og:title" content="Page not found | breakhound">
-<meta property="og:description" content="This page could not be found. Sniff lost the trail. Head back to breakhound and find bugs in any JavaScript library automatically.">
+<meta property="og:description" content="This page could not be found.">
 <meta property="og:url" content="https://kwy404.github.io/breakhound/404.html">
 <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
 <meta property="og:image:width" content="1280">
@@ -22,7 +23,7 @@
 <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Page not found | breakhound">
-<meta name="twitter:description" content="This page could not be found. Sniff lost the trail. Head back to breakhound and find bugs in any JavaScript library automatically.">
+<meta name="twitter:description" content="This page could not be found.">
 <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
 <link rel="icon" href="/breakhound/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -40,7 +41,7 @@
 <header class="topbar" v-data="{ open: false }" @keydown.escape="open = false">
   <div class="wrap topbar-in">
     <a href="/breakhound/" class="brand" aria-label="breakhound home"><img src="/breakhound/assets/mascot.svg" width="34" height="34" alt=""><span class="brand-name">breakhound</span><span class="brand-file">case files</span></a>
-    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="/breakhound/#terminal" class="top-link">Terminal</a><a href="/breakhound/#cases" class="top-link">Case files</a><a href="/breakhound/#board" class="top-link">Evidence board</a><a href="/breakhound/#ci" class="top-link">CI</a><a href="/breakhound/guides.html" class="top-link">Case index</a></nav>
+    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="/breakhound/#try" class="top-link">Try it</a><a href="/breakhound/#terminal" class="top-link">Terminal</a><a href="/breakhound/#cases" class="top-link">Case files</a><a href="/breakhound/#ci" class="top-link">CI</a><a href="/breakhound/guides.html" class="top-link">Guides</a></nav>
     <div class="top-right">
       <button type="button" class="search-btn" data-search-open v-hotkey="mod+k" aria-haspopup="dialog" aria-label="Search the site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="search-label">Search</span><kbd class="kbd kbd-sm">Ctrl K</kbd></button>
       <a href="https://github.com/kwy404/breakhound" class="icon-btn" aria-label="breakhound on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a>
@@ -67,10 +68,31 @@
       <div class="nf-term"><pre><code><span class="t-green">~/cases</span> <span class="t-dim">$</span> npx breakhound ./this-page
 <span class="t-red">breakhound: not a path and not a valid npm package name</span>
 <span class="t-dim">Hints: try the home page or the case index</span></code></pre></div>
-      <div class="nf-cta"><a class="btn btn-primary" href="/breakhound/"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Back to the terminal</a><a class="btn btn-outline" href="/breakhound/guides.html"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Open the case index</a></div>
+      <p class="nf-moved" data-moved hidden></p>
+      <div class="nf-cta"><a class="btn btn-primary" href="/breakhound/"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Back to the home page</a><a class="btn btn-outline" href="/breakhound/guides.html"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Open the guides</a></div>
     </div>
   </div>
 </section>
+<script>
+(function () {
+  // Guides that were merged into the home page and the remaining guides.
+  var moved = {
+    'find-bugs-automatically-javascript': ['/breakhound/#try', 'the home page, which now starts with a live demo'],
+    'fuzz-testing-typescript': ['/breakhound/#how', 'the procedure on the home page'],
+    'property-based-testing-without-writing-tests': ['/breakhound/#cases', 'the eight case files on the home page'],
+    'roundtrip-testing-encode-decode': ['/breakhound/#case-roundtrip', 'the roundtrip case file'],
+  };
+  var slug = location.pathname.replace(/^.*\//, '').replace(/\.html$/, '');
+  var to = moved[slug];
+  var el = document.querySelector('[data-moved]');
+  if (!to || !el) return;
+  var a = document.createElement('a');
+  a.href = to[0];
+  a.textContent = to[1];
+  el.append('This guide was retired. Its content lives on in ', a, '.');
+  el.hidden = false;
+})();
+</script>
 </main>
 <footer class="site-foot">
   <div class="wrap">
@@ -81,9 +103,9 @@
         <p class="foot-links"><a href="https://github.com/kwy404/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>GitHub</a><a href="https://www.npmjs.com/package/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-npm"/></svg>npm</a><a href="https://github.com/kwy404/breakhound/blob/main/CHANGELOG.md"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Changelog</a></p>
       </div>
       <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
-        <li><a href="/breakhound/#terminal">Live terminal</a></li><li><a href="/breakhound/#cases">The eight oracles</a></li><li><a href="/breakhound/#board">Evidence board</a></li><li><a href="/breakhound/#ci">CI job summary</a></li><li><a href="/breakhound/guides.html">Case index</a></li><li><a href="/breakhound/#faq">FAQ</a></li>
+        <li><a href="/breakhound/#try">Paste and see</a></li><li><a href="/breakhound/#terminal">Live terminal</a></li><li><a href="/breakhound/#cases">The eight oracles</a></li><li><a href="/breakhound/#board">Evidence board</a></li><li><a href="/breakhound/#ci">CI job summary</a></li><li><a href="/breakhound/guides.html">Case index</a></li><li><a href="/breakhound/#faq">FAQ</a></li>
       </ul></nav>
-      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="/breakhound/find-bugs-automatically-javascript.html">Find bugs automatically</a></li><li><a href="/breakhound/fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li><li><a href="/breakhound/timezone-bugs-javascript.html">Timezone bugs</a></li><li><a href="/breakhound/unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li><li><a href="/breakhound/property-based-testing-without-writing-tests.html">Property testing, no tests</a></li><li><a href="/breakhound/roundtrip-testing-encode-decode.html">Roundtrip testing</a></li><li><a href="/breakhound/negative-zero-javascript-bugs.html">Negative zero bugs</a></li><li><a href="/breakhound/automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li></ul></nav>
+      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="/breakhound/timezone-bugs-javascript.html">Time zone bugs</a></li><li><a href="/breakhound/unicode-surrogate-pair-bugs.html">Surrogate pairs</a></li><li><a href="/breakhound/negative-zero-javascript-bugs.html">Negative zero</a></li><li><a href="/breakhound/automated-testing-in-github-actions.html">GitHub Actions</a></li></ul></nav>
       <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more"><li><a href="https://kwy404.github.io/monsoon/">Monsoon</a><small>Utility-first CSS with no build step</small></li><li><a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li><li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li><li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li><li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li><li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li><li><a href="https://kwy404.github.io/cookieowl/">cookieowl</a><small>Cookie consent for LGPD and GDPR</small></li><li><a href="https://kwy404.github.io/installkite/">installkite</a><small>Make any website installable and offline capable</small></li><li><a href="https://kwy404.github.io/a11ymedic/">a11ymedic</a><small>Accessibility checker with the exact fix</small></li><li><a href="https://kwy404.github.io/fontsketch/">fontsketch</a><small>Turn your handwriting into a font</small></li><li><a href="https://kwy404.github.io/kastor/">kastor</a><small>The TypeScript ORM for almost every database</small></li></ul></nav>
     </div>
     <div class="foot-bottom">
@@ -97,7 +119,7 @@
     <label class="command-palette-search"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><input id="search-input" class="command-palette-input" v-model="q" @input="sel = 0" placeholder="Search cases, guides and oracles" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="search-results"></label>
     <div id="search-results" class="command-palette-list" role="listbox" aria-label="Results">
       <p class="command-palette-heading" v-if="!q">Suggestions</p>
-      <a v-for="(r, i) in hits(q, S.ready)" :key="r.url" :href="/breakhound/r.url" class="command-palette-item" role="option" :aria-selected="i === sel ? 'true' : 'false'" @mouseenter="sel = i"><span class="hit-kind" v-text="r.kind"></span><span class="hit-text"><span class="hit-title" v-text="r.title"></span><span class="hit-sub" v-text="r.sub"></span></span></a>
+      <a v-for="(r, i) in hits(q, S.ready)" :key="r.url" :href="r.url" class="command-palette-item" role="option" :aria-selected="i === sel ? 'true' : 'false'" @mouseenter="sel = i"><span class="hit-kind" v-text="r.kind"></span><span class="hit-text"><span class="hit-title" v-text="r.title"></span><span class="hit-sub" v-text="r.sub"></span></span></a>
       <p class="command-palette-empty" v-if="q && !hits(q, S.ready).length">No case matches. Sniff is still searching.</p>
     </div>
     <div class="command-palette-footer"><span><kbd class="kbd kbd-xs">Enter</kbd> open</span><span><kbd class="kbd kbd-xs">Esc</kbd> close</span></div>

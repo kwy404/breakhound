@@ -10,12 +10,11 @@ export const TOPICS = {
   time: 'Dates and time',
   numbers: 'Numbers',
   invariants: 'Invariants',
-  workflow: 'Workflow',
   ci: 'CI',
 };
 
-export const UPDATED = '2026-10-13';
-const UPDATED_LABEL = 'October 13, 2026';
+export const UPDATED = '2026-10-15';
+const UPDATED_LABEL = 'October 15, 2026';
 
 function crumbs(items) {
   const lis = items
@@ -130,7 +129,7 @@ export function indexBody(guides) {
       ${crumbs([['breakhound', './'], ['Guides', '']])}
       <p class="kicker">${icon('folder')}Case index</p>
       <h1>Every case Sniff has worked</h1>
-      <p class="lead">Eight long read guides on the bugs breakhound hunts, and the eight oracles that catch them. Filter by topic, or search for a function, a rule or a symptom.</p>
+      <p class="lead">Four guides on the bugs breakhound looks for and on running it in CI, plus the eight oracles. Filter by topic or search for a rule.</p>
     </div>
     ${illustration('board', 'ill ix-ill')}
   </div>
@@ -162,7 +161,7 @@ export function indexJsonLd(guides) {
         '@type': 'CollectionPage',
         name: 'breakhound guides: the case index',
         url: `${SITE}guides.html`,
-        description: 'Guides on finding JavaScript bugs automatically: timezone bugs, surrogate pairs, negative zero, roundtrips, property testing, fuzzing and CI.',
+        description: 'Four guides on the bugs breakhound looks for and on running it in CI.',
         inLanguage: 'en',
         isPartOf: { '@type': 'WebSite', name: 'breakhound', url: SITE },
         mainEntity: {
@@ -192,8 +191,29 @@ export function notFoundBody() {
       <div class="nf-term"><pre><code><span class="t-green">~/cases</span> <span class="t-dim">$</span> npx breakhound ./this-page
 <span class="t-red">breakhound: not a path and not a valid npm package name</span>
 <span class="t-dim">Hints: try the home page or the case index</span></code></pre></div>
-      <div class="nf-cta"><a class="btn btn-primary" href="./">${icon('terminal')}Back to the terminal</a><a class="btn btn-outline" href="guides.html">${icon('folder')}Open the case index</a></div>
+      <p class="nf-moved" data-moved hidden></p>
+      <div class="nf-cta"><a class="btn btn-primary" href="./">${icon('terminal')}Back to the home page</a><a class="btn btn-outline" href="guides.html">${icon('folder')}Open the guides</a></div>
     </div>
   </div>
-</section>`;
+</section>
+<script>
+(function () {
+  // Guides that were merged into the home page and the remaining guides.
+  var moved = {
+    'find-bugs-automatically-javascript': ['/breakhound/#try', 'the home page, which now starts with a live demo'],
+    'fuzz-testing-typescript': ['/breakhound/#how', 'the procedure on the home page'],
+    'property-based-testing-without-writing-tests': ['/breakhound/#cases', 'the eight case files on the home page'],
+    'roundtrip-testing-encode-decode': ['/breakhound/#case-roundtrip', 'the roundtrip case file'],
+  };
+  var slug = location.pathname.replace(/^.*\\//, '').replace(/\\.html$/, '');
+  var to = moved[slug];
+  var el = document.querySelector('[data-moved]');
+  if (!to || !el) return;
+  var a = document.createElement('a');
+  a.href = to[0];
+  a.textContent = to[1];
+  el.append('This guide was retired. Its content lives on in ', a, '.');
+  el.hidden = false;
+})();
+</script>`;
 }

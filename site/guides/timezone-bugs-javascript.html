@@ -1,16 +1,16 @@
 <!--meta
 {
   "slug": "timezone-bugs-javascript",
-  "title": "Timezone bugs in JavaScript: find and fix | breakhound",
-  "description": "Why JavaScript date code breaks in other time zones: UTC vs local getters, DST, dates before 1970, and how to catch every case automatically.",
-  "h1": "Timezone bugs in JavaScript and how to catch them",
-  "crumb": "Timezone bugs",
+  "title": "Time zone bugs in JavaScript dates | breakhound",
+  "description": "How mixing UTC and local getters breaks date code in other time zones, and how breakhound catches it.",
+  "h1": "Time zone bugs in JavaScript dates",
+  "crumb": "Time zone bugs",
   "lead": "A JavaScript Date is one instant, but every getter answers in some time zone. Mix two of them and your code is right on your laptop and wrong for half the planet.",
   "readTime": "4 min read",
   "related": [
-    "unicode-surrogate-pair-bugs",
-    "property-based-testing-without-writing-tests",
-    "roundtrip-testing-encode-decode"
+    "negative-zero-javascript-bugs",
+    "automated-testing-in-github-actions",
+    "unicode-surrogate-pair-bugs"
   ],
   "faq": [
     {
@@ -39,8 +39,8 @@
     "@graph": [
       {
         "@type": "TechArticle",
-        "headline": "Timezone bugs in JavaScript and how to catch them",
-        "description": "Why JavaScript date code breaks in other time zones: UTC vs local getters, DST, dates before 1970, and how to catch every case automatically.",
+        "headline": "Time zone bugs in JavaScript dates",
+        "description": "How mixing UTC and local getters breaks date code in other time zones, and how breakhound catches it.",
         "url": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html",
         "mainEntityOfPage": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html",
         "image": "https://kwy404.github.io/breakhound/og.png",
@@ -122,12 +122,12 @@
             "@type": "ListItem",
             "position": 2,
             "name": "Guides",
-            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+            "item": "https://kwy404.github.io/breakhound/guides.html"
           },
           {
             "@type": "ListItem",
             "position": 3,
-            "name": "Timezone bugs in JavaScript and how to catch them",
+            "name": "Time zone bugs",
             "item": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html"
           }
         ]
@@ -221,7 +221,7 @@ test("yearLabel does not depend on the host time zone", () =&gt; {
   }
 });
 </pre>
-<p>Runs are seeded (default seed 42), so the same command gives the same findings. Read <a href="find-bugs-automatically-javascript.html">how to find bugs automatically in JavaScript</a> for the full workflow, and <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a> to run it on every pull request.</p>
+<p>Runs are seeded (default seed 42), so the same command gives the same findings. Read how to find bugs automatically in JavaScript for the full workflow, and <a href="automated-testing-in-github-actions.html">automated testing in GitHub Actions</a> to run it on every pull request.</p>
 <div class="callout"><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container.</p></div>
 </section>
 <section id="fix-checklist"><h2>A checklist that prevents the bug</h2>

@@ -1,16 +1,16 @@
 <!--meta
 {
   "slug": "unicode-surrogate-pair-bugs",
-  "title": "Surrogate pair bugs in JavaScript: lone surrogates",
-  "description": "Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.",
-  "h1": "Surrogate pair bugs in JavaScript: why emoji get split",
-  "crumb": "Surrogate pair bugs",
+  "title": "Surrogate pairs and split emoji | breakhound",
+  "description": "Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.",
+  "h1": "Surrogate pairs and split emoji",
+  "crumb": "Surrogate pairs",
   "lead": "JavaScript strings are UTF-16, so cutting one at the wrong index can leave half an emoji behind. That half is a lone surrogate, and it breaks JSON, URLs and rendering.",
   "readTime": "3 min read",
   "related": [
-    "property-based-testing-without-writing-tests",
-    "roundtrip-testing-encode-decode",
-    "negative-zero-javascript-bugs"
+    "timezone-bugs-javascript",
+    "negative-zero-javascript-bugs",
+    "automated-testing-in-github-actions"
   ],
   "faq": [
     {
@@ -39,8 +39,8 @@
     "@graph": [
       {
         "@type": "TechArticle",
-        "headline": "Surrogate pair bugs in JavaScript: why emoji get split",
-        "description": "Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.",
+        "headline": "Surrogate pairs and split emoji",
+        "description": "Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.",
         "url": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
         "mainEntityOfPage": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
         "image": "https://kwy404.github.io/breakhound/og.png",
@@ -122,12 +122,12 @@
             "@type": "ListItem",
             "position": 2,
             "name": "Guides",
-            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+            "item": "https://kwy404.github.io/breakhound/guides.html"
           },
           {
             "@type": "ListItem",
             "position": 3,
-            "name": "Surrogate pair bugs in JavaScript: why emoji get split",
+            "name": "Surrogate pairs",
             "item": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html"
           }
         ]
@@ -223,6 +223,6 @@ test("truncate returns well formed UTF-16", () =&gt; {
   expect(result).not.toMatch(LONE_SURROGATE);
 });
 </pre>
-<p>The same run also reports crashes, <code>NaN</code> leaks and zone-dependent output, so one command covers more than strings. See <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a> for the full list of rules, <a href="timezone-bugs-javascript.html">timezone bugs</a> for the date side, and <a href="fuzz-testing-typescript.html">fuzz testing TypeScript</a> for how this compares with writing your own fuzzers.</p>
+<p>The same run also reports crashes, <code>NaN</code> leaks and zone-dependent output, so one command covers more than strings. See the <a href="./#cases">eight case files</a> for the full list of rules and <a href="timezone-bugs-javascript.html">time zone bugs</a> for the date side.</p>
 <div class="callout"><p>breakhound executes the package code it analyzes. Run it on code you trust, or inside a container.</p></div>
 </section>

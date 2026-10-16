@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>
+<script src="seasons.js"></script>
 <title>breakhound guides: the case index of JavaScript bugs</title>
-<meta name="description" content="Guides on finding JavaScript bugs automatically: timezone bugs, surrogate pairs, negative zero, roundtrips, property testing, fuzzing and CI.">
+<meta name="description" content="Four guides on the bugs breakhound looks for and on running it in CI.">
 <link rel="canonical" href="https://kwy404.github.io/breakhound/guides.html">
 <meta name="author" content="Alexandre Kohler">
 <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)">
@@ -14,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="breakhound">
 <meta property="og:title" content="breakhound guides: the case index of JavaScript bugs">
-<meta property="og:description" content="Guides on finding JavaScript bugs automatically: timezone bugs, surrogate pairs, negative zero, roundtrips, property testing, fuzzing and CI.">
+<meta property="og:description" content="Four guides on the bugs breakhound looks for and on running it in CI.">
 <meta property="og:url" content="https://kwy404.github.io/breakhound/guides.html">
 <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
 <meta property="og:image:width" content="1280">
@@ -22,7 +23,7 @@
 <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="breakhound guides: the case index of JavaScript bugs">
-<meta name="twitter:description" content="Guides on finding JavaScript bugs automatically: timezone bugs, surrogate pairs, negative zero, roundtrips, property testing, fuzzing and CI.">
+<meta name="twitter:description" content="Four guides on the bugs breakhound looks for and on running it in CI.">
 <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -41,7 +42,7 @@
       "@type": "CollectionPage",
       "name": "breakhound guides: the case index",
       "url": "https://kwy404.github.io/breakhound/guides.html",
-      "description": "Guides on finding JavaScript bugs automatically: timezone bugs, surrogate pairs, negative zero, roundtrips, property testing, fuzzing and CI.",
+      "description": "Four guides on the bugs breakhound looks for and on running it in CI.",
       "inLanguage": "en",
       "isPartOf": {
         "@type": "WebSite",
@@ -54,50 +55,26 @@
           {
             "@type": "ListItem",
             "position": 1,
-            "url": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html",
-            "name": "How to find bugs automatically in a JavaScript library"
+            "url": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html",
+            "name": "Time zone bugs in JavaScript dates"
           },
           {
             "@type": "ListItem",
             "position": 2,
-            "url": "https://kwy404.github.io/breakhound/fuzz-testing-typescript.html",
-            "name": "Fuzz testing TypeScript without writing harnesses"
+            "url": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
+            "name": "Surrogate pairs and split emoji"
           },
           {
             "@type": "ListItem",
             "position": 3,
-            "url": "https://kwy404.github.io/breakhound/timezone-bugs-javascript.html",
-            "name": "Timezone bugs in JavaScript and how to catch them"
+            "url": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
+            "name": "Negative zero and lost minus signs"
           },
           {
             "@type": "ListItem",
             "position": 4,
-            "url": "https://kwy404.github.io/breakhound/unicode-surrogate-pair-bugs.html",
-            "name": "Surrogate pair bugs in JavaScript: why emoji get split"
-          },
-          {
-            "@type": "ListItem",
-            "position": 5,
-            "url": "https://kwy404.github.io/breakhound/property-based-testing-without-writing-tests.html",
-            "name": "Property based testing without writing tests"
-          },
-          {
-            "@type": "ListItem",
-            "position": 6,
-            "url": "https://kwy404.github.io/breakhound/roundtrip-testing-encode-decode.html",
-            "name": "Roundtrip testing for encode and decode functions"
-          },
-          {
-            "@type": "ListItem",
-            "position": 7,
-            "url": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
-            "name": "Negative zero in JavaScript: the bugs it causes and how to catch them"
-          },
-          {
-            "@type": "ListItem",
-            "position": 8,
             "url": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html",
-            "name": "Automated testing in GitHub Actions without writing tests"
+            "name": "Running breakhound in GitHub Actions"
           }
         ]
       }
@@ -129,7 +106,7 @@
 <header class="topbar" v-data="{ open: false }" @keydown.escape="open = false">
   <div class="wrap topbar-in">
     <a href="./" class="brand" aria-label="breakhound home"><img src="assets/mascot.svg" width="34" height="34" alt=""><span class="brand-name">breakhound</span><span class="brand-file">case files</span></a>
-    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#board" class="top-link">Evidence board</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Case index</a></nav>
+    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#try" class="top-link">Try it</a><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Guides</a></nav>
     <div class="top-right">
       <button type="button" class="search-btn" data-search-open v-hotkey="mod+k" aria-haspopup="dialog" aria-label="Search the site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="search-label">Search</span><kbd class="kbd kbd-sm">Ctrl K</kbd></button>
       <a href="https://github.com/kwy404/breakhound" class="icon-btn" aria-label="breakhound on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a>
@@ -145,7 +122,7 @@
       <nav class="crumbs" aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="./">breakhound</a></li><li><span aria-current="page">Guides</span></li></ol></nav>
       <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Case index</p>
       <h1>Every case Sniff has worked</h1>
-      <p class="lead">Eight long read guides on the bugs breakhound hunts, and the eight oracles that catch them. Filter by topic, or search for a function, a rule or a symptom.</p>
+      <p class="lead">Four guides on the bugs breakhound looks for and on running it in CI, plus the eight oracles. Filter by topic or search for a rule.</p>
     </div>
     <svg class="ill ix-ill" viewBox="0 0 240 170" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="2.2">
 <rect x="14" y="14" width="212" height="142" rx="6"/>
@@ -160,93 +137,73 @@
   </div>
 </section>
 <div class="ix" v-data="{ q: '', kind: 'all', topic: 'all' }">
-  <script type="application/json" id="ix-data">[{"kind":"guide","topic":"workflow","text":"how to find bugs automatically in a javascript library find bugs automatically in a javascript library without writing tests. breakhound reads your types, tries edge cases and writes vitest tests. case file g-01 workflow"},{"kind":"guide","topic":"workflow","text":"fuzz testing typescript without writing harnesses fuzz testing typescript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes vitest tests. case file g-02 workflow"},{"kind":"guide","topic":"time","text":"timezone bugs in javascript and how to catch them why javascript date code breaks in other time zones: utc vs local getters, dst, dates before 1970, and how to catch every case automatically. case file g-03 dates and time"},{"kind":"guide","topic":"unicode","text":"surrogate pair bugs in javascript: why emoji get split why slice, substr and charat split emoji into lone surrogates in javascript, with real fixes in budoux and vscode-js-debug, and how to catch them. case file g-04 unicode"},{"kind":"guide","topic":"invariants","text":"property based testing without writing tests property based testing without writing tests: breakhound checks idempotence, roundtrip and determinism from your types, no properties to author. case file g-05 invariants"},{"kind":"guide","topic":"invariants","text":"roundtrip testing for encode and decode functions roundtrip testing for encode decode pairs: breakhound finds encodex/decodex and toy/fromy partners by name and checks they invert each other. case file g-06 invariants"},{"kind":"guide","topic":"numbers","text":"negative zero in javascript: the bugs it causes and how to catch them how negative zero in javascript silently drops minus signs in tofixed, math.trunc and formatters, and how to catch the bug automatically. case file g-07 numbers"},{"kind":"guide","topic":"ci","text":"automated testing in github actions without writing tests add automated testing in github actions that fails the build on real bugs: workflow yaml, annotations, job summary, json reports and seeds. case file g-08 ci"},{"kind":"oracle","topic":"unicode","text":"split emoji a string result holds half of a surrogate pair, so an emoji is cut in two. oracle id lone-surrogate-output. case 01 unicode"},{"kind":"oracle","topic":"time","text":"time zone dependence the same call answers differently when only the host tz changes. oracle id timezone-dependent. case 02 dates and time"},{"kind":"oracle","topic":"workflow","text":"crash on valid input a value the types allow makes the engine throw a typeerror. oracle id unexpected-crash. case 03 workflow"},{"kind":"oracle","topic":"numbers","text":"nan leak finite numbers go in and nan comes out where a number was expected. oracle id nan-leak. case 04 numbers"},{"kind":"oracle","topic":"invariants","text":"broken roundtrip a decode and encode pair does not give the input back. oracle id roundtrip. case 05 invariants"},{"kind":"oracle","topic":"invariants","text":"not idempotent normalizing twice changes the result again. oracle id not-idempotent. case 06 invariants"},{"kind":"oracle","topic":"numbers","text":"lost minus sign values between -1 and 0 are printed as if they were positive. oracle id negative-zero-sign. case 07 numbers"},{"kind":"oracle","topic":"invariants","text":"nondeterminism same call, same input, a different result from hidden state. oracle id nondeterministic. case 08 invariants"}]</script>
+  <script type="application/json" id="ix-data">[{"kind":"guide","topic":"time","text":"time zone bugs in javascript dates how mixing utc and local getters breaks date code in other time zones, and how breakhound catches it. case file g-01 dates and time"},{"kind":"guide","topic":"unicode","text":"surrogate pairs and split emoji why slicing a javascript string can cut an emoji in half, how to fix it, and how breakhound finds it. case file g-02 unicode"},{"kind":"guide","topic":"numbers","text":"negative zero and lost minus signs how -0 and math.trunc drop the minus sign of values between -1 and 0, and how to catch it. case file g-03 numbers"},{"kind":"guide","topic":"ci","text":"running breakhound in github actions a workflow that fails pull requests on new bugs, with annotations, a job summary and reproducible seeds. case file g-04 ci"},{"kind":"oracle","topic":"unicode","text":"split emoji a string result holds half of a surrogate pair, so an emoji is cut in two. oracle id lone-surrogate-output. case 01 unicode"},{"kind":"oracle","topic":"time","text":"time zone dependence the same call answers differently when only the host tz changes. oracle id timezone-dependent. case 02 dates and time"},{"kind":"oracle","topic":"invariants","text":"crash on valid input a value the types allow makes the engine throw a typeerror. oracle id unexpected-crash. case 03 invariants"},{"kind":"oracle","topic":"numbers","text":"nan leak finite numbers go in and nan comes out where a number was expected. oracle id nan-leak. case 04 numbers"},{"kind":"oracle","topic":"invariants","text":"broken roundtrip a decode and encode pair does not give the input back. oracle id roundtrip. case 05 invariants"},{"kind":"oracle","topic":"invariants","text":"not idempotent normalizing twice changes the result again. oracle id not-idempotent. case 06 invariants"},{"kind":"oracle","topic":"numbers","text":"lost minus sign values between -1 and 0 are printed as if they were positive. oracle id negative-zero-sign. case 07 numbers"},{"kind":"oracle","topic":"invariants","text":"nondeterminism same call, same input, a different result from hidden state. oracle id nondeterministic. case 08 invariants"}]</script>
   <div class="filterbar">
     <div class="wrap filterbar-in">
       <label class="ix-search"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><input type="search" v-model="q" placeholder="Search the case index" aria-label="Search the case index"></label>
       <div class="seg" role="group" aria-label="Kind"><button type="button" class="seg-btn" :aria-pressed="kind === 'all' ? 'true' : 'false'" aria-pressed="true" @click="kind = 'all'">Everything</button><button type="button" class="seg-btn" :aria-pressed="kind === 'guide' ? 'true' : 'false'" aria-pressed="false" @click="kind = 'guide'">Guides</button><button type="button" class="seg-btn" :aria-pressed="kind === 'oracle' ? 'true' : 'false'" aria-pressed="false" @click="kind = 'oracle'">Oracles</button></div>
-      <div class="ix-topics" role="group" aria-label="Topic"><button type="button" class="chip-btn" :aria-pressed="topic === 'all' ? 'true' : 'false'" aria-pressed="true" @click="topic = 'all'">All topics</button><button type="button" class="chip-btn" :aria-pressed="topic === 'unicode' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'unicode'">Unicode</button><button type="button" class="chip-btn" :aria-pressed="topic === 'time' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'time'">Dates and time</button><button type="button" class="chip-btn" :aria-pressed="topic === 'numbers' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'numbers'">Numbers</button><button type="button" class="chip-btn" :aria-pressed="topic === 'invariants' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'invariants'">Invariants</button><button type="button" class="chip-btn" :aria-pressed="topic === 'workflow' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'workflow'">Workflow</button><button type="button" class="chip-btn" :aria-pressed="topic === 'ci' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'ci'">CI</button></div>
-      <p class="ix-count" aria-live="polite"><strong v-text="cardCount(q, kind, topic)">16</strong> of 16 files</p>
+      <div class="ix-topics" role="group" aria-label="Topic"><button type="button" class="chip-btn" :aria-pressed="topic === 'all' ? 'true' : 'false'" aria-pressed="true" @click="topic = 'all'">All topics</button><button type="button" class="chip-btn" :aria-pressed="topic === 'unicode' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'unicode'">Unicode</button><button type="button" class="chip-btn" :aria-pressed="topic === 'time' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'time'">Dates and time</button><button type="button" class="chip-btn" :aria-pressed="topic === 'numbers' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'numbers'">Numbers</button><button type="button" class="chip-btn" :aria-pressed="topic === 'invariants' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'invariants'">Invariants</button><button type="button" class="chip-btn" :aria-pressed="topic === 'ci' ? 'true' : 'false'" aria-pressed="false" @click="topic = 'ci'">CI</button></div>
+      <p class="ix-count" aria-live="polite"><strong v-text="cardCount(q, kind, topic)">12</strong> of 12 files</p>
     </div>
   </div>
   <div class="wrap">
     <div class="icards">
-<a href="find-bugs-automatically-javascript.html" class="icard icard-guide" v-show="cardMatch(0, q, kind, topic)">
+<a href="timezone-bugs-javascript.html" class="icard icard-guide" v-show="cardMatch(0, q, kind, topic)">
   <span class="icard-tab"><span>Case file G-01</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-magnifier"/></svg></span><strong>How to find bugs automatically in a JavaScript library</strong><span class="icard-sum">Find bugs automatically in a JavaScript library without writing tests. breakhound reads your types, tries edge cases and writes Vitest tests.</span></span>
-  <span class="icard-foot"><span class="tag">Workflow</span><span>4 min read</span></span>
-</a>
-<a href="fuzz-testing-typescript.html" class="icard icard-guide" v-show="cardMatch(1, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-02</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-unexpected-crash"/></svg></span><strong>Fuzz testing TypeScript without writing harnesses</strong><span class="icard-sum">Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.</span></span>
-  <span class="icard-foot"><span class="tag">Workflow</span><span>4 min read</span></span>
-</a>
-<a href="timezone-bugs-javascript.html" class="icard icard-guide" v-show="cardMatch(2, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-03</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-timezone-dependent"/></svg></span><strong>Timezone bugs in JavaScript and how to catch them</strong><span class="icard-sum">Why JavaScript date code breaks in other time zones: UTC vs local getters, DST, dates before 1970, and how to catch every case automatically.</span></span>
+  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-timezone-dependent"/></svg></span><strong>Time zone bugs in JavaScript dates</strong><span class="icard-sum">How mixing UTC and local getters breaks date code in other time zones, and how breakhound catches it.</span></span>
   <span class="icard-foot"><span class="tag">Dates and time</span><span>4 min read</span></span>
 </a>
-<a href="unicode-surrogate-pair-bugs.html" class="icard icard-guide" v-show="cardMatch(3, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-04</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-lone-surrogate-output"/></svg></span><strong>Surrogate pair bugs in JavaScript: why emoji get split</strong><span class="icard-sum">Why slice, substr and charAt split emoji into lone surrogates in JavaScript, with real fixes in budoux and vscode-js-debug, and how to catch them.</span></span>
+<a href="unicode-surrogate-pair-bugs.html" class="icard icard-guide" v-show="cardMatch(1, q, kind, topic)">
+  <span class="icard-tab"><span>Case file G-02</span><span class="icard-kind">Guide</span></span>
+  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-lone-surrogate-output"/></svg></span><strong>Surrogate pairs and split emoji</strong><span class="icard-sum">Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.</span></span>
   <span class="icard-foot"><span class="tag">Unicode</span><span>3 min read</span></span>
 </a>
-<a href="property-based-testing-without-writing-tests.html" class="icard icard-guide" v-show="cardMatch(4, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-05</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-not-idempotent"/></svg></span><strong>Property based testing without writing tests</strong><span class="icard-sum">Property based testing without writing tests: breakhound checks idempotence, roundtrip and determinism from your types, no properties to author.</span></span>
-  <span class="icard-foot"><span class="tag">Invariants</span><span>4 min read</span></span>
-</a>
-<a href="roundtrip-testing-encode-decode.html" class="icard icard-guide" v-show="cardMatch(5, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-06</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-roundtrip"/></svg></span><strong>Roundtrip testing for encode and decode functions</strong><span class="icard-sum">Roundtrip testing for encode decode pairs: breakhound finds encodeX/decodeX and toY/fromY partners by name and checks they invert each other.</span></span>
-  <span class="icard-foot"><span class="tag">Invariants</span><span>4 min read</span></span>
-</a>
-<a href="negative-zero-javascript-bugs.html" class="icard icard-guide" v-show="cardMatch(6, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-07</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-negative-zero-sign"/></svg></span><strong>Negative zero in JavaScript: the bugs it causes and how to catch them</strong><span class="icard-sum">How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.</span></span>
+<a href="negative-zero-javascript-bugs.html" class="icard icard-guide" v-show="cardMatch(2, q, kind, topic)">
+  <span class="icard-tab"><span>Case file G-03</span><span class="icard-kind">Guide</span></span>
+  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-negative-zero-sign"/></svg></span><strong>Negative zero and lost minus signs</strong><span class="icard-sum">How -0 and Math.trunc drop the minus sign of values between -1 and 0, and how to catch it.</span></span>
   <span class="icard-foot"><span class="tag">Numbers</span><span>3 min read</span></span>
 </a>
-<a href="automated-testing-in-github-actions.html" class="icard icard-guide" v-show="cardMatch(7, q, kind, topic)">
-  <span class="icard-tab"><span>Case file G-08</span><span class="icard-kind">Guide</span></span>
-  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-ci"/></svg></span><strong>Automated testing in GitHub Actions without writing tests</strong><span class="icard-sum">Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.</span></span>
+<a href="automated-testing-in-github-actions.html" class="icard icard-guide" v-show="cardMatch(3, q, kind, topic)">
+  <span class="icard-tab"><span>Case file G-04</span><span class="icard-kind">Guide</span></span>
+  <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-ci"/></svg></span><strong>Running breakhound in GitHub Actions</strong><span class="icard-sum">A workflow that fails pull requests on new bugs, with annotations, a job summary and reproducible seeds.</span></span>
   <span class="icard-foot"><span class="tag">CI</span><span>3 min read</span></span>
 </a>
-<a href="./#case-lone-surrogate-output" class="icard icard-oracle" v-show="cardMatch(8, q, kind, topic)">
+<a href="./#case-lone-surrogate-output" class="icard icard-oracle" v-show="cardMatch(4, q, kind, topic)">
   <span class="icard-tab"><span>Case 01</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-lone-surrogate-output"/></svg></span><strong>Split emoji</strong><span class="icard-sum">A string result holds half of a surrogate pair, so an emoji is cut in two. Oracle id lone-surrogate-output.</span></span>
   <span class="icard-foot"><span class="tag">Unicode</span><span>Recorded on truncate</span></span>
 </a>
-<a href="./#case-timezone-dependent" class="icard icard-oracle" v-show="cardMatch(9, q, kind, topic)">
+<a href="./#case-timezone-dependent" class="icard icard-oracle" v-show="cardMatch(5, q, kind, topic)">
   <span class="icard-tab"><span>Case 02</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-timezone-dependent"/></svg></span><strong>Time zone dependence</strong><span class="icard-sum">The same call answers differently when only the host TZ changes. Oracle id timezone-dependent.</span></span>
   <span class="icard-foot"><span class="tag">Dates and time</span><span>Recorded on yearLabel</span></span>
 </a>
-<a href="./#case-unexpected-crash" class="icard icard-oracle" v-show="cardMatch(10, q, kind, topic)">
+<a href="./#case-unexpected-crash" class="icard icard-oracle" v-show="cardMatch(6, q, kind, topic)">
   <span class="icard-tab"><span>Case 03</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-unexpected-crash"/></svg></span><strong>Crash on valid input</strong><span class="icard-sum">A value the types allow makes the engine throw a TypeError. Oracle id unexpected-crash.</span></span>
-  <span class="icard-foot"><span class="tag">Workflow</span><span>Recorded on initials</span></span>
+  <span class="icard-foot"><span class="tag">Invariants</span><span>Recorded on initials</span></span>
 </a>
-<a href="./#case-nan-leak" class="icard icard-oracle" v-show="cardMatch(11, q, kind, topic)">
+<a href="./#case-nan-leak" class="icard icard-oracle" v-show="cardMatch(7, q, kind, topic)">
   <span class="icard-tab"><span>Case 04</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-nan-leak"/></svg></span><strong>NaN leak</strong><span class="icard-sum">Finite numbers go in and NaN comes out where a number was expected. Oracle id nan-leak.</span></span>
   <span class="icard-foot"><span class="tag">Numbers</span><span>Recorded on average</span></span>
 </a>
-<a href="./#case-roundtrip" class="icard icard-oracle" v-show="cardMatch(12, q, kind, topic)">
+<a href="./#case-roundtrip" class="icard icard-oracle" v-show="cardMatch(8, q, kind, topic)">
   <span class="icard-tab"><span>Case 05</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-roundtrip"/></svg></span><strong>Broken roundtrip</strong><span class="icard-sum">A decode and encode pair does not give the input back. Oracle id roundtrip.</span></span>
   <span class="icard-foot"><span class="tag">Invariants</span><span>Recorded on encodeBase</span></span>
 </a>
-<a href="./#case-not-idempotent" class="icard icard-oracle" v-show="cardMatch(13, q, kind, topic)">
+<a href="./#case-not-idempotent" class="icard icard-oracle" v-show="cardMatch(9, q, kind, topic)">
   <span class="icard-tab"><span>Case 06</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-not-idempotent"/></svg></span><strong>Not idempotent</strong><span class="icard-sum">Normalizing twice changes the result again. Oracle id not-idempotent.</span></span>
   <span class="icard-foot"><span class="tag">Invariants</span><span>Recorded on slugify</span></span>
 </a>
-<a href="./#case-negative-zero-sign" class="icard icard-oracle" v-show="cardMatch(14, q, kind, topic)">
+<a href="./#case-negative-zero-sign" class="icard icard-oracle" v-show="cardMatch(10, q, kind, topic)">
   <span class="icard-tab"><span>Case 07</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-negative-zero-sign"/></svg></span><strong>Lost minus sign</strong><span class="icard-sum">Values between -1 and 0 are printed as if they were positive. Oracle id negative-zero-sign.</span></span>
   <span class="icard-foot"><span class="tag">Numbers</span><span>Recorded on formatFixed</span></span>
 </a>
-<a href="./#case-nondeterministic" class="icard icard-oracle" v-show="cardMatch(15, q, kind, topic)">
+<a href="./#case-nondeterministic" class="icard icard-oracle" v-show="cardMatch(11, q, kind, topic)">
   <span class="icard-tab"><span>Case 08</span><span class="icard-kind">Oracle</span></span>
   <span class="icard-body"><span class="icard-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-nondeterministic"/></svg></span><strong>Nondeterminism</strong><span class="icard-sum">Same call, same input, a different result from hidden state. Oracle id nondeterministic.</span></span>
   <span class="icard-foot"><span class="tag">Invariants</span><span>Recorded on label</span></span>
@@ -272,9 +229,9 @@
         <p class="foot-links"><a href="https://github.com/kwy404/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>GitHub</a><a href="https://www.npmjs.com/package/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-npm"/></svg>npm</a><a href="https://github.com/kwy404/breakhound/blob/main/CHANGELOG.md"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Changelog</a></p>
       </div>
       <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
-        <li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
+        <li><a href="./#try">Paste and see</a></li><li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
       </ul></nav>
-      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li><li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li><li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li><li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li><li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li><li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li></ul></nav>
+      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="timezone-bugs-javascript.html">Time zone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pairs</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero</a></li><li><a href="automated-testing-in-github-actions.html">GitHub Actions</a></li></ul></nav>
       <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more"><li><a href="https://kwy404.github.io/monsoon/">Monsoon</a><small>Utility-first CSS with no build step</small></li><li><a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li><li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li><li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li><li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li><li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li><li><a href="https://kwy404.github.io/cookieowl/">cookieowl</a><small>Cookie consent for LGPD and GDPR</small></li><li><a href="https://kwy404.github.io/installkite/">installkite</a><small>Make any website installable and offline capable</small></li><li><a href="https://kwy404.github.io/a11ymedic/">a11ymedic</a><small>Accessibility checker with the exact fix</small></li><li><a href="https://kwy404.github.io/fontsketch/">fontsketch</a><small>Turn your handwriting into a font</small></li><li><a href="https://kwy404.github.io/kastor/">kastor</a><small>The TypeScript ORM for almost every database</small></li></ul></nav>
     </div>
     <div class="foot-bottom">

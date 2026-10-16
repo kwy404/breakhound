@@ -5,24 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>
-<title>Negative Zero in JavaScript: Bugs and Fixes | breakhound</title>
-<meta name="description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
+<script src="seasons.js"></script>
+<title>Negative zero and lost minus signs | breakhound</title>
+<meta name="description" content="How -0 and Math.trunc drop the minus sign of values between -1 and 0, and how to catch it.">
 <link rel="canonical" href="https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html">
 <meta name="author" content="Alexandre Kohler">
 <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1220" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="breakhound">
-<meta property="og:title" content="Negative Zero in JavaScript: Bugs and Fixes | breakhound">
-<meta property="og:description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
+<meta property="og:title" content="Negative zero and lost minus signs | breakhound">
+<meta property="og:description" content="How -0 and Math.trunc drop the minus sign of values between -1 and 0, and how to catch it.">
 <meta property="og:url" content="https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html">
 <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Negative Zero in JavaScript: Bugs and Fixes | breakhound">
-<meta name="twitter:description" content="How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.">
+<meta name="twitter:title" content="Negative zero and lost minus signs | breakhound">
+<meta name="twitter:description" content="How -0 and Math.trunc drop the minus sign of values between -1 and 0, and how to catch it.">
 <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -39,13 +40,13 @@
   "@graph": [
     {
       "@type": "TechArticle",
-      "headline": "Negative zero in JavaScript: the bugs it causes and how to catch them",
-      "description": "How negative zero in JavaScript silently drops minus signs in toFixed, Math.trunc and formatters, and how to catch the bug automatically.",
+      "headline": "Negative zero and lost minus signs",
+      "description": "How -0 and Math.trunc drop the minus sign of values between -1 and 0, and how to catch it.",
       "url": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
       "mainEntityOfPage": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html",
       "image": "https://kwy404.github.io/breakhound/og.png",
       "datePublished": "2026-10-12",
-      "dateModified": "2026-10-13",
+      "dateModified": "2026-10-15",
       "inLanguage": "en",
       "proficiencyLevel": "Intermediate",
       "author": {
@@ -131,7 +132,7 @@
         {
           "@type": "ListItem",
           "position": 3,
-          "name": "Negative zero in JavaScript: the bugs it causes and how to catch them",
+          "name": "Negative zero",
           "item": "https://kwy404.github.io/breakhound/negative-zero-javascript-bugs.html"
         }
       ]
@@ -146,7 +147,7 @@
 <header class="topbar" v-data="{ open: false }" @keydown.escape="open = false">
   <div class="wrap topbar-in">
     <a href="./" class="brand" aria-label="breakhound home"><img src="assets/mascot.svg" width="34" height="34" alt=""><span class="brand-name">breakhound</span><span class="brand-file">case files</span></a>
-    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#board" class="top-link">Evidence board</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Case index</a></nav>
+    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#try" class="top-link">Try it</a><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link" aria-current="page">Guides</a></nav>
     <div class="top-right">
       <button type="button" class="search-btn" data-search-open v-hotkey="mod+k" aria-haspopup="dialog" aria-label="Search the site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="search-label">Search</span><kbd class="kbd kbd-sm">Ctrl K</kbd></button>
       <a href="https://github.com/kwy404/breakhound" class="icon-btn" aria-label="breakhound on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a>
@@ -158,13 +159,13 @@
 <main id="main">
 <div class="read-progress" aria-hidden="true"></div>
 <div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="./">breakhound</a></li><li><a href="guides.html">Guides</a></li><li><span aria-current="page">Negative zero bugs</span></li></ol></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="./">breakhound</a></li><li><a href="guides.html">Guides</a></li><li><span aria-current="page">Negative zero</span></li></ol></nav>
   <header class="cover">
     <div class="cover-text">
-      <p class="cover-file"><span class="file-no">Case file G-07</span><span class="file-topic">Numbers</span></p>
-      <h1>Negative zero in JavaScript: the bugs it causes and how to catch them</h1>
+      <p class="cover-file"><span class="file-no">Case file G-03</span><span class="file-topic">Numbers</span></p>
+      <h1>Negative zero and lost minus signs</h1>
       <p class="lead">JavaScript has two zeros, and the difference between them is invisible to ===, String() and JSON. Here is how -0 breaks number formatting, how the pdf.js bug happened, and how to find it without writing a single test.</p>
-      <p class="cover-meta"><span>By <a href="https://github.com/kwy404" rel="author">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-13">October 13, 2026</time></span><span>3 min read</span></p>
+      <p class="cover-meta"><span>By <a href="https://github.com/kwy404" rel="author">Alexandre Kohler</a></span><span>Updated <time datetime="2026-10-15">October 15, 2026</time></span><span>3 min read</span></p>
     </div>
     <div class="cover-art" aria-hidden="true"><svg class="ill cover-folders" viewBox="0 0 240 170" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="2.2">
 <path d="M46 40h52l10 12h86a8 8 0 0 1 8 8v82a8 8 0 0 1-8 8H46a8 8 0 0 1-8-8V48a8 8 0 0 1 8-8Z" style="fill:var(--paper,#f6ecd2)" transform="rotate(-6 120 95)"/>
@@ -221,7 +222,7 @@
 <div class="callout callout-warning"><p class="callout-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-isolation"/></svg>Handle with care</p><p>Rule of thumb: never derive the sign of a result from a value that has already been truncated or rounded. Read it from the input.</p></div>
 </section>
 <section id="breakhound" class="chapter"><h2><a href="#breakhound" class="anchor" aria-hidden="true" tabindex="-1">#</a>Catching it automatically with breakhound</h2><aside class="mnote mnote-case"><p class="mnote-label"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Case 07</p><p>Lost minus sign. The <a href="./#case-negative-zero-sign">recorded case</a> and its generated test.</p></aside>
-<p>The <code>negative-zero-sign</code> oracle looks for functions where a value between -1 and 0 loses its minus sign in the output. The input generator already includes <code>-0</code> and other edge cases from the edgegoat package, so you do not write anything. See <a href="find-bugs-automatically-javascript.html">how breakhound finds bugs automatically</a> for the overall approach.</p>
+<p>The <code>negative-zero-sign</code> oracle looks for functions where a value between -1 and 0 loses its minus sign in the output. The input generator already includes <code>-0</code> and other edge cases from the edgegoat package, so you do not write anything. See how breakhound finds bugs automatically for the overall approach.</p>
 <figure class="frame frame-terminal" data-lang="bash"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#3f8f4f"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">$_</text></svg><span>Terminal</span></span><button type="button" class="frame-copy" v-copy-from="#code-3" aria-label="Copy Terminal"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki" tabindex="0"><code id="code-3"><span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">npx</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> breakhound</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> ./my-lib</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --rules</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178"> negative-zero-sign</span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6"> --plain</span></span></code></pre></figure>
 <figure class="frame frame-output" data-lang="text"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#6b7280"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">&gt;_</text></svg><span>Terminal output</span></span><button type="button" class="frame-copy" v-copy-from="#code-4" aria-label="Copy Terminal output"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki" tabindex="0"><code id="code-4"><span class="line"><span>MEDIUM (1)</span></span>
 <span class="line"><span>  [negative-zero-sign] formatFixed drops the minus sign of numbers between -1 and 0 (confidence medium)</span></span>
@@ -235,7 +236,7 @@
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">test</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">"formatFixed keeps the sign of -0.5"</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">, () </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">=></span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4"> {</span></span>
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(-</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">)).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toBe</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">formatFixed</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0.5</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">));</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
-<p>To keep it from coming back, run the same command on every pull request. The <a href="automated-testing-in-github-actions.html">GitHub Actions guide</a> shows the workflow, and <a href="roundtrip-testing-encode-decode.html">roundtrip testing</a> covers a related class of silent data loss. Go back to the <a href="./">home page</a> for the full list of oracles.</p>
+<p>To keep it from coming back, run the same command on every pull request. The <a href="automated-testing-in-github-actions.html">GitHub Actions guide</a> shows the workflow, and roundtrip testing covers a related class of silent data loss. Go back to the <a href="./">home page</a> for the full list of oracles.</p>
 </section>
 
       <section id="faq" class="chapter"><h2><a href="#faq" class="anchor" aria-hidden="true" tabindex="-1">#</a>Questions on the record</h2><div class="accordion collapse-plus"><details class="collapse q" open><summary class="collapse-title"><span class="q-no">Q1</span>Is -0 === 0 true in JavaScript?</summary><div class="collapse-content"><p>Yes. Strict and loose equality both treat the two zeros as equal. Use <code>Object.is(x, -0)</code> when you must tell them apart.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q2</span>Why does Math.trunc(-0.5) return -0?</summary><div class="collapse-content"><p>Truncation keeps the sign of the input, and the result has magnitude zero, so it is negative zero. Printing it gives <code>"0"</code>, which is how the minus sign gets lost.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q3</span>Does toFixed keep the sign of small negative numbers?</summary><div class="collapse-content"><p>It depends on the value. <code>(-0.4).toFixed(0)</code> returns <code>"-0"</code>, while <code>(-0).toFixed(0)</code> returns <code>"0"</code>. Do not assume the two behave the same.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q4</span>How do I convert -0 to 0?</summary><div class="collapse-content"><p>Add zero: <code>-0 + 0</code> is <code>0</code>. Adding opposite signed zeros gives positive zero under round to nearest.</p></div></details><details class="collapse q"><summary class="collapse-title"><span class="q-no">Q5</span>Can breakhound find negative zero bugs in code without tests?</summary><div class="collapse-content"><p>Yes. It reads TypeScript types (<code>.d.ts</code>) to decide what to generate for each parameter, then runs the <code>negative-zero-sign</code> oracle. Point it at a package or a local path with <code>npx breakhound ./my-lib</code>.</p></div></details></div></section>
@@ -244,7 +245,7 @@
         <div><h2>Let Sniff work your library</h2><p>No install, no config, no tests to write. You get a reproduction and a Vitest test for every bug.</p>
         <div class="close-cmd"><code id="cta-cmd">npx breakhound ./my-lib</code><button type="button" class="copy-btn" v-copy-from="#cta-cmd" aria-label="Copy the command"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div></div>
       </aside>
-      <section id="related" class="chapter"><h2><a href="#related" class="anchor" aria-hidden="true" tabindex="-1">#</a>Related case files</h2><div class="related"><a href="automated-testing-in-github-actions.html" class="rel"><span class="rel-no">Case file G-08</span><strong>Automated testing in GitHub Actions without writing tests</strong><span>Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.</span></a><a href="find-bugs-automatically-javascript.html" class="rel"><span class="rel-no">Case file G-01</span><strong>How to find bugs automatically in a JavaScript library</strong><span>Find bugs automatically in a JavaScript library without writing tests. breakhound reads your types, tries edge cases and writes Vitest tests.</span></a><a href="fuzz-testing-typescript.html" class="rel"><span class="rel-no">Case file G-02</span><strong>Fuzz testing TypeScript without writing harnesses</strong><span>Fuzz testing TypeScript without harnesses: breakhound reads .d.ts types, generates edge cases and checks invariants, then writes Vitest tests.</span></a></div></section>
+      <section id="related" class="chapter"><h2><a href="#related" class="anchor" aria-hidden="true" tabindex="-1">#</a>Related case files</h2><div class="related"><a href="timezone-bugs-javascript.html" class="rel"><span class="rel-no">Case file G-01</span><strong>Time zone bugs in JavaScript dates</strong><span>How mixing UTC and local getters breaks date code in other time zones, and how breakhound catches it.</span></a><a href="unicode-surrogate-pair-bugs.html" class="rel"><span class="rel-no">Case file G-02</span><strong>Surrogate pairs and split emoji</strong><span>Why slicing a JavaScript string can cut an emoji in half, how to fix it, and how breakhound finds it.</span></a><a href="automated-testing-in-github-actions.html" class="rel"><span class="rel-no">Case file G-04</span><strong>Running breakhound in GitHub Actions</strong><span>A workflow that fails pull requests on new bugs, with annotations, a job summary and reproducible seeds.</span></a></div></section>
     </article>
   </div>
 </div>
@@ -258,9 +259,9 @@
         <p class="foot-links"><a href="https://github.com/kwy404/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>GitHub</a><a href="https://www.npmjs.com/package/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-npm"/></svg>npm</a><a href="https://github.com/kwy404/breakhound/blob/main/CHANGELOG.md"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Changelog</a></p>
       </div>
       <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
-        <li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
+        <li><a href="./#try">Paste and see</a></li><li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
       </ul></nav>
-      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li><li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li><li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li><li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li><li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li><li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li></ul></nav>
+      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="timezone-bugs-javascript.html">Time zone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pairs</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero</a></li><li><a href="automated-testing-in-github-actions.html">GitHub Actions</a></li></ul></nav>
       <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more"><li><a href="https://kwy404.github.io/monsoon/">Monsoon</a><small>Utility-first CSS with no build step</small></li><li><a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li><li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li><li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li><li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li><li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li><li><a href="https://kwy404.github.io/cookieowl/">cookieowl</a><small>Cookie consent for LGPD and GDPR</small></li><li><a href="https://kwy404.github.io/installkite/">installkite</a><small>Make any website installable and offline capable</small></li><li><a href="https://kwy404.github.io/a11ymedic/">a11ymedic</a><small>Accessibility checker with the exact fix</small></li><li><a href="https://kwy404.github.io/fontsketch/">fontsketch</a><small>Turn your handwriting into a font</small></li><li><a href="https://kwy404.github.io/kastor/">kastor</a><small>The TypeScript ORM for almost every database</small></li></ul></nav>
     </div>
     <div class="foot-bottom">

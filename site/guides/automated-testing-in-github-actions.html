@@ -1,16 +1,16 @@
 <!--meta
 {
   "slug": "automated-testing-in-github-actions",
-  "title": "Automated Testing in GitHub Actions with breakhound",
-  "description": "Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.",
-  "h1": "Automated testing in GitHub Actions without writing tests",
-  "crumb": "Testing in GitHub Actions",
+  "title": "Running breakhound in GitHub Actions | breakhound",
+  "description": "A workflow that fails pull requests on new bugs, with annotations, a job summary and reproducible seeds.",
+  "h1": "Running breakhound in GitHub Actions",
+  "crumb": "GitHub Actions",
   "lead": "A pull request check that finds crashes, time zone bugs and broken Unicode handling in your JavaScript library takes about ten lines of YAML. Here is the workflow, what it reports, and how to keep runs reproducible.",
   "readTime": "3 min read",
   "related": [
-    "find-bugs-automatically-javascript",
-    "fuzz-testing-typescript",
-    "timezone-bugs-javascript"
+    "timezone-bugs-javascript",
+    "unicode-surrogate-pair-bugs",
+    "negative-zero-javascript-bugs"
   ],
   "faq": [
     {
@@ -30,8 +30,8 @@
       "a": "<p>That is the point of seeding. The default seed is 42; pass <code>--seed</code> to choose another one and record it so a failure can be reproduced locally.</p>"
     },
     {
-      "q": "How is this different from running fast-check or Jazzer.js in CI?",
-      "a": "<p>fast-check needs you to write properties and arbitraries, and Jazzer.js needs fuzz targets. breakhound is type driven and needs neither, so it works as a zero setup first line of defense. See <a href=\"fuzz-testing-typescript.html\">fuzz testing TypeScript</a> for the trade-offs.</p>"
+      "q": "Do I need to write properties or fuzz targets first?",
+      "a": "<p>No. breakhound reads the types of each exported function, generates the inputs itself and checks built in rules on the results, so the first run needs no setup.</p>"
     }
   ],
   "jsonld": {
@@ -39,8 +39,8 @@
     "@graph": [
       {
         "@type": "TechArticle",
-        "headline": "Automated testing in GitHub Actions without writing tests",
-        "description": "Add automated testing in GitHub Actions that fails the build on real bugs: workflow YAML, annotations, job summary, JSON reports and seeds.",
+        "headline": "Running breakhound in GitHub Actions",
+        "description": "A workflow that fails pull requests on new bugs, with annotations, a job summary and reproducible seeds.",
         "url": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html",
         "mainEntityOfPage": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html",
         "image": "https://kwy404.github.io/breakhound/og.png",
@@ -101,10 +101,10 @@
           },
           {
             "@type": "Question",
-            "name": "How is this different from running fast-check or Jazzer.js in CI?",
+            "name": "Do I need to write properties or fuzz targets first?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "fast-check needs you to write properties and arbitraries, and Jazzer.js needs fuzz targets. breakhound is type driven and needs neither, so it works as a zero setup first line of defense. See fuzz testing TypeScript for the trade-offs."
+              "text": "No. breakhound reads the types of each exported function, generates the inputs itself and checks built in rules on the results, so the first run needs no setup."
             }
           }
         ]
@@ -122,12 +122,12 @@
             "@type": "ListItem",
             "position": 2,
             "name": "Guides",
-            "item": "https://kwy404.github.io/breakhound/find-bugs-automatically-javascript.html"
+            "item": "https://kwy404.github.io/breakhound/guides.html"
           },
           {
             "@type": "ListItem",
             "position": 3,
-            "name": "Automated testing in GitHub Actions without writing tests",
+            "name": "GitHub Actions",
             "item": "https://kwy404.github.io/breakhound/automated-testing-in-github-actions.html"
           }
         ]
@@ -137,7 +137,7 @@
 }
 -->
 <section id="why"><h2>Why add a bug hunt to CI</h2>
-<p>Unit tests only cover the cases someone thought of. A type driven check covers the rest: <code>npx breakhound</code> reads your TypeScript declarations, generates inputs for every parameter (including time zones, DST edges, emoji, lone surrogates, <code>-0</code>, <code>NaN</code> and empty strings), and checks invariants on the results. Running it in CI means a regression is caught on the pull request that introduces it, not in a bug report six months later. For how the checks work, see <a href="find-bugs-automatically-javascript.html">finding bugs automatically in JavaScript</a>.</p>
+<p>Unit tests only cover the cases someone thought of. A type driven check covers the rest: <code>npx breakhound</code> reads your TypeScript declarations, generates inputs for every parameter (including time zones, DST edges, emoji, lone surrogates, <code>-0</code>, <code>NaN</code> and empty strings), and checks invariants on the results. Running it in CI means a regression is caught on the pull request that introduces it, not in a bug report six months later. For how the checks work, see the <a href="./#cases">eight case files</a> on the home page.</p>
 </section>
 <section id="naive-workflow"><h2>The workflow people write first</h2>
 <p>The first attempt usually has two problems. <code>npm install</code> runs lifecycle scripts of every dependency, and <code>|| true</code> swallows the exit code, so the job is green no matter what was found. A check that can never fail is decoration.</p>
@@ -205,6 +205,14 @@ Summary: 5 high, 5 medium, 0 low, 2 info
             run.jsonl
 </pre>
 <p>The <code>if: always()</code> guards matter: without them the later steps are skipped exactly when the gate step fails, which is when you want the files.</p>
+</section>
+<section id="baseline"><h2>Failing only on new bugs</h2>
+<p>An older library may already have findings that nobody can fix this week. Save a report from your main branch, then pass it with <code>--baseline</code>. breakhound lists which findings are new and which were fixed since that report, and <code>--fail-on</code> then counts only the new ones, so the job fails on regressions instead of on the backlog.</p>
+<pre data-kind="terminal" data-lang="bash">
+npx breakhound . --json --output baseline.json
+npx breakhound . --baseline baseline.json --fail-on high
+</pre>
+<p>The same flag compares two published versions of a package: save a report for <code>my-lib@1</code>, then run <code>npx breakhound my-lib@2 --baseline my-lib-1.json</code>. On your own machine, <code>--baseline last</code> compares with the previous run saved in <code>.breakhound/report.json</code>.</p>
 </section>
 <section id="seeds"><h2>Seeds and reproducibility</h2>
 <p>Input generation is seeded. The default seed is 42, so two runs on the same commit explore the same inputs. That is what you want on pull requests: a failure should not vanish on rerun. To widen coverage over time, run a scheduled workflow that passes a different seed, such as <code>--seed ${{ github.run_number }}</code>, and use the seed printed in the log header to rerun locally:</p>
