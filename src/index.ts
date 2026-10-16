@@ -1,3 +1,5 @@
+export { compareReports, formatComparison } from './compare';
+export type { Comparison, ComparedFinding } from './compare';
 export { hunt, DEFAULT_ZONES, FROZEN_NOW, SEVERITIES } from './hunt';
 export { extractSignatures, packageIdentifier } from './extract';
 export { generateInputs, edgeValues, baseValue } from './generate';

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, test } from 'vitest';
-import { runCli } from '../src/run-cli';
+import { runCli, suggest } from '../src/run-cli';
 
 const fixture = fileURLToPath(new URL('./fixtures/buggy-lib', import.meta.url));
 const dirs: string[] = [];
@@ -11,9 +11,9 @@ afterAll(() => {
   for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
 });
 
-async function run(args: string[], env: Record<string, string> = {}) {
-  const cwd = mkdtempSync(join(tmpdir(), 'breakhound-cli-'));
-  dirs.push(cwd);
+async function run(args: string[], env: Record<string, string> = {}, dir?: string) {
+  const cwd = dir ?? mkdtempSync(join(tmpdir(), 'breakhound-cli-'));
+  if (!dir) dirs.push(cwd);
   let stdout = '';
   let stderr = '';
   const code = await runCli(args, {
@@ -81,5 +81,40 @@ describe('command line', () => {
   test('help and version', async () => {
     expect((await run(['--help'])).stdout).toContain('Usage: breakhound');
     expect((await run(['--version'])).stdout.trim()).toMatch(/^\d+\.\d+\.\d+/);
+  });
+
+  test('unknown options, rules and severities get a did you mean hint', async () => {
+    await expect(run([fixture, '--jsn'])).rejects.toThrow('unknown option --jsn. Did you mean --json?');
+    await expect(run([fixture, '--rules', 'nan-leaks'])).rejects.toThrow('Did you mean nan-leak?');
+    await expect(run([fixture, '--fail-on', 'hgh'])).rejects.toThrow('Did you mean high?');
+    expect(suggest('max-call', ['max-calls', 'only'])).toBe('max-calls');
+    expect(suggest('zzz', ['json', 'only'])).toBeUndefined();
+  });
+
+  test('with no target it hunts the package in the current folder', async () => {
+    const empty = await run([]);
+    expect(empty.code).toBe(2);
+    expect(empty.stdout).toContain('Usage: breakhound');
+    const { code, stdout, stderr } = await run(['--only', 'truncate', '--no-save'], {}, fixture);
+    expect(code).toBe(0);
+    expect(stderr).toContain('hunts the package in this folder');
+    expect(stdout).toContain('buggy-lib@1.0.0 (local)');
+  });
+
+  test('--baseline lists new and fixed findings and gates only on new ones', async () => {
+    const first = await run([fixture, '--only', 'truncate', '--json', '--output', 'base.json']);
+    const base = join(first.cwd, 'base.json');
+    const { code, stdout } = await run([fixture, '--only', 'formatFixed,formatFixedSafe', '--baseline', base, '--fail-on', 'high']);
+    expect(code).toBe(0);
+    expect(stdout).toContain('Compared with buggy-lib@1.0.0');
+    expect(stdout).toContain('1 new, 1 fixed, 0 unchanged');
+    expect(stdout).toMatch(/NEW +\[negative-zero-sign\] formatFixed/);
+    expect(stdout).toMatch(/FIXED \[lone-surrogate-output\] truncate/);
+    const same = await run([fixture, '--only', 'truncate', '--baseline', base, '--fail-on', 'high', '--json']);
+    expect(same.code).toBe(0);
+    const json = JSON.parse(same.stdout) as { comparison: { added: unknown[]; fixed: unknown[]; unchanged: number } };
+    expect(json.comparison).toMatchObject({ added: [], fixed: [], unchanged: 1 });
+    await expect(run([fixture, '--baseline', 'last'])).rejects.toThrow('no saved run yet');
+    await expect(run([fixture, '--baseline', join(fixture, 'package.json')])).rejects.toThrow('is not a breakhound report');
   });
 });

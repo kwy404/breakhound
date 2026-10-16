@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `--baseline <file>` compares the run with an earlier JSON report and lists new and fixed findings. `--baseline last` uses the previous run saved in `.breakhound/report.json`. With `--fail-on`, only new findings fail the run, so a CI job can gate on regressions between two versions.
+- `compareReports` and `formatComparison` in the API.
+- `breakhound` with no target hunts the package in the current folder when it has a `package.json`.
+- Unknown options, rule ids and severities get a "did you mean" hint.
+
 ## [1.0.0] - 2026-10-13
 
 ### Changed
