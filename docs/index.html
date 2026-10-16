@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>(function(){try{var t=localStorage.getItem('voodoo:theme');if(t&&t.charAt(0)==='"')t=JSON.parse(t);var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);r.style.colorScheme=t}else{r.removeAttribute('data-theme')}}catch(e){}})();</script>
+<script src="seasons.js"></script>
 <title>breakhound: find bugs in JavaScript libraries automatically</title>
-<meta name="description" content="Find bugs in any JavaScript or TypeScript library with one command, no tests needed. Edge cases, time zones, unicode, plus a Vitest test per bug.">
+<meta name="description" content="breakhound finds bugs in JavaScript and TypeScript libraries with one command. Paste two versions of a function to see what changed.">
 <link rel="canonical" href="https://kwy404.github.io/breakhound/">
 <meta name="author" content="Alexandre Kohler">
 <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)">
@@ -14,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="breakhound">
 <meta property="og:title" content="breakhound: find bugs in JavaScript libraries automatically">
-<meta property="og:description" content="Find bugs in any JavaScript or TypeScript library with one command, no tests needed. Edge cases, time zones, unicode, plus a Vitest test per bug.">
+<meta property="og:description" content="breakhound finds bugs in JavaScript and TypeScript libraries with one command. Paste two versions of a function to see what changed.">
 <meta property="og:url" content="https://kwy404.github.io/breakhound/">
 <meta property="og:image" content="https://kwy404.github.io/breakhound/og.png">
 <meta property="og:image:width" content="1280">
@@ -22,7 +23,7 @@
 <meta property="og:image:alt" content="breakhound: find bugs in any JavaScript library automatically">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="breakhound: find bugs in JavaScript libraries automatically">
-<meta name="twitter:description" content="Find bugs in any JavaScript or TypeScript library with one command, no tests needed. Edge cases, time zones, unicode, plus a Vitest test per bug.">
+<meta name="twitter:description" content="breakhound finds bugs in JavaScript and TypeScript libraries with one command. Paste two versions of a function to see what changed.">
 <meta name="twitter:image" content="https://kwy404.github.io/breakhound/og.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -33,6 +34,7 @@
 <link rel="stylesheet" href="site.css">
 <script src="https://cdn.jsdelivr.net/npm/voodoojs@1.0.0/dist/voodoo.full.min.js" data-manual defer></script>
 <script type="module" src="site.js"></script>
+<script type="module" src="demo.js"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -41,7 +43,7 @@
       "@type": "SoftwareApplication",
       "name": "breakhound",
       "url": "https://kwy404.github.io/breakhound/",
-      "description": "Find bugs in any JavaScript or TypeScript library automatically, no tests required. Reads types, generates edge case inputs, checks invariants and writes Vitest tests.",
+      "description": "A command line tool that finds bugs in JavaScript and TypeScript libraries by trying edge case inputs on every exported function.",
       "applicationCategory": "DeveloperApplication",
       "applicationSubCategory": "Testing tool",
       "operatingSystem": "Windows, macOS, Linux",
@@ -76,18 +78,18 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "How do I find bugs automatically in a JavaScript library?",
+          "name": "What does breakhound need from my library?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Run npx breakhound with a package name or a path. breakhound reads the TypeScript types to learn what each exported function accepts, feeds it edge case inputs, and reports calls that break invariants such as roundtrips, idempotence, sign preservation or time zone independence. You do not need to write any test first."
+            "text": "TypeScript declarations: bundled .d.ts files or a package from DefinitelyTyped. They tell breakhound which functions are exported and what each parameter accepts. A package without declarations is reported with a clear message instead of being guessed at."
           }
         },
         {
           "@type": "Question",
-          "name": "How is this different from property based testing?",
+          "name": "Do I have to write tests or properties first?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Tools such as fast-check ask you to write the properties and generators yourself. breakhound ships the properties, a fixed set of invariants that hold for most libraries, and derives the generators from the type signatures, so it works on code you have never read. When it finds something, it hands you a regular Vitest test you can keep."
+            "text": "No. breakhound ships a fixed set of invariants that hold for most libraries and derives the inputs from the type signatures. When it finds something, it hands you a regular Vitest test you can keep."
           }
         },
         {
@@ -100,10 +102,10 @@
         },
         {
           "@type": "Question",
-          "name": "Does it work with plain JavaScript without types?",
+          "name": "How do I compare two versions?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "It works best with TypeScript declarations, either bundled .d.ts files or DefinitelyTyped. Without types it falls back to a smaller set of generic inputs."
+            "text": "Save a report for the old version with --json --output old.json, then run the new one with --baseline old.json. breakhound lists the findings that are new and the ones that were fixed, and --fail-on counts only the new ones. The demo at the top of this page compares the answers of two versions of one function."
           }
         },
         {
@@ -111,15 +113,7 @@
           "name": "Will it report false positives?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Some invariants, such as time zone dependence, can be intentional for a given function. Every finding has a confidence level and a minimal reproduction so you can judge it in seconds, and --rules, --only and --exclude let you narrow the hunt."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Are runs reproducible?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Inputs come from a seeded generator (seed 42 by default, change it with --seed), the call budget is fixed with --max-calls, and each run is saved to .breakhound/last-run.jsonl and .breakhound/report.json unless you pass --no-save."
+            "text": "Some invariants, such as time zone dependence, can be intentional for a given function. Every finding has a confidence level and a minimal reproduction so you can judge it in seconds, and --rules, --only and --exclude narrow the hunt."
           }
         }
       ]
@@ -134,7 +128,7 @@
 <header class="topbar" v-data="{ open: false }" @keydown.escape="open = false">
   <div class="wrap topbar-in">
     <a href="./" class="brand" aria-label="breakhound home"><img src="assets/mascot.svg" width="34" height="34" alt=""><span class="brand-name">breakhound</span><span class="brand-file">case files</span></a>
-    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#board" class="top-link">Evidence board</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link">Case index</a></nav>
+    <nav id="topnav" class="topnav" :class="{ 'is-open': open }" aria-label="Main" @click="open = false"><a href="./#try" class="top-link">Try it</a><a href="./#terminal" class="top-link">Terminal</a><a href="./#cases" class="top-link">Case files</a><a href="./#ci" class="top-link">CI</a><a href="guides.html" class="top-link">Guides</a></nav>
     <div class="top-right">
       <button type="button" class="search-btn" data-search-open v-hotkey="mod+k" aria-haspopup="dialog" aria-label="Search the site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="search-label">Search</span><kbd class="kbd kbd-sm">Ctrl K</kbd></button>
       <a href="https://github.com/kwy404/breakhound" class="icon-btn" aria-label="breakhound on GitHub"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg></a>
@@ -145,22 +139,71 @@
 </header>
 <main id="main">
 <section class="hero-band dark" aria-labelledby="hero-title">
+  <div class="season-accent" data-season-slot="accent" aria-hidden="true"></div>
   <div class="wrap">
     <div class="hero-head">
-      <div>
-        <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-magnifier"/></svg>Zero config bug finder for JavaScript and TypeScript</p>
+      <div class="reveal">
+        <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-magnifier"/></svg>Zero config bug finder for JavaScript and TypeScript<span class="season-icons" data-season-slot="icons" aria-hidden="true"></span></p>
         <h1 id="hero-title">Find bugs in any JavaScript library <em>automatically</em></h1>
       </div>
-      <div class="hero-side">
-        <p class="lead">Point <strong>breakhound</strong> at an npm package or a local folder. It reads the TypeScript types, attacks every exported function with edge cases, checks eight oracles and files a minimal reproduction plus a ready Vitest test for every bug. No tests to write first.</p>
-        <div class="hero-cta">
-          <button type="button" class="btn btn-accent" data-term-run><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>Run the demo</button>
-          <a class="btn btn-outline" href="guides.html"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Open the case index</a>
-        </div>
+      <div class="hero-side reveal">
+        <p class="lead">Point <strong>breakhound</strong> at an npm package or a folder. It reads the types, tries edge cases on every exported function and hands you a reproduction and a Vitest test for each bug.</p>
+        <div class="close-cmd hero-cmd"><span class="t-dim" aria-hidden="true">$</span><code id="hero-cmd">npx breakhound ./my-lib</code><button type="button" class="copy-btn" v-copy-from="#hero-cmd" aria-label="Copy the command"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div>
       </div>
     </div>
-    <div class="term-wrap" id="terminal">
-      <img class="term-sniff" src="assets/mascot.svg" width="112" height="112" alt="Sniff, the breakhound bloodhound detective, peeking over the terminal">
+    <div class="demo reveal" id="try" data-demo>
+      <span class="demo-sniff" data-season-slot="sniff"><img src="assets/mascot.svg" width="104" height="104" alt="Sniff, the breakhound bloodhound detective, watching the demo"></span>
+      <div class="demo-head">
+        <div>
+          <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg>Paste and see</p>
+          <h2>Paste two versions. See what broke.</h2>
+          <p class="demo-lead">Sniff runs both versions on the same edge case inputs, right here in your browser, and lists every input where the answers differ.</p>
+        </div>
+        <div class="demo-presets" role="group" aria-label="Examples"><button type="button" class="demo-chip" data-preset="truncate" aria-pressed="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>truncate</button><button type="button" class="demo-chip" data-preset="formatPrice" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>formatPrice</button><button type="button" class="demo-chip" data-preset="parseTags" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>parseTags</button><button type="button" class="demo-chip" data-preset="blank" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Your code</button></div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-eds">
+          <div class="ed">
+          <div class="ed-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><label class="ed-tab" for="demo-old"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#c9a400"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">JS</text></svg>before.js</label><span class="ed-tag ed-tag-old">Old</span></div>
+          <textarea id="demo-old" class="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="7" aria-label="Old version of the function">function truncate(text, max) {
+  const chars = Array.from(text);
+  if (chars.length &lt;= max) return text;
+  return chars.slice(0, Math.max(0, max - 1)).join('') + '...';
+}</textarea>
+        </div>
+          <div class="ed">
+          <div class="ed-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><label class="ed-tab" for="demo-new"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#c9a400"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">JS</text></svg>after.js</label><span class="ed-tag ed-tag-new">New</span></div>
+          <textarea id="demo-new" class="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="7" aria-label="New version of the function">// v2: &quot;faster, no array&quot;
+function truncate(text: string, max: number) {
+  if (text.length &lt;= max) return text;
+  return text.slice(0, max - 1) + '...';
+}</textarea>
+        </div>
+        </div>
+        <div class="term demo-out" data-demo-state="idle">
+          <div class="term-bar">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="term-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg><span>sniff@agency: ~/compare</span></span>
+            <span class="demo-status" data-demo-status>ready</span>
+          </div>
+          <div class="demo-trail" aria-hidden="true"><span></span></div>
+          <div class="demo-res" data-demo-out><p class="t-dim">Sniff compares the two versions as soon as the page is ready.</p><noscript><p class="t-dim">This demo needs JavaScript. On your machine, npx breakhound runs the full hunt.</p></noscript></div>
+        </div>
+      </div>
+      <p class="demo-note"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-isolation"/></svg><span>Runs in a worker in this tab, nothing is uploaded. Plain JavaScript, with optional types on the parameters to pick the inputs. For a whole package, the CLI compares the reports of two versions with <code>--baseline</code>.</span></p>
+      <script type="application/json" id="demo-presets">[{"id":"truncate","label":"truncate","old":"function truncate(text, max) {\n  const chars = Array.from(text);\n  if (chars.length \u003c= max) return text;\n  return chars.slice(0, Math.max(0, max - 1)).join('') + '...';\n}","new":"// v2: \"faster, no array\"\nfunction truncate(text: string, max: number) {\n  if (text.length \u003c= max) return text;\n  return text.slice(0, max - 1) + '...';\n}"},{"id":"formatPrice","label":"formatPrice","old":"function formatPrice(cents) {\n  return (cents / 100).toFixed(2);\n}","new":"// v2: \"no more floating point\"\nfunction formatPrice(cents: number) {\n  const whole = Math.trunc(cents / 100);\n  const rest = Math.abs(cents % 100);\n  return whole + '.' + String(rest).padStart(2, '0');\n}"},{"id":"parseTags","label":"parseTags","old":"function parseTags(input) {\n  return input.split(',').map((t) => t.trim()).filter(Boolean);\n}","new":"// v2: \"one regex instead of three passes\"\nfunction parseTags(input: string) {\n  const [first, ...rest] = input.match(/[^,\\s][^,]*/g);\n  return [first.trim(), ...rest.map((t) => t.trim())];\n}"},{"id":"blank","label":"Your code","old":"","new":"// Paste a function here. Leave the old version empty\n// to hunt for bugs in this one only.\nfunction initials(name: string) {\n  const [first, last] = name.trim().split(' ');\n  return first[0].toUpperCase() + (last ? last[0].toUpperCase() : '');\n}"}]</script>
+    </div>
+  </div>
+</section>
+<section class="sec sec-term" id="terminal" aria-labelledby="term-title">
+  <div class="wrap">
+    <header class="sec-head reveal">
+  <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Live terminal</p>
+  <h2 id="term-title">Watch a real run, line by line</h2>
+  <p class="sec-lead">This is breakhound 1.0.0 hunting through <code>test/fixtures/buggy-lib</code>, a small library with planted bugs. Press Run, or type a command.</p>
+</header>
+    <div class="term-wrap reveal">
+      <img class="term-sniff" src="assets/mascot.svg" width="112" height="112" alt="" loading="lazy">
       <div class="term" :class="'is-' + T.state" data-term>
         <div class="term-bar">
           <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -208,18 +251,28 @@ MEDIUM negative-zero-sign     formatFixed
       </div>
       <p class="sr-only" aria-live="polite" v-text="T.announce"></p>
     </div>
-    <dl class="ledger" aria-label="Numbers from the recorded run">
-      <div><dt>functions analyzed</dt><dd>23</dd></div>
-      <div><dt>calls in isolated processes</dt><dd>4,444</dd></div>
-      <div><dt>time zones per call</dt><dd>6</dd></div>
-      <div><dt>findings, each with a test</dt><dd>12</dd></div>
+    <dl class="ledger reveal" aria-label="Numbers from the recorded run">
+      <div><dt>functions analyzed</dt><dd data-count="23">23</dd></div>
+      <div><dt>calls in isolated processes</dt><dd data-count="4444">4,444</dd></div>
+      <div><dt>time zones per call</dt><dd data-count="6">6</dd></div>
+      <div><dt>findings, each with a test</dt><dd data-count="12">12</dd></div>
     </dl>
   </div>
 </section>
 <div class="wrap trail-wrap"><svg class="ill trail" viewBox="0 0 640 80" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(30 26) rotate(90) scale(1.6)" opacity="0.25"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(100 54) rotate(90) scale(1.6)" opacity="0.34"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(170 26) rotate(90) scale(1.6)" opacity="0.44"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(240 54) rotate(90) scale(1.6)" opacity="0.53"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(310 26) rotate(90) scale(1.6)" opacity="0.63"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(380 54) rotate(90) scale(1.6)" opacity="0.72"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(450 26) rotate(90) scale(1.6)" opacity="0.81"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(520 54) rotate(90) scale(1.6)" opacity="0.91"><path fill="currentColor" stroke="none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse fill="currentColor" stroke="none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse fill="currentColor" stroke="none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse fill="currentColor" stroke="none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g><g transform="translate(590 26) rotate(90) scale(1.6)" opacity="1.00"><path style="fill:var(--ev,#e8a33d);stroke:none" d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse style="fill:var(--ev,#e8a33d);stroke:none" cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse style="fill:var(--ev,#e8a33d);stroke:none" cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse style="fill:var(--ev,#e8a33d);stroke:none" cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse style="fill:var(--ev,#e8a33d);stroke:none" cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g></svg></div>
+<section class="sec sec-proc" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <header class="sec-head reveal">
+  <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg>Procedure</p>
+  <h2 id="how-title">From package name to failing test in one command</h2>
+  <p class="sec-lead">Everything below happens inside <code>npx breakhound</code>. You keep only the part you care about: the tests.</p>
+</header>
+    <ol class="proc"><li class="proc-step reveal" style="--i:0"><span class="proc-no">01</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-types"/></svg></span><h3>Read the types</h3><p>breakhound installs the package with <code>--ignore-scripts</code> or opens your folder, then reads its TypeScript declarations to learn every exported function and parameter.</p></li><li class="proc-step reveal" style="--i:1"><span class="proc-no">02</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-inputs"/></svg></span><h3>Bag the evidence</h3><p>Each parameter gets values from <a href="https://kwy404.github.io/edgegoat/">edgegoat</a>: DST transitions, dates before 1970, emoji, lone surrogates, <code>-0</code> and <code>NaN</code>. Callbacks are generated too.</p></li><li class="proc-step reveal" style="--i:2"><span class="proc-no">03</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-isolation"/></svg></span><h3>Interrogate in isolation</h3><p>Every call runs in a child process with a timeout, repeated under several <code>TZ</code> values, with a fixed seed so the same command finds the same bugs.</p></li><li class="proc-step reveal" style="--i:3"><span class="proc-no">04</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-report"/></svg></span><h3>File the report</h3><p>Eight oracles judge the results. Each finding is shrunk to a minimal input and confirmed in a fresh process, then written up with a reproduction and a Vitest test.</p></li></ol>
+  </div>
+</section>
 <section class="sec" id="cases" aria-labelledby="cases-title" v-data="{ sev: 'all' }">
   <div class="wrap">
-    <header class="sec-head">
+    <header class="sec-head reveal">
   <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Eight oracles</p>
   <h2 id="cases-title">Every oracle is an open case file</h2>
   <p class="sec-lead">An oracle is an invariant that almost every library should keep. Each file below is a real finding from the recorded run: the suspect function, the evidence that broke it, the verdict and the Vitest test breakhound wrote.</p>
@@ -232,7 +285,7 @@ MEDIUM negative-zero-sign     formatFixed
       <span class="case-filter-note">5 high, 5 medium, 2 info findings in the full report</span>
     </div>
     <div class="cases">
-<article class="case" id="case-lone-surrogate-output" data-sev="high" v-show="sev === 'all' || sev === 'high'">
+<article class="case reveal" style="--i:0" id="case-lone-surrogate-output" data-sev="high" v-show="sev === 'all' || sev === 'high'">
   <div class="case-tab"><span class="case-no">Case 01</span><span class="case-rule">lone-surrogate-output</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -261,7 +314,7 @@ MEDIUM negative-zero-sign     formatFixed
     <a class="case-link" href="unicode-surrogate-pair-bugs.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
   </div>
 </article>
-<article class="case" id="case-timezone-dependent" data-sev="high" v-show="sev === 'all' || sev === 'high'">
+<article class="case reveal" style="--i:1" id="case-timezone-dependent" data-sev="high" v-show="sev === 'all' || sev === 'high'">
   <div class="case-tab"><span class="case-no">Case 02</span><span class="case-rule">timezone-dependent</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -296,7 +349,7 @@ MEDIUM negative-zero-sign     formatFixed
     <a class="case-link" href="timezone-bugs-javascript.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
   </div>
 </article>
-<article class="case" id="case-unexpected-crash" data-sev="high" v-show="sev === 'all' || sev === 'high'">
+<article class="case reveal" style="--i:0" id="case-unexpected-crash" data-sev="high" v-show="sev === 'all' || sev === 'high'">
   <div class="case-tab"><span class="case-no">Case 03</span><span class="case-rule">unexpected-crash</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -319,10 +372,10 @@ MEDIUM negative-zero-sign     formatFixed
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(() </span><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">=></span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> initials</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">''</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">)).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toThrow</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">();</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
     </details>
-    <a class="case-link" href="fuzz-testing-typescript.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
+    
   </div>
 </article>
-<article class="case" id="case-nan-leak" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
+<article class="case reveal" style="--i:1" id="case-nan-leak" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
   <div class="case-tab"><span class="case-no">Case 04</span><span class="case-rule">nan-leak</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -345,10 +398,10 @@ MEDIUM negative-zero-sign     formatFixed
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">average</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">([</span><span style="--shiki-light:#098658;--shiki-dark:#B5CEA8">0</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">])).</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">not</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toBeNaN</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">();</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
     </details>
-    <a class="case-link" href="find-bugs-automatically-javascript.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
+    
   </div>
 </article>
-<article class="case" id="case-roundtrip" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
+<article class="case reveal" style="--i:0" id="case-roundtrip" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
   <div class="case-tab"><span class="case-no">Case 05</span><span class="case-rule">roundtrip</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -373,10 +426,10 @@ MEDIUM negative-zero-sign     formatFixed
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">decodeBase</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">encoded</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">)).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toEqual</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">input</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
     </details>
-    <a class="case-link" href="roundtrip-testing-encode-decode.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
+    
   </div>
 </article>
-<article class="case" id="case-not-idempotent" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
+<article class="case reveal" style="--i:1" id="case-not-idempotent" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
   <div class="case-tab"><span class="case-no">Case 06</span><span class="case-rule">not-idempotent</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -400,10 +453,10 @@ MEDIUM negative-zero-sign     formatFixed
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">slugify</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">once</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">)).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toEqual</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">once</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
     </details>
-    <a class="case-link" href="property-based-testing-without-writing-tests.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
+    
   </div>
 </article>
-<article class="case" id="case-negative-zero-sign" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
+<article class="case reveal" style="--i:0" id="case-negative-zero-sign" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
   <div class="case-tab"><span class="case-no">Case 07</span><span class="case-rule">negative-zero-sign</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -429,7 +482,7 @@ MEDIUM negative-zero-sign     formatFixed
     <a class="case-link" href="negative-zero-javascript-bugs.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
   </div>
 </article>
-<article class="case" id="case-nondeterministic" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
+<article class="case reveal" style="--i:1" id="case-nondeterministic" data-sev="medium" v-show="sev === 'all' || sev === 'medium'">
   <div class="case-tab"><span class="case-no">Case 08</span><span class="case-rule">nondeterministic</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -454,7 +507,7 @@ MEDIUM negative-zero-sign     formatFixed
 <span class="line"><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">  expect</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">second</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">).</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">toEqual</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">first</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">});</span></span></code></pre></figure>
     </details>
-    <a class="case-link" href="property-based-testing-without-writing-tests.html">Read the case notes <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a>
+    
   </div>
 </article>
     </div>
@@ -462,7 +515,7 @@ MEDIUM negative-zero-sign     formatFixed
 </section>
 <section class="sec sec-board" id="board" aria-labelledby="board-title">
   <div class="wrap">
-    <header class="sec-head">
+    <header class="sec-head reveal">
   <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg>Evidence board</p>
   <h2 id="board-title">Every oracle traces back to a merged fix</h2>
   <p class="sec-lead">breakhound is built by Alexandre Kohler, who has landed 130 merged bug fixes in projects at Google, Microsoft, GitHub, Mozilla, Vue and more. Hover a card to follow the string from a real pull request to the case it became.</p>
@@ -476,19 +529,9 @@ MEDIUM negative-zero-sign     formatFixed
     </div>
   </div>
 </section>
-<section class="sec sec-proc" id="how" aria-labelledby="how-title">
-  <div class="wrap">
-    <header class="sec-head">
-  <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg>Procedure</p>
-  <h2 id="how-title">From package name to failing test in one command</h2>
-  <p class="sec-lead">Everything below happens inside <code>npx breakhound</code>. You keep only the part you care about: the tests.</p>
-</header>
-    <ol class="proc"><li class="proc-step"><span class="proc-no">01</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-types"/></svg></span><h3>Read the types</h3><p>breakhound installs the package with <code>--ignore-scripts</code> or opens your folder, then reads its TypeScript declarations to learn every exported function and parameter.</p></li><li class="proc-step"><span class="proc-no">02</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-inputs"/></svg></span><h3>Bag the evidence</h3><p>Each parameter gets values from <a href="https://kwy404.github.io/edgegoat/">edgegoat</a>: DST transitions, dates before 1970, emoji, lone surrogates, <code>-0</code> and <code>NaN</code>. Callbacks are generated too.</p></li><li class="proc-step"><span class="proc-no">03</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-isolation"/></svg></span><h3>Interrogate in isolation</h3><p>Every call runs in a child process with a timeout, repeated under several <code>TZ</code> values, with a fixed seed so the same command finds the same bugs.</p></li><li class="proc-step"><span class="proc-no">04</span><span class="proc-ic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-report"/></svg></span><h3>File the report</h3><p>Eight oracles judge the results. Each finding is shrunk to a minimal input and confirmed in a fresh process, then written up with a reproduction and a Vitest test.</p></li></ol>
-  </div>
-</section>
 <section class="sec sec-ci" id="ci" aria-labelledby="ci-title">
   <div class="wrap">
-    <header class="sec-head">
+    <header class="sec-head reveal">
   <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-ci"/></svg>Continuous integration</p>
   <h2 id="ci-title">File the report on every pull request</h2>
   <p class="sec-lead">Add one step to GitHub Actions. <code>--fail-on high</code> fails the job on serious findings, and inside Actions breakhound writes annotations and a job summary on its own. This summary was produced by the same recorded run. <a href="automated-testing-in-github-actions.html">Read the CI guide</a>.</p>
@@ -524,7 +567,7 @@ MEDIUM negative-zero-sign     formatFixed
         </div>
         <div class="gh-panel" v-tab-panel="summary"><div class="gh-md"><h3>breakhound report for buggy-lib@1.0.0</h3>
 <p><strong>Verdict:</strong> likely bugs found, 12 findings (5 high, 5 medium, 2 info).</p>
-<p>23 functions analyzed, 1 skipped, 4444 calls, seed 42, 2.9s.</p>
+<p>23 functions analyzed, 1 skipped, 4444 calls, seed 42, 6.3s.</p>
 <div class="gh-table"><table><thead><tr><th>Rule</th><th>Severity</th><th>Count</th></tr></thead><tbody><tr><td>lone-surrogate-output</td><td>high</td><td>2</td></tr><tr><td>timezone-dependent</td><td>high</td><td>1</td></tr><tr><td>unexpected-crash</td><td>high</td><td>2</td></tr><tr><td>nan-leak</td><td>medium</td><td>1</td></tr><tr><td>negative-zero-sign</td><td>medium</td><td>1</td></tr><tr><td>nondeterministic</td><td>medium</td><td>1</td></tr><tr><td>not-idempotent</td><td>medium</td><td>1</td></tr><tr><td>roundtrip</td><td>medium</td><td>1</td></tr><tr><td>nondeterministic</td><td>info</td><td>1</td></tr><tr><td>unexpected-crash</td><td>info</td><td>1</td></tr></tbody></table></div>
 <details class="gh-details">
 <summary><span class="sev sev-high">high</span> lone-surrogate-output: initials: initials returns a string with a lone surrogate</summary>
@@ -834,23 +877,10 @@ MEDIUM negative-zero-sign     formatFixed
     </div>
   </div>
 </section>
-<section class="sec" id="compare" aria-labelledby="compare-title">
-  <div class="wrap">
-    <header class="sec-head">
-  <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-magnifier"/></svg>Line-up</p>
-  <h2 id="compare-title">Where breakhound fits</h2>
-  <p class="sec-lead">breakhound complements these tools rather than replacing them. A good workflow: a free sweep with breakhound first, important properties in fast-check, parsers in Jazzer.js.</p>
-</header>
-    <div class="table-wrap lineup"><table class="table">
-      <thead><tr><th scope="col">Aspect</th><th scope="col" class="us">breakhound</th><th scope="col">Tests by hand</th><th scope="col">fast-check</th><th scope="col">Jazzer.js</th></tr></thead>
-      <tbody><tr><th scope="row">Approach</th><td class="us">Type driven invariant checks</td><td>Examples you think of</td><td>Property based testing library</td><td>Coverage guided fuzzing</td></tr><tr><th scope="row">You write</th><td class="us">Nothing</td><td>Every case and assertion</td><td>Properties and arbitraries</td><td>Fuzz targets</td></tr><tr><th scope="row">Input source</th><td class="us">Types plus edgegoat edge cases</td><td>Your imagination</td><td>Your arbitraries, with shrinking</td><td>Mutation guided by coverage</td></tr><tr><th scope="row">Best at</th><td class="us">Unicode, time zone and number formatting bugs in public APIs</td><td>Documenting intended behavior</td><td>Precise properties of your own code</td><td>Crashes and security issues in parsers</td></tr><tr><th scope="row">Works on code you never read</th><td class="us">Yes</td><td>No</td><td>No</td><td>Partly, after writing a target</td></tr><tr><th scope="row">Output</th><td class="us">Reproduction plus ready Vitest test</td><td>Pass or fail</td><td>Failing counterexample</td><td>Crashing input</td></tr></tbody>
-    </table></div>
-  </div>
-</section>
 <section class="sec sec-faq" id="faq" aria-labelledby="faq-title">
   <div class="wrap faq-grid">
     <div>
-      <header class="sec-head">
+      <header class="sec-head reveal">
   <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-magnifier"/></svg>Interrogation</p>
   <h2 id="faq-title">Questions, answered on the record</h2>
   
@@ -864,7 +894,7 @@ MEDIUM negative-zero-sign     formatFixed
 <g transform="translate(86 92) scale(2.4)" fill="currentColor" stroke="none"><path d="M-4.2 3.6c0-2.6 1.9-4.6 4.2-4.6s4.2 2 4.2 4.6c0 2-1.4 3-2.8 3-.7 0-1-.4-1.4-.4s-.7.4-1.4.4c-1.4 0-2.8-1-2.8-3Z"/><ellipse cx="-6.2" cy="-2.4" rx="1.5" ry="2.1"/><ellipse cx="-2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse cx="2.4" cy="-6" rx="1.5" ry="2.2"/><ellipse cx="6.2" cy="-2.4" rx="1.5" ry="2.1"/></g>
 </g></svg>
     </div>
-    <div class="accordion collapse-plus"><details class="collapse q" open name="faq"><summary class="collapse-title"><span class="q-no">Q1</span>How do I find bugs automatically in a JavaScript library?</summary><div class="collapse-content"><p>Run npx breakhound with a package name or a path. breakhound reads the TypeScript types to learn what each exported function accepts, feeds it edge case inputs, and reports calls that break invariants such as roundtrips, idempotence, sign preservation or time zone independence. You do not need to write any test first.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q2</span>How is this different from property based testing?</summary><div class="collapse-content"><p>Tools such as fast-check ask you to write the properties and generators yourself. breakhound ships the properties, a fixed set of invariants that hold for most libraries, and derives the generators from the type signatures, so it works on code you have never read. When it finds something, it hands you a regular Vitest test you can keep.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q3</span>Is it safe to run on any package?</summary><div class="collapse-content"><p>breakhound executes the code it scans, so treat it like running the package's own test suite. Installs use --ignore-scripts and every call runs in a child process with a timeout, which is isolation for robustness, not a security sandbox. Scan untrusted packages inside a container or a disposable VM.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q4</span>Does it work with plain JavaScript without types?</summary><div class="collapse-content"><p>It works best with TypeScript declarations, either bundled .d.ts files or DefinitelyTyped. Without types it falls back to a smaller set of generic inputs.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q5</span>Will it report false positives?</summary><div class="collapse-content"><p>Some invariants, such as time zone dependence, can be intentional for a given function. Every finding has a confidence level and a minimal reproduction so you can judge it in seconds, and --rules, --only and --exclude let you narrow the hunt.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q6</span>Are runs reproducible?</summary><div class="collapse-content"><p>Yes. Inputs come from a seeded generator (seed 42 by default, change it with --seed), the call budget is fixed with --max-calls, and each run is saved to .breakhound/last-run.jsonl and .breakhound/report.json unless you pass --no-save.</p></div></details></div>
+    <div class="accordion collapse-plus"><details class="collapse q" open name="faq"><summary class="collapse-title"><span class="q-no">Q1</span>What does breakhound need from my library?</summary><div class="collapse-content"><p>TypeScript declarations: bundled .d.ts files or a package from DefinitelyTyped. They tell breakhound which functions are exported and what each parameter accepts. A package without declarations is reported with a clear message instead of being guessed at.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q2</span>Do I have to write tests or properties first?</summary><div class="collapse-content"><p>No. breakhound ships a fixed set of invariants that hold for most libraries and derives the inputs from the type signatures. When it finds something, it hands you a regular Vitest test you can keep.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q3</span>Is it safe to run on any package?</summary><div class="collapse-content"><p>breakhound executes the code it scans, so treat it like running the package's own test suite. Installs use --ignore-scripts and every call runs in a child process with a timeout, which is isolation for robustness, not a security sandbox. Scan untrusted packages inside a container or a disposable VM.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q4</span>How do I compare two versions?</summary><div class="collapse-content"><p>Save a report for the old version with --json --output old.json, then run the new one with --baseline old.json. breakhound lists the findings that are new and the ones that were fixed, and --fail-on counts only the new ones. The demo at the top of this page compares the answers of two versions of one function.</p></div></details><details class="collapse q" name="faq"><summary class="collapse-title"><span class="q-no">Q5</span>Will it report false positives?</summary><div class="collapse-content"><p>Some invariants, such as time zone dependence, can be intentional for a given function. Every finding has a confidence level and a minimal reproduction so you can judge it in seconds, and --rules, --only and --exclude narrow the hunt.</p></div></details></div>
   </div>
 </section>
 <section class="sec sec-close" aria-labelledby="close-title">
@@ -896,9 +926,9 @@ MEDIUM negative-zero-sign     formatFixed
         <p class="foot-links"><a href="https://github.com/kwy404/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>GitHub</a><a href="https://www.npmjs.com/package/breakhound"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-npm"/></svg>npm</a><a href="https://github.com/kwy404/breakhound/blob/main/CHANGELOG.md"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>Changelog</a></p>
       </div>
       <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
-        <li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
+        <li><a href="./#try">Paste and see</a></li><li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
       </ul></nav>
-      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="find-bugs-automatically-javascript.html">Find bugs automatically</a></li><li><a href="fuzz-testing-typescript.html">Fuzz testing TypeScript</a></li><li><a href="timezone-bugs-javascript.html">Timezone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pair bugs</a></li><li><a href="property-based-testing-without-writing-tests.html">Property testing, no tests</a></li><li><a href="roundtrip-testing-encode-decode.html">Roundtrip testing</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero bugs</a></li><li><a href="automated-testing-in-github-actions.html">Testing in GitHub Actions</a></li></ul></nav>
+      <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul><li><a href="timezone-bugs-javascript.html">Time zone bugs</a></li><li><a href="unicode-surrogate-pair-bugs.html">Surrogate pairs</a></li><li><a href="negative-zero-javascript-bugs.html">Negative zero</a></li><li><a href="automated-testing-in-github-actions.html">GitHub Actions</a></li></ul></nav>
       <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more"><li><a href="https://kwy404.github.io/monsoon/">Monsoon</a><small>Utility-first CSS with no build step</small></li><li><a href="https://kwy404.github.io/Voodoo.js/">Voodoo.js</a><small>Reactive attributes for plain HTML</small></li><li><a href="https://kwy404.github.io/vueleap/">vueleap</a><small>Vue 2 to Vue 3 migration</small></li><li><a href="https://kwy404.github.io/graphemely/">graphemely</a><small>Grapheme aware string utilities</small></li><li><a href="https://kwy404.github.io/numberparrot/">numberparrot</a><small>Parse localized numbers</small></li><li><a href="https://kwy404.github.io/edgegoat/">edgegoat</a><small>Edge case inputs for JavaScript testing</small></li><li><a href="https://kwy404.github.io/cookieowl/">cookieowl</a><small>Cookie consent for LGPD and GDPR</small></li><li><a href="https://kwy404.github.io/installkite/">installkite</a><small>Make any website installable and offline capable</small></li><li><a href="https://kwy404.github.io/a11ymedic/">a11ymedic</a><small>Accessibility checker with the exact fix</small></li><li><a href="https://kwy404.github.io/fontsketch/">fontsketch</a><small>Turn your handwriting into a font</small></li><li><a href="https://kwy404.github.io/kastor/">kastor</a><small>The TypeScript ORM for almost every database</small></li></ul></nav>
     </div>
     <div class="foot-bottom">

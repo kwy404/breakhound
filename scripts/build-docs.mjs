@@ -10,6 +10,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { standalone } from '../site/art.mjs';
+import { SEASONS, seasonFiles } from '../site/seasons-art.mjs';
 import { FAQ, ORACLES, homeBody, homeJsonLd } from '../site/home.mjs';
 import { GUIDES, SITE, esc, page } from '../site/layout.mjs';
 import { NOTES } from '../site/notes.mjs';
@@ -150,6 +151,28 @@ const github = JSON.parse(readData('github.json'));
 const version = readData('version.txt').trim();
 const progress = JSON.parse(readData('progress.json'));
 
+// Edge case pools for the paste and see demo, taken from the built library
+// (npm run build first) so the page tries the same values as the CLI.
+const { edgeValues } = await import(pathToFileURL(join(root, 'dist', 'index.js')).href);
+function encodeValue(v) {
+  if (typeof v === 'number') return Object.is(v, -0) ? { $n: '-0' } : Number.isFinite(v) ? v : { $n: String(v) };
+  if (typeof v === 'bigint') return { $b: String(v) };
+  if (v instanceof Date) return { $d: v.toISOString() };
+  return v;
+}
+const pool = (shape, hint, max) => edgeValues(shape, hint).slice(0, max).map(encodeValue);
+const edgePools = {
+  string: pool({ kind: 'string' }, '', 72),
+  url: pool({ kind: 'string' }, 'url', 40),
+  email: pool({ kind: 'string' }, 'email', 40),
+  path: pool({ kind: 'string' }, 'path', 40),
+  json: pool({ kind: 'string' }, 'json', 40),
+  isoDate: pool({ kind: 'string' }, 'date', 40),
+  number: pool({ kind: 'number' }, '', 64),
+  bigint: pool({ kind: 'bigint' }, '', 16),
+  date: pool({ kind: 'date' }, '', 24),
+};
+
 const runData = {
   version,
   findings: report.findings.length,
@@ -183,7 +206,7 @@ out['index.html'] = page(
     path: '',
     nav: '',
     title: 'breakhound: find bugs in JavaScript libraries automatically',
-    description: 'Find bugs in any JavaScript or TypeScript library with one command, no tests needed. Edge cases, time zones, unicode, plus a Vitest test per bug.',
+    description: 'breakhound finds bugs in JavaScript and TypeScript libraries with one command. Paste two versions of a function to see what changed.',
     jsonld: homeJsonLd(),
   },
   homeBody(ctx),
@@ -204,14 +227,15 @@ out['guides.html'] = page(
     path: 'guides.html',
     nav: 'index',
     title: 'breakhound guides: the case index of JavaScript bugs',
-    description: 'Guides on finding JavaScript bugs automatically: timezone bugs, surrogate pairs, negative zero, roundtrips, property testing, fuzzing and CI.',
+    description: 'Four guides on the bugs breakhound looks for and on running it in CI.',
     jsonld: indexJsonLd(guides),
   },
   indexBody(guides),
 );
 
 // The 404 page is served at any missing path, so its links are rooted.
-const rootLinks = (html) => html.replace(/\b(href|src)="(?![a-z]+:|#|\/)([^"]*)"/g, (_, a, v) => `${a}="/breakhound/${v.replace(/^\.\//, '')}"`);
+// Only plain attributes: Voodoo bindings such as :href hold expressions.
+const rootLinks = (html) => html.replace(/(?<=\s)(href|src)="(?![a-z]+:|#|\/)([^"]*)"/g, (_, a, v) => `${a}="/breakhound/${v.replace(/^\.\//, '')}"`);
 out['404.html'] = rootLinks(
   page(
     {
@@ -219,7 +243,7 @@ out['404.html'] = rootLinks(
       path: '404.html',
       noindex: true,
       title: 'Page not found | breakhound',
-      description: 'This page could not be found. Sniff lost the trail. Head back to breakhound and find bugs in any JavaScript library automatically.',
+      description: 'This page could not be found.',
     },
     notFoundBody(),
   ),
@@ -228,6 +252,7 @@ out['404.html'] = rootLinks(
 // ---------- Search index ----------
 
 const search = [];
+search.push({ kind: 'Page', title: 'Paste and see', sub: 'Compare two versions of a function in the browser', url: './#try' });
 search.push({ kind: 'Page', title: 'Live terminal', sub: 'Run breakhound on the buggy fixture', url: './#terminal' });
 search.push({ kind: 'Page', title: 'Case index', sub: 'Every guide and oracle', url: 'guides.html' });
 search.push({ kind: 'Page', title: 'Evidence board', sub: 'The merged fixes behind each oracle', url: './#board' });
@@ -258,6 +283,8 @@ const files = {
   ...out,
   'search.json': `${JSON.stringify(search)}\n`,
   'assets/run.json': `${JSON.stringify(runData)}\n`,
+  // ASCII only: every non ASCII code unit (emoji included) is a \u escape.
+  'assets/edge-values.json': `${JSON.stringify(edgePools).replace(/[^\x20-\x7e]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)}\n`,
   'sitemap.xml': sitemap,
   'robots.txt': `User-agent: *\nAllow: /\nDisallow: /404.html\n\nSitemap: ${SITE}sitemap.xml\n`,
   '.nojekyll': '',
@@ -265,6 +292,19 @@ const files = {
 for (const theme of ['light', 'dark']) {
   for (const [name, svg] of Object.entries(standalone(theme))) files[`assets/art/${theme}/${name}`] = svg;
 }
+// Special dates: the art lives in assets/seasons/<id>/ (keys starting with
+// ../ are relative to the repository root) and is copied into the site.
+for (const [name, svg] of Object.entries(seasonFiles())) {
+  files[`../assets/seasons/${name}`] = svg;
+  files[`assets/seasons/${name}`] = svg;
+}
+// seasons.js ships without its comments and indentation to stay under 3 kB.
+files['seasons.js'] = `${readFileSync(join(root, 'assets', 'seasons', 'seasons.js'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .split('\n')
+  .map((l) => l.trim())
+  .filter(Boolean)
+  .join('\n')}\n`;
 
 // House rules for every generated file.
 const problems = [];
@@ -295,9 +335,11 @@ if (check) {
   console.log('docs/ is up to date');
 } else {
   rmSync(join(docs, 'assets', 'art'), { recursive: true, force: true });
+  rmSync(join(docs, 'assets', 'seasons'), { recursive: true, force: true });
+  for (const id of Object.keys(SEASONS)) rmSync(join(root, 'assets', 'seasons', id), { recursive: true, force: true });
   for (const [name, content] of Object.entries(files)) {
     mkdirSync(join(docs, name, '..'), { recursive: true });
     writeFileSync(join(docs, name), content);
   }
-  console.log(`built ${Object.keys(out).length} pages and ${Object.keys(files).length - Object.keys(out).length} other files in docs/`);
+  console.log(`built ${Object.keys(out).length} pages and ${Object.keys(files).length - Object.keys(out).length} other files in docs/ and assets/seasons/`);
 }

@@ -1,6 +1,6 @@
-// The landing page: a live terminal session, the eight oracles as case files,
-// an evidence board, the procedure, a mock CI job summary, the comparison and
-// the FAQ. Every number and finding comes from site/data, captured from a real
+// The landing page: the paste and see demo, a live terminal session, the
+// procedure, the eight oracles as case files, an evidence board, a mock CI job
+// summary and the FAQ. Every number and finding comes from site/data, captured from a real
 // run of breakhound on test/fixtures/buggy-lib (npm run demo).
 import { icon, illustration } from './art.mjs';
 import { GITHUB, SITE, esc } from './layout.mjs';
@@ -9,12 +9,12 @@ import { GITHUB, SITE, esc } from './layout.mjs';
 export const ORACLES = [
   { rule: 'lone-surrogate-output', name: 'Split emoji', sum: 'A string result holds half of a surrogate pair, so an emoji is cut in two.', fn: 'truncate', guide: 'unicode-surrogate-pair-bugs', topic: 'unicode' },
   { rule: 'timezone-dependent', name: 'Time zone dependence', sum: 'The same call answers differently when only the host TZ changes.', fn: 'yearLabel', guide: 'timezone-bugs-javascript', topic: 'time' },
-  { rule: 'unexpected-crash', name: 'Crash on valid input', sum: 'A value the types allow makes the engine throw a TypeError.', fn: 'initials', guide: 'fuzz-testing-typescript', topic: 'workflow' },
-  { rule: 'nan-leak', name: 'NaN leak', sum: 'Finite numbers go in and NaN comes out where a number was expected.', fn: 'average', guide: 'find-bugs-automatically-javascript', topic: 'numbers' },
-  { rule: 'roundtrip', name: 'Broken roundtrip', sum: 'A decode and encode pair does not give the input back.', fn: 'encodeBase', guide: 'roundtrip-testing-encode-decode', topic: 'invariants' },
-  { rule: 'not-idempotent', name: 'Not idempotent', sum: 'Normalizing twice changes the result again.', fn: 'slugify', guide: 'property-based-testing-without-writing-tests', topic: 'invariants' },
+  { rule: 'unexpected-crash', name: 'Crash on valid input', sum: 'A value the types allow makes the engine throw a TypeError.', fn: 'initials', topic: 'invariants' },
+  { rule: 'nan-leak', name: 'NaN leak', sum: 'Finite numbers go in and NaN comes out where a number was expected.', fn: 'average', topic: 'numbers' },
+  { rule: 'roundtrip', name: 'Broken roundtrip', sum: 'A decode and encode pair does not give the input back.', fn: 'encodeBase', topic: 'invariants' },
+  { rule: 'not-idempotent', name: 'Not idempotent', sum: 'Normalizing twice changes the result again.', fn: 'slugify', topic: 'invariants' },
   { rule: 'negative-zero-sign', name: 'Lost minus sign', sum: 'Values between -1 and 0 are printed as if they were positive.', fn: 'formatFixed', guide: 'negative-zero-javascript-bugs', topic: 'numbers' },
-  { rule: 'nondeterministic', name: 'Nondeterminism', sum: 'Same call, same input, a different result from hidden state.', fn: 'label', guide: 'property-based-testing-without-writing-tests', topic: 'invariants' },
+  { rule: 'nondeterministic', name: 'Nondeterminism', sum: 'Same call, same input, a different result from hidden state.', fn: 'label', topic: 'invariants' },
 ];
 
 /** Merged pull requests by the author that each oracle comes from. */
@@ -27,12 +27,65 @@ export const PRECEDENTS = [
 ];
 
 export const FAQ = [
-  ['How do I find bugs automatically in a JavaScript library?', 'Run npx breakhound with a package name or a path. breakhound reads the TypeScript types to learn what each exported function accepts, feeds it edge case inputs, and reports calls that break invariants such as roundtrips, idempotence, sign preservation or time zone independence. You do not need to write any test first.'],
-  ['How is this different from property based testing?', 'Tools such as fast-check ask you to write the properties and generators yourself. breakhound ships the properties, a fixed set of invariants that hold for most libraries, and derives the generators from the type signatures, so it works on code you have never read. When it finds something, it hands you a regular Vitest test you can keep.'],
+  ['What does breakhound need from my library?', 'TypeScript declarations: bundled .d.ts files or a package from DefinitelyTyped. They tell breakhound which functions are exported and what each parameter accepts. A package without declarations is reported with a clear message instead of being guessed at.'],
+  ['Do I have to write tests or properties first?', 'No. breakhound ships a fixed set of invariants that hold for most libraries and derives the inputs from the type signatures. When it finds something, it hands you a regular Vitest test you can keep.'],
   ['Is it safe to run on any package?', "breakhound executes the code it scans, so treat it like running the package's own test suite. Installs use --ignore-scripts and every call runs in a child process with a timeout, which is isolation for robustness, not a security sandbox. Scan untrusted packages inside a container or a disposable VM."],
-  ['Does it work with plain JavaScript without types?', 'It works best with TypeScript declarations, either bundled .d.ts files or DefinitelyTyped. Without types it falls back to a smaller set of generic inputs.'],
-  ['Will it report false positives?', 'Some invariants, such as time zone dependence, can be intentional for a given function. Every finding has a confidence level and a minimal reproduction so you can judge it in seconds, and --rules, --only and --exclude let you narrow the hunt.'],
-  ['Are runs reproducible?', 'Yes. Inputs come from a seeded generator (seed 42 by default, change it with --seed), the call budget is fixed with --max-calls, and each run is saved to .breakhound/last-run.jsonl and .breakhound/report.json unless you pass --no-save.'],
+  ['How do I compare two versions?', 'Save a report for the old version with --json --output old.json, then run the new one with --baseline old.json. breakhound lists the findings that are new and the ones that were fixed, and --fail-on counts only the new ones. The demo at the top of this page compares the answers of two versions of one function.'],
+  ['Will it report false positives?', 'Some invariants, such as time zone dependence, can be intentional for a given function. Every finding has a confidence level and a minimal reproduction so you can judge it in seconds, and --rules, --only and --exclude narrow the hunt.'],
+];
+
+/** Examples for the paste and see demo: an old and a new version of one function. */
+export const PRESETS = [
+  {
+    id: 'truncate',
+    label: 'truncate',
+    old: `function truncate(text, max) {
+  const chars = Array.from(text);
+  if (chars.length <= max) return text;
+  return chars.slice(0, Math.max(0, max - 1)).join('') + '...';
+}`,
+    new: `// v2: "faster, no array"
+function truncate(text: string, max: number) {
+  if (text.length <= max) return text;
+  return text.slice(0, max - 1) + '...';
+}`,
+  },
+  {
+    id: 'formatPrice',
+    label: 'formatPrice',
+    old: `function formatPrice(cents) {
+  return (cents / 100).toFixed(2);
+}`,
+    new: `// v2: "no more floating point"
+function formatPrice(cents: number) {
+  const whole = Math.trunc(cents / 100);
+  const rest = Math.abs(cents % 100);
+  return whole + '.' + String(rest).padStart(2, '0');
+}`,
+  },
+  {
+    id: 'parseTags',
+    label: 'parseTags',
+    old: `function parseTags(input) {
+  return input.split(',').map((t) => t.trim()).filter(Boolean);
+}`,
+    new: `// v2: "one regex instead of three passes"
+function parseTags(input: string) {
+  const [first, ...rest] = input.match(/[^,\\s][^,]*/g);
+  return [first.trim(), ...rest.map((t) => t.trim())];
+}`,
+  },
+  {
+    id: 'blank',
+    label: 'Your code',
+    old: '',
+    new: `// Paste a function here. Leave the old version empty
+// to hunt for bugs in this one only.
+function initials(name: string) {
+  const [first, last] = name.trim().split(' ');
+  return first[0].toUpperCase() + (last ? last[0].toUpperCase() : '');
+}`,
+  },
 ];
 
 export function homeJsonLd() {
@@ -43,7 +96,7 @@ export function homeJsonLd() {
         '@type': 'SoftwareApplication',
         name: 'breakhound',
         url: SITE,
-        description: 'Find bugs in any JavaScript or TypeScript library automatically, no tests required. Reads types, generates edge case inputs, checks invariants and writes Vitest tests.',
+        description: 'A command line tool that finds bugs in JavaScript and TypeScript libraries by trying edge case inputs on every exported function.',
         applicationCategory: 'DeveloperApplication',
         applicationSubCategory: 'Testing tool',
         operatingSystem: 'Windows, macOS, Linux',
@@ -68,35 +121,78 @@ export function homeJsonLd() {
 const n = (x) => Number(x).toLocaleString('en-US');
 
 function sectionHead(kicker, id, title, lead, iconName) {
-  return `<header class="sec-head">
+  return `<header class="sec-head reveal">
   <p class="kicker">${icon(iconName)}${kicker}</p>
   <h2 id="${id}">${title}</h2>
   ${lead ? `<p class="sec-lead">${lead}</p>` : ''}
 </header>`;
 }
 
-/** The hero with the interactive terminal. */
-function hero(ctx) {
+/** The hero: one sentence, one command and the paste and see demo. */
+function hero() {
+  const p = PRESETS[0];
+  const presetBtns = PRESETS.map(
+    (x, i) => `<button type="button" class="demo-chip" data-preset="${x.id}" aria-pressed="${i === 0}">${x.id === 'blank' ? icon('terminal') : icon('folder')}${esc(x.label)}</button>`,
+  ).join('');
+  const editor = (id, file, tag, value, label) => `<div class="ed">
+          <div class="ed-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><label class="ed-tab" for="${id}"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#c9a400"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">JS</text></svg>${file}</label><span class="ed-tag ed-tag-${tag}">${label}</span></div>
+          <textarea id="${id}" class="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="7" aria-label="${label} version of the function">${esc(value)}</textarea>
+        </div>`;
+  return `<section class="hero-band dark" aria-labelledby="hero-title">
+  <div class="season-accent" data-season-slot="accent" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="hero-head">
+      <div class="reveal">
+        <p class="kicker">${icon('magnifier')}Zero config bug finder for JavaScript and TypeScript<span class="season-icons" data-season-slot="icons" aria-hidden="true"></span></p>
+        <h1 id="hero-title">Find bugs in any JavaScript library <em>automatically</em></h1>
+      </div>
+      <div class="hero-side reveal">
+        <p class="lead">Point <strong>breakhound</strong> at an npm package or a folder. It reads the types, tries edge cases on every exported function and hands you a reproduction and a Vitest test for each bug.</p>
+        <div class="close-cmd hero-cmd"><span class="t-dim" aria-hidden="true">$</span><code id="hero-cmd">npx breakhound ./my-lib</code><button type="button" class="copy-btn" v-copy-from="#hero-cmd" aria-label="Copy the command">${icon('copy')}Copy</button></div>
+      </div>
+    </div>
+    <div class="demo reveal" id="try" data-demo>
+      <span class="demo-sniff" data-season-slot="sniff"><img src="assets/mascot.svg" width="104" height="104" alt="Sniff, the breakhound bloodhound detective, watching the demo"></span>
+      <div class="demo-head">
+        <div>
+          <p class="kicker">${icon('paw')}Paste and see</p>
+          <h2>Paste two versions. See what broke.</h2>
+          <p class="demo-lead">Sniff runs both versions on the same edge case inputs, right here in your browser, and lists every input where the answers differ.</p>
+        </div>
+        <div class="demo-presets" role="group" aria-label="Examples">${presetBtns}</div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-eds">
+          ${editor('demo-old', 'before.js', 'old', p.old, 'Old')}
+          ${editor('demo-new', 'after.js', 'new', p.new, 'New')}
+        </div>
+        <div class="term demo-out" data-demo-state="idle">
+          <div class="term-bar">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="term-title">${icon('terminal')}<span>sniff@agency: ~/compare</span></span>
+            <span class="demo-status" data-demo-status>ready</span>
+          </div>
+          <div class="demo-trail" aria-hidden="true"><span></span></div>
+          <div class="demo-res" data-demo-out><p class="t-dim">Sniff compares the two versions as soon as the page is ready.</p><noscript><p class="t-dim">This demo needs JavaScript. On your machine, npx breakhound runs the full hunt.</p></noscript></div>
+        </div>
+      </div>
+      <p class="demo-note">${icon('isolation')}<span>Runs in a worker in this tab, nothing is uploaded. Plain JavaScript, with optional types on the parameters to pick the inputs. For a whole package, the CLI compares the reports of two versions with <code>--baseline</code>.</span></p>
+      <script type="application/json" id="demo-presets">${JSON.stringify(PRESETS).replace(/</g, '\\u003c')}</script>
+    </div>
+  </div>
+</section>`;
+}
+
+/** The recorded terminal session. */
+function terminal(ctx) {
   const { report, version } = ctx;
   const s = report.stats;
   const total = report.findings.length;
-  return `<section class="hero-band dark" aria-labelledby="hero-title">
+  return `<section class="sec sec-term" id="terminal" aria-labelledby="term-title">
   <div class="wrap">
-    <div class="hero-head">
-      <div>
-        <p class="kicker">${icon('magnifier')}Zero config bug finder for JavaScript and TypeScript</p>
-        <h1 id="hero-title">Find bugs in any JavaScript library <em>automatically</em></h1>
-      </div>
-      <div class="hero-side">
-        <p class="lead">Point <strong>breakhound</strong> at an npm package or a local folder. It reads the TypeScript types, attacks every exported function with edge cases, checks eight oracles and files a minimal reproduction plus a ready Vitest test for every bug. No tests to write first.</p>
-        <div class="hero-cta">
-          <button type="button" class="btn btn-accent" data-term-run>${icon('play')}Run the demo</button>
-          <a class="btn btn-outline" href="guides.html">${icon('folder')}Open the case index</a>
-        </div>
-      </div>
-    </div>
-    <div class="term-wrap" id="terminal">
-      <img class="term-sniff" src="assets/mascot.svg" width="112" height="112" alt="Sniff, the breakhound bloodhound detective, peeking over the terminal">
+    ${sectionHead('Live terminal', 'term-title', 'Watch a real run, line by line', `This is breakhound ${version} hunting through <code>test/fixtures/buggy-lib</code>, a small library with planted bugs. Press Run, or type a command.`, 'terminal')}
+    <div class="term-wrap reveal">
+      <img class="term-sniff" src="assets/mascot.svg" width="112" height="112" alt="" loading="lazy">
       <div class="term" :class="'is-' + T.state" data-term>
         <div class="term-bar">
           <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -135,11 +231,11 @@ ${report.findings.filter((f) => f.severity !== 'info').map((f) => `${f.severity.
       </div>
       <p class="sr-only" aria-live="polite" v-text="T.announce"></p>
     </div>
-    <dl class="ledger" aria-label="Numbers from the recorded run">
-      <div><dt>functions analyzed</dt><dd>${s.analyzed}</dd></div>
-      <div><dt>calls in isolated processes</dt><dd>${n(s.calls)}</dd></div>
-      <div><dt>time zones per call</dt><dd>${report.options.zones.length}</dd></div>
-      <div><dt>findings, each with a test</dt><dd>${total}</dd></div>
+    <dl class="ledger reveal" aria-label="Numbers from the recorded run">
+      <div><dt>functions analyzed</dt><dd data-count="${s.analyzed}">${s.analyzed}</dd></div>
+      <div><dt>calls in isolated processes</dt><dd data-count="${s.calls}">${n(s.calls)}</dd></div>
+      <div><dt>time zones per call</dt><dd data-count="${report.options.zones.length}">${report.options.zones.length}</dd></div>
+      <div><dt>findings, each with a test</dt><dd data-count="${total}">${total}</dd></div>
     </dl>
   </div>
 </section>`;
@@ -159,7 +255,7 @@ function cases(ctx) {
       .map((e) => `<li>${e.tz ? `<span class="tz">TZ=${esc(e.tz)}</span>` : ''}<code>${esc(e.call)}</code><span class="arrow" aria-hidden="true">${icon('arrow')}</span><code class="res">${esc(e.result)}</code></li>`)
       .join('');
     const test = ctx.frame(f.test.trimEnd(), { lang: 'ts', title: `${f.function}.test.ts`, kind: 'editor', numbered: true });
-    return `<article class="case" id="case-${o.rule}" data-sev="${f.severity}" v-show="sev === 'all' || sev === '${f.severity}'">
+    return `<article class="case reveal" style="--i:${i % 2}" id="case-${o.rule}" data-sev="${f.severity}" v-show="sev === 'all' || sev === '${f.severity}'">
   <div class="case-tab"><span class="case-no">Case ${num}</span><span class="case-rule">${o.rule}</span></div>
   <div class="case-sheet">
     <header class="case-head">
@@ -177,7 +273,7 @@ function cases(ctx) {
       <summary>${icon('book')}Generated test <span class="text-muted-foreground">confidence ${f.confidence}</span></summary>
       ${test}
     </details>
-    <a class="case-link" href="${o.guide}.html">Read the case notes ${icon('arrow')}</a>
+    ${o.guide ? `<a class="case-link" href="${o.guide}.html">Read the case notes ${icon('arrow')}</a>` : ''}
   </div>
 </article>`;
   }).join('\n');
@@ -263,7 +359,7 @@ function procedure() {
     ['report', 'File the report', 'Eight oracles judge the results. Each finding is shrunk to a minimal input and confirmed in a fresh process, then written up with a reproduction and a Vitest test.'],
   ];
   const items = steps
-    .map(([ic, t, d], i) => `<li class="proc-step"><span class="proc-no">${String(i + 1).padStart(2, '0')}</span><span class="proc-ic">${icon(ic)}</span><h3>${t}</h3><p>${d}</p></li>`)
+    .map(([ic, t, d], i) => `<li class="proc-step reveal" style="--i:${i}"><span class="proc-no">${String(i + 1).padStart(2, '0')}</span><span class="proc-ic">${icon(ic)}</span><h3>${t}</h3><p>${d}</p></li>`)
     .join('');
   return `<section class="sec sec-proc" id="how" aria-labelledby="how-title">
   <div class="wrap">
@@ -380,26 +476,6 @@ Error: Process completed with exit code ${gh.exitCode}.`,
 </section>`;
 }
 
-function compare() {
-  const rows = [
-    ['Approach', 'Type driven invariant checks', 'Examples you think of', 'Property based testing library', 'Coverage guided fuzzing'],
-    ['You write', 'Nothing', 'Every case and assertion', 'Properties and arbitraries', 'Fuzz targets'],
-    ['Input source', 'Types plus edgegoat edge cases', 'Your imagination', 'Your arbitraries, with shrinking', 'Mutation guided by coverage'],
-    ['Best at', 'Unicode, time zone and number formatting bugs in public APIs', 'Documenting intended behavior', 'Precise properties of your own code', 'Crashes and security issues in parsers'],
-    ['Works on code you never read', 'Yes', 'No', 'No', 'Partly, after writing a target'],
-    ['Output', 'Reproduction plus ready Vitest test', 'Pass or fail', 'Failing counterexample', 'Crashing input'],
-  ];
-  return `<section class="sec" id="compare" aria-labelledby="compare-title">
-  <div class="wrap">
-    ${sectionHead('Line-up', 'compare-title', 'Where breakhound fits', 'breakhound complements these tools rather than replacing them. A good workflow: a free sweep with breakhound first, important properties in fast-check, parsers in Jazzer.js.', 'magnifier')}
-    <div class="table-wrap lineup"><table class="table">
-      <thead><tr><th scope="col">Aspect</th><th scope="col" class="us">breakhound</th><th scope="col">Tests by hand</th><th scope="col">fast-check</th><th scope="col">Jazzer.js</th></tr></thead>
-      <tbody>${rows.map(([h, ...c]) => `<tr><th scope="row">${h}</th>${c.map((v, i) => `<td${i === 0 ? ' class="us"' : ''}>${v}</td>`).join('')}</tr>`).join('')}</tbody>
-    </table></div>
-  </div>
-</section>`;
-}
-
 function faq() {
   const items = FAQ.map(
     ([q, a], i) => `<details class="collapse q"${i === 0 ? ' open' : ''} name="faq"><summary class="collapse-title"><span class="q-no">Q${i + 1}</span>${q}</summary><div class="collapse-content"><p>${esc(a)}</p></div></details>`,
@@ -433,5 +509,5 @@ function closing() {
 
 export function homeBody(ctx) {
   const trail = illustration('paw-trail', 'ill trail');
-  return [hero(ctx), `<div class="wrap trail-wrap">${trail}</div>`, cases(ctx), board(), procedure(), ci(ctx), compare(), faq(), closing()].join('\n');
+  return [hero(), terminal(ctx), `<div class="wrap trail-wrap">${trail}</div>`, procedure(), cases(ctx), board(), ci(ctx), faq(), closing()].join('\n');
 }

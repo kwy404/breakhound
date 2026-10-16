@@ -272,5 +272,227 @@ if (term) {
   setTimeout(loadRun, 1500);
 }
 
+// ---------- Motion: reveal on scroll and counting numbers ----------
+
+if (!reduced && 'IntersectionObserver' in window) {
+  document.documentElement.classList.add('motion');
+  const seen = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('is-in');
+        seen.unobserve(e.target);
+        for (const dd of $$('[data-count]', e.target)) countUp(dd);
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+  );
+  for (const el of $$('.reveal')) seen.observe(el);
+}
+function countUp(el) {
+  const to = Number(el.dataset.count);
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / 900);
+    el.textContent = Math.round(to * (1 - (1 - t) ** 3)).toLocaleString('en-US');
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ---------- Special dates ----------
+// seasons.js (loaded in the head) picks the season and sets data-season on
+// <html>. Here: Sniff in costume, the hero accent, the off switch chip and
+// one small particle canvas in the hero.
+
+const seasons = window.BreakhoundSeasons;
+const season = seasons && seasons.state;
+const ICONS_BY_SEASON = {
+  newyear: 'firework', carnival: 'mask', easter: 'egg', valentine: 'heart', junina: 'bonfire', halloween: 'pumpkin', christmas: 'snowflake',
+};
+const SEASON_ICONS = {
+  newyear: ['firework', 'star', 'clock'], carnival: ['mask', 'confetti', 'streamer'], easter: ['egg', 'bunny', 'basket'], valentine: ['heart', 'balloon', 'letter'],
+  junina: ['bonfire', 'flags', 'hat'], halloween: ['pumpkin', 'bat', 'witch-hat'], christmas: ['snowflake', 'gift', 'tree'],
+};
+function seasonImg(file, cls, alt = '') {
+  return `<img class="${cls} season-light" src="assets/seasons/${file}-light.svg" alt="${alt}" decoding="async"><img class="${cls} season-dark" src="assets/seasons/${file}-dark.svg" alt="" aria-hidden="true" decoding="async">`;
+}
+let particles = null;
+function dress(on) {
+  for (const slot of $$('[data-season-slot]')) {
+    const kind = slot.dataset.seasonSlot;
+    if (slot.dataset.plain === undefined) slot.dataset.plain = slot.innerHTML;
+    if (!on) {
+      slot.innerHTML = slot.dataset.plain;
+      continue;
+    }
+    if (kind === 'sniff') slot.innerHTML = seasonImg(`${season.id}/sniff`, 'season-sniff', `Sniff, the breakhound mascot, dressed for ${season.name}`);
+    if (kind === 'accent') slot.innerHTML = seasonImg(`${season.id}/accent`, 'season-accent-img');
+    if (kind === 'icons') slot.innerHTML = SEASON_ICONS[season.id].map((n) => `<img src="assets/seasons/${season.id}/icon-${n}-dark.svg" alt="" width="20" height="20">`).join('');
+  }
+  if (on && !reduced) particles = particles || startParticles(season.id);
+  if (particles) particles.toggle(on && !reduced);
+}
+function chip() {
+  const el = document.createElement('div');
+  el.className = 'season-chip';
+  el.setAttribute('role', 'group');
+  el.setAttribute('aria-label', `${season.name} mode`);
+  const icon = `assets/seasons/${season.id}/icon-${ICONS_BY_SEASON[season.id]}`;
+  el.innerHTML = `<span class="season-chip-ic" aria-hidden="true"><img class="season-light" src="${icon}-light.svg" alt="" width="18" height="18"><img class="season-dark" src="${icon}-dark.svg" alt="" width="18" height="18"></span><span class="season-chip-label">${season.name} mode</span><button type="button" class="season-switch" role="switch" aria-checked="${season.on}" aria-label="${season.name} mode"><span></span></button>`;
+  const btn = el.querySelector('button');
+  btn.addEventListener('click', () => {
+    seasons.set(!season.on);
+    btn.setAttribute('aria-checked', String(season.on));
+    el.classList.toggle('is-off', !season.on);
+    dress(season.on);
+  });
+  el.classList.toggle('is-off', !season.on);
+  document.body.append(el);
+}
+
+/** One canvas in the hero, a few dozen particles, paused when hidden or off screen. */
+function startParticles(id) {
+  const host = $('.hero-band') || $('.nf');
+  if (!host) return null;
+  const canvas = document.createElement('canvas');
+  canvas.className = 'season-fx';
+  canvas.setAttribute('aria-hidden', 'true');
+  host.prepend(canvas);
+  const ctx = canvas.getContext('2d');
+  const style = getComputedStyle(document.documentElement);
+  const colors = ['--season-a', '--season-b', '--season-c'].map((v) => style.getPropertyValue(v).trim() || '#e8a33d');
+  let w = 0;
+  let h = 0;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const resize = () => {
+    w = host.clientWidth;
+    h = host.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+  new ResizeObserver(resize).observe(host);
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const count = Math.round(Math.min(34, Math.max(14, w / 45)));
+  const up = id === 'junina';
+  const make = (first) => {
+    const p = makeOne(first);
+    if (id === 'halloween' && Math.random() < 0.22) Object.assign(p, { bat: true, x: first ? rand(0, w) : -20, y: rand(h * 0.05, h * 0.5), vx: rand(0.6, 1.2), vy: rand(-0.08, 0.08), r: rand(6, 9) });
+    return p;
+  };
+  const makeOne = (first) => ({
+    x: rand(0, w),
+    y: first ? rand(0, h) : up ? h + 10 : -12,
+    vx: rand(-0.25, 0.25),
+    vy: up ? rand(-0.9, -0.4) : rand(0.35, 0.9),
+    r: rand(2, id === 'christmas' ? 3.4 : 5),
+    a: rand(0, Math.PI * 2),
+    va: rand(-0.04, 0.04),
+    c: colors[Math.floor(rand(0, colors.length))],
+    life: 1,
+  });
+  let list = Array.from({ length: count }, () => make(true));
+  let bursts = [];
+  let raf = 0;
+  let running = false;
+  let visible = true;
+  let last = 0;
+  function draw(t) {
+    raf = requestAnimationFrame(draw);
+    const dt = Math.min(3, (t - (last || t)) / 16.7);
+    last = t;
+    ctx.clearRect(0, 0, w, h);
+    if (id === 'newyear') {
+      if (bursts.length < 3 && Math.random() < 0.02 * dt) {
+        bursts.push({ x: rand(w * 0.1, w * 0.9), y: rand(h * 0.08, h * 0.4), c: colors[Math.floor(rand(0, 2))], t: 0, n: 18 });
+      }
+      bursts = bursts.filter((b) => b.t < 1);
+      for (const b of bursts) {
+        b.t += 0.012 * dt;
+        const r = 70 * (1 - (1 - b.t) ** 2);
+        ctx.globalAlpha = Math.max(0, 0.7 * (1 - b.t));
+        ctx.fillStyle = b.c;
+        for (let i = 0; i < b.n; i++) {
+          const a = (i / b.n) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(b.x + Math.cos(a) * r, b.y + Math.sin(a) * r + b.t * 14, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      return;
+    }
+    for (const p of list) {
+      p.x += (p.vx + Math.sin(p.a) * 0.3) * dt;
+      p.y += p.vy * dt;
+      p.a += p.va * dt;
+      if (up) p.life -= 0.004 * dt;
+      if (p.y > h + 14 || p.y < -14 || p.x > w + 30 || p.life <= 0) Object.assign(p, make(false));
+      if (p.bat) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = colors[1];
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(p.r / 10, (p.r / 10) * (0.55 + 0.45 * Math.abs(Math.sin(t / 110 + p.a))));
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-4, -6, -12, -6, -18, -2);
+        ctx.quadraticCurveTo(-12, 0, -12, 5);
+        ctx.quadraticCurveTo(-6, 2, -3, 5);
+        ctx.lineTo(0, 2);
+        ctx.lineTo(3, 5);
+        ctx.quadraticCurveTo(6, 2, 12, 5);
+        ctx.quadraticCurveTo(12, 0, 18, -2);
+        ctx.bezierCurveTo(12, -6, 4, -6, 0, 0);
+        ctx.fill();
+        ctx.restore();
+        continue;
+      }
+      ctx.globalAlpha = up ? Math.max(0, p.life) * 0.8 : 0.55;
+      ctx.fillStyle = p.c;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.a);
+      ctx.beginPath();
+      if (id === 'carnival') ctx.rect(-p.r, -p.r / 2.4, p.r * 2, p.r / 1.2);
+      else if (id === 'christmas' || up) ctx.arc(0, 0, p.r * (up ? 0.5 : 0.7), 0, Math.PI * 2);
+      else ctx.ellipse(0, 0, p.r, p.r / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+  const sync = () => {
+    const should = running && visible && !document.hidden;
+    if (should && !raf) {
+      last = 0;
+      raf = requestAnimationFrame(draw);
+    } else if (!should && raf) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+  };
+  document.addEventListener('visibilitychange', sync);
+  new IntersectionObserver((e) => {
+    visible = e[0].isIntersecting;
+    sync();
+  }).observe(host);
+  return {
+    toggle(on) {
+      running = on;
+      canvas.hidden = !on;
+      if (!on) ctx.clearRect(0, 0, w, h);
+      else list = Array.from({ length: count }, () => make(true));
+      sync();
+    },
+  };
+}
+if (season && season.id) {
+  chip();
+  dress(season.on);
+}
+
 setTimeout(loadSearch, 2500);
 V.start();

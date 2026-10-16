@@ -14,14 +14,10 @@ export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 
 /** The guides, in reading order. Titles are short labels for navigation. */
 export const GUIDES = [
-  { slug: 'find-bugs-automatically-javascript', short: 'Find bugs automatically', topic: 'workflow', file: 'G-01' },
-  { slug: 'fuzz-testing-typescript', short: 'Fuzz testing TypeScript', topic: 'workflow', file: 'G-02' },
-  { slug: 'timezone-bugs-javascript', short: 'Timezone bugs', topic: 'time', file: 'G-03' },
-  { slug: 'unicode-surrogate-pair-bugs', short: 'Surrogate pair bugs', topic: 'unicode', file: 'G-04' },
-  { slug: 'property-based-testing-without-writing-tests', short: 'Property testing, no tests', topic: 'invariants', file: 'G-05' },
-  { slug: 'roundtrip-testing-encode-decode', short: 'Roundtrip testing', topic: 'invariants', file: 'G-06' },
-  { slug: 'negative-zero-javascript-bugs', short: 'Negative zero bugs', topic: 'numbers', file: 'G-07' },
-  { slug: 'automated-testing-in-github-actions', short: 'Testing in GitHub Actions', topic: 'ci', file: 'G-08' },
+  { slug: 'timezone-bugs-javascript', short: 'Time zone bugs', topic: 'time', file: 'G-01' },
+  { slug: 'unicode-surrogate-pair-bugs', short: 'Surrogate pairs', topic: 'unicode', file: 'G-02' },
+  { slug: 'negative-zero-javascript-bugs', short: 'Negative zero', topic: 'numbers', file: 'G-03' },
+  { slug: 'automated-testing-in-github-actions', short: 'GitHub Actions', topic: 'ci', file: 'G-04' },
 ];
 
 export const MORE = [
@@ -51,6 +47,7 @@ export function head(p) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 ${THEME_SNIPPET}
+<script src="seasons.js"></script>
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.description)}">
 ${p.noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${url}">`}
@@ -78,16 +75,16 @@ ${p.noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" 
 <link rel="stylesheet" href="${MONSOON_CSS}">
 <link rel="stylesheet" href="site.css">
 <script src="${VOODOO_JS}" data-manual defer></script>
-<script type="module" src="site.js"></script>${ld}
+<script type="module" src="site.js"></script>${p.kind === 'home' ? '\n<script type="module" src="demo.js"></script>' : ''}${ld}
 </head>`;
 }
 
 const NAV = [
+  ['try', 'Try it', './#try'],
   ['terminal', 'Terminal', './#terminal'],
   ['cases', 'Case files', './#cases'],
-  ['board', 'Evidence board', './#board'],
   ['ci', 'CI', './#ci'],
-  ['index', 'Case index', 'guides.html'],
+  ['index', 'Guides', 'guides.html'],
 ];
 
 /** The sticky top bar. `current` marks the active nav item. */
@@ -139,7 +136,7 @@ export function footer() {
         <p class="foot-links"><a href="${GITHUB}">${icon('github')}GitHub</a><a href="${NPM}">${icon('npm')}npm</a><a href="${GITHUB}/blob/main/CHANGELOG.md">${icon('book')}Changelog</a></p>
       </div>
       <nav aria-labelledby="f-cases"><h2 id="f-cases" class="foot-title">Case files</h2><ul>
-        <li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
+        <li><a href="./#try">Paste and see</a></li><li><a href="./#terminal">Live terminal</a></li><li><a href="./#cases">The eight oracles</a></li><li><a href="./#board">Evidence board</a></li><li><a href="./#ci">CI job summary</a></li><li><a href="guides.html">Case index</a></li><li><a href="./#faq">FAQ</a></li>
       </ul></nav>
       <nav aria-labelledby="f-guides"><h2 id="f-guides" class="foot-title">Guides</h2><ul>${guides}</ul></nav>
       <nav aria-labelledby="f-more"><h2 id="f-more" class="foot-title">More from kwy404</h2><ul class="foot-more">${more}</ul></nav>
