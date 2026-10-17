@@ -1,6 +1,6 @@
 {
   "name": "breakhound",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Finds bugs in JavaScript and TypeScript libraries by running every exported function on edge case inputs.",
   "keywords": [
     "testing",

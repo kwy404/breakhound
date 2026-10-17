@@ -1,7 +1,7 @@
 {
   "tool": {
     "name": "breakhound",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "target": {
     "spec": "C:\\Users\\Hadouken Game Center\\own\\breakhound\\test\\fixtures\\buggy-lib",
@@ -39,7 +39,7 @@
     "analyzed": 23,
     "skipped": 1,
     "calls": 4444,
-    "durationMs": 4504,
+    "durationMs": 2232,
     "budgetExhausted": false,
     "unconfirmed": 0
   },
@@ -348,12 +348,12 @@
       "evidence": [
         {
           "call": "randomToken()",
-          "result": "'ioip9xid2rs'",
+          "result": "'d9aesp7o0ew'",
           "note": "first call"
         },
         {
           "call": "randomToken()",
-          "result": "'j1xqcw4sbcd'",
+          "result": "'hp0vn2nwgnc'",
           "note": "second call"
         }
       ],

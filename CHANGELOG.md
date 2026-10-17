@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-17
+
 ### Added
 
 - `--baseline <file>` compares the run with an earlier JSON report and lists new and fixed findings. `--baseline last` uses the previous run saved in `.breakhound/report.json`. With `--fail-on`, only new findings fail the run, so a CI job can gate on regressions between two versions.
 - `compareReports` and `formatComparison` in the API.
 - `breakhound` with no target hunts the package in the current folder when it has a `package.json`.
 - Unknown options, rule ids and severities get a "did you mean" hint.
+
+### Changed
+
+- The documentation site is rebuilt as a terminal and detective case files, with Voodoo.js 1.0.0. The home page opens with a paste and see demo that compares two versions of a function in the browser, and the recorded run and CLI help show `--baseline`.
+- Seasonal themes on the site for special dates, with Sniff in costume.
+- The site keeps four guides with plain titles, and links to retired guides point to the home page.
+- Shorter READMEs and package keywords. "More from kwy404" lists the newest projects.
 
 ## [1.0.0] - 2026-10-13
 
@@ -46,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Terminal and JSON output.
 - `--fail-on` option to make breakhound exit with a non zero code in CI.
 
-[Unreleased]: https://github.com/kwy404/breakhound/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/kwy404/breakhound/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/kwy404/breakhound/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/kwy404/breakhound/compare/v0.1.1...v1.0.0
 [0.1.1]: https://github.com/kwy404/breakhound/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kwy404/breakhound/releases/tag/v0.1.0

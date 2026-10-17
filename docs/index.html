@@ -200,7 +200,7 @@ function truncate(text: string, max: number) {
     <header class="sec-head reveal">
   <p class="kicker"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Live terminal</p>
   <h2 id="term-title">Watch a real run, line by line</h2>
-  <p class="sec-lead">This is breakhound 1.0.0 hunting through <code>test/fixtures/buggy-lib</code>, a small library with planted bugs. Press Run, or type a command.</p>
+  <p class="sec-lead">This is breakhound 1.1.0 hunting through <code>test/fixtures/buggy-lib</code>, a small library with planted bugs. Press Run, or type a command.</p>
 </header>
     <div class="term-wrap reveal">
       <img class="term-sniff" src="assets/mascot.svg" width="112" height="112" alt="" loading="lazy">
@@ -208,7 +208,7 @@ function truncate(text: string, max: number) {
         <div class="term-bar">
           <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="term-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg><span>sniff@agency: ~/cases</span></span>
-          <span class="term-rec" title="Output recorded from breakhound 1.0.0 on test/fixtures/buggy-lib"><span class="rec-dot" aria-hidden="true"></span>recorded from v1.0.0</span>
+          <span class="term-rec" title="Output recorded from breakhound 1.1.0 on test/fixtures/buggy-lib"><span class="rec-dot" aria-hidden="true"></span>recorded from v1.1.0</span>
           <span class="term-actions">
             <button type="button" class="term-btn" data-term-run :disabled="T.state === 'running'"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-play"/></svg><span>Run</span></button>
             <button type="button" class="term-btn" data-term-skip v-show="T.state === 'running'"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-skip"/></svg><span>Skip</span></button>
@@ -217,7 +217,7 @@ function truncate(text: string, max: number) {
         </div>
         <div class="term-body" data-term-body>
           <pre class="term-out" data-term-out aria-label="Terminal output"><code><span class="t-dim">Sniff's terminal: a real run of breakhound</span>
-<span class="t-dim">1.0.0 on test/fixtures/buggy-lib,</span>
+<span class="t-dim">1.1.0 on test/fixtures/buggy-lib,</span>
 <span class="t-dim">replayed line by line.</span>
 <span class="t-dim">Type a command and press Enter, or press Run.</span>
 
@@ -567,7 +567,7 @@ MEDIUM negative-zero-sign     formatFixed
         </div>
         <div class="gh-panel" v-tab-panel="summary"><div class="gh-md"><h3>breakhound report for buggy-lib@1.0.0</h3>
 <p><strong>Verdict:</strong> likely bugs found, 12 findings (5 high, 5 medium, 2 info).</p>
-<p>23 functions analyzed, 1 skipped, 4444 calls, seed 42, 6.3s.</p>
+<p>23 functions analyzed, 1 skipped, 4444 calls, seed 42, 2.2s.</p>
 <div class="gh-table"><table><thead><tr><th>Rule</th><th>Severity</th><th>Count</th></tr></thead><tbody><tr><td>lone-surrogate-output</td><td>high</td><td>2</td></tr><tr><td>timezone-dependent</td><td>high</td><td>1</td></tr><tr><td>unexpected-crash</td><td>high</td><td>2</td></tr><tr><td>nan-leak</td><td>medium</td><td>1</td></tr><tr><td>negative-zero-sign</td><td>medium</td><td>1</td></tr><tr><td>nondeterministic</td><td>medium</td><td>1</td></tr><tr><td>not-idempotent</td><td>medium</td><td>1</td></tr><tr><td>roundtrip</td><td>medium</td><td>1</td></tr><tr><td>nondeterministic</td><td>info</td><td>1</td></tr><tr><td>unexpected-crash</td><td>info</td><td>1</td></tr></tbody></table></div>
 <details class="gh-details">
 <summary><span class="sev sev-high">high</span> lone-surrogate-output: initials: initials returns a string with a lone surrogate</summary>
@@ -858,7 +858,7 @@ MEDIUM negative-zero-sign     formatFixed
 <ul><li><code>Counter</code>: class (constructors are not called)</li></ul></div></div>
         <div class="gh-panel" v-tab-panel="annotations" hidden><ul class="anns"><li class="ann ann-error"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">error</span>breakhound lone-surrogate-output</p><p class="ann-msg"><code>initials</code> initials returns a string with a lone surrogate with input <code>'\u{1F600}'</code></p></div></li><li class="ann ann-error"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">error</span>breakhound lone-surrogate-output</p><p class="ann-msg"><code>truncate</code> truncate returns a string with a lone surrogate with input <code>'\u{1F600}', 1</code></p></div></li><li class="ann ann-error"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">error</span>breakhound timezone-dependent</p><p class="ann-msg"><code>yearLabel</code> yearLabel returns different results in different time zones with input <code>0</code></p></div></li><li class="ann ann-error"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">error</span>breakhound unexpected-crash</p><p class="ann-msg"><code>initials</code> initials throws TypeError: Cannot read properties of undefined (reading 'toUpperCase') with input <code>''</code></p></div></li><li class="ann ann-error"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">error</span>breakhound unexpected-crash</p><p class="ann-msg"><code>mapWords</code> mapWords throws TypeError: Cannot read properties of undefined (reading 'toUpperCase') with input <code>'', (word) =&gt; word</code></p></div></li><li class="ann ann-warning"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">warning</span>breakhound nan-leak</p><p class="ann-msg"><code>average</code> average returns NaN for finite input with input <code>[0]</code></p></div></li><li class="ann ann-warning"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">warning</span>breakhound nondeterministic</p><p class="ann-msg"><code>label</code> label returns different results for the same input with input <code>'a'</code></p></div></li><li class="ann ann-warning"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">warning</span>breakhound roundtrip</p><p class="ann-msg"><code>encodeBase</code> decodeBase(encodeBase(x)) does not return x with input <code>'_'</code></p></div></li><li class="ann ann-warning"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">warning</span>breakhound not-idempotent</p><p class="ann-msg"><code>slugify</code> slugify is not idempotent with input <code>'x y'</code></p></div></li><li class="ann ann-warning"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">warning</span>breakhound negative-zero-sign</p><p class="ann-msg"><code>formatFixed</code> formatFixed drops the minus sign of numbers between -1 and 0 with input <code>-0.5</code></p></div></li><li class="ann ann-notice"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">notice</span>breakhound unexpected-crash</p><p class="ann-msg"><code>percent</code> percent throws RangeError for some inputs that match its types with input <code>0, 0</code></p></div></li><li class="ann ann-notice"><span class="ann-ic" aria-hidden="true"></span><div><p class="ann-title"><span class="ann-level">notice</span>breakhound nondeterministic</p><p class="ann-msg"><code>randomToken</code> randomToken returns a different result on each call with input <code>(no arguments)</code></p></div></li></ul></div>
         <div class="gh-panel" v-tab-panel="log" hidden><figure class="frame frame-output frame-compact" data-lang="text"><div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="frame-tab"><svg class="file-ic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#6b7280"/><text x="8" y="11" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="6.4" font-weight="700" fill="#fff">&gt;_</text></svg><span>sniff</span></span><button type="button" class="frame-copy" v-copy-from="#code-9" aria-label="Copy sniff"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre class="shiki" tabindex="0"><code id="code-9"><span class="line"><span>$ npx breakhound . --fail-on high</span></span>
-<span class="line"><span>breakhound v1.0.0  buggy-lib@1.0.0 (local)</span></span>
+<span class="line"><span>breakhound v1.1.0  buggy-lib@1.0.0 (local)</span></span>
 <span class="line"><span>23 functions analyzed, 1 skipped | 4444 calls | 6 time zones | seed 42</span></span>
 <span class="line"><span></span></span>
 <span class="line"><span>HIGH (5)</span></span>

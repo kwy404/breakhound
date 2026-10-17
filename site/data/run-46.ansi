@@ -1,4 +1,4 @@
-[33m    __/\__         [0m  [1mbreakhound[0m [2mv1.0.0[0m
+[33m    __/\__         [0m  [1mbreakhound[0m [2mv1.1.0[0m
 [33m   (  o  o)__      [0m  target buggy-lib@1.0.0...
 [33m   /   (_)   \ .-. [0m  23 functions, 4444 cal...
 [33m  ( '--'  ,__(( O )[0m  [2m6 time zones, 8 rules[0m
@@ -341,8 +341,8 @@
 [90m│[0m likely intended.                           [90m│[0m
 [90m│[0m                                            [90m│[0m
 [90m│[0m input:                                     [90m│[0m
-[90m│[0m [2mrandomToken() -> '7a5hwz3jyhc'            [0m [90m│[0m
-[90m│[0m [2mrandomToken() -> 'asy5lxac6z'             [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> 'rij2vqvb3ph'            [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> '74eq3jxhv3s'            [0m [90m│[0m
 [90m│[0m                                            [90m│[0m
 [90m│[0m [2mreproduction:                             [0m [90m│[0m
 [90m│[0m   // randomToken returns a different       [90m│[0m
@@ -369,7 +369,7 @@
   nondeterministic           1  [90minfo[0m
   unexpected-crash           1  [90minfo[0m
 
-[1m[31m12 bugs sniffed out in 23 functions, 5.3 s[0m[0m
+[1m[31m12 bugs sniffed out in 23 functions, 2.2 s[0m[0m
 
 [2mSkipped 1 signature:[0m
 [2m  Counter: class (constructors are not called)[0m

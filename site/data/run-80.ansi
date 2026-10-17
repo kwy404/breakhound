@@ -1,4 +1,4 @@
-[33m    __/\__         [0m  [1mbreakhound[0m [2mv1.0.0[0m
+[33m    __/\__         [0m  [1mbreakhound[0m [2mv1.1.0[0m
 [33m   (  o  o)__      [0m  target buggy-lib@1.0.0 [2m(local)[0m
 [33m   /   (_)   \ .-. [0m  [2m23 functions, 4444 calls, seed 42[0m
 [33m  ( '--'  ,__(( O )[0m  [2m6 time zones, 8 rules[0m
@@ -249,8 +249,8 @@
 [90m│[0m suggests randomness, time or unique ids, so this is likely intended.         [90m│[0m
 [90m│[0m                                                                              [90m│[0m
 [90m│[0m input:                                                                       [90m│[0m
-[90m│[0m [2mrandomToken() -> '64cdg76rwd8'                                              [0m [90m│[0m
-[90m│[0m [2mrandomToken() -> 'q283ferzkli'                                              [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> 'jwfs7dpc61o'                                              [0m [90m│[0m
+[90m│[0m [2mrandomToken() -> 'vwym6vnak4'                                               [0m [90m│[0m
 [90m│[0m                                                                              [90m│[0m
 [90m│[0m [2mreproduction:                                                               [0m [90m│[0m
 [90m│[0m   // randomToken returns a different result on each call                     [90m│[0m
@@ -275,7 +275,7 @@
   nondeterministic           1  [90minfo[0m
   unexpected-crash           1  [90minfo[0m
 
-[1m[31m12 bugs sniffed out in 23 functions, 7.9 s[0m[0m
+[1m[31m12 bugs sniffed out in 23 functions, 2.2 s[0m[0m
 
 [2mSkipped 1 signature:[0m
 [2m  Counter: class (constructors are not called)[0m
